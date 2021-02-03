@@ -1,0 +1,117 @@
+﻿  serial_transport_win32.c
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(113,1): warning C4005: 'INT8_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(49): message : see previous definition of 'INT8_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(114,1): warning C4005: 'INT16_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(50): message : see previous definition of 'INT16_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(115,1): warning C4005: 'INT32_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(51): message : see previous definition of 'INT32_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(116,1): warning C4005: 'INT64_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(52): message : see previous definition of 'INT64_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(118,1): warning C4005: 'INT8_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(53): message : see previous definition of 'INT8_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(119,1): warning C4005: 'INT16_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(54): message : see previous definition of 'INT16_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(120,1): warning C4005: 'INT32_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(55): message : see previous definition of 'INT32_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(121,1): warning C4005: 'INT64_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(56): message : see previous definition of 'INT64_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(123,1): warning C4005: 'UINT8_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(57): message : see previous definition of 'UINT8_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(124,1): warning C4005: 'UINT16_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(58): message : see previous definition of 'UINT16_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(125,1): warning C4005: 'UINT32_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(59): message : see previous definition of 'UINT32_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(126,1): warning C4005: 'UINT64_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(60): message : see previous definition of 'UINT64_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(146,1): warning C4005: 'INT_FAST16_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(76): message : see previous definition of 'INT_FAST16_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(151,1): warning C4005: 'INT_FAST16_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(80): message : see previous definition of 'INT_FAST16_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(156,1): warning C4005: 'UINT_FAST16_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(84): message : see previous definition of 'UINT_FAST16_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(181,1): warning C4005: 'SIG_ATOMIC_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(114): message : see previous definition of 'SIG_ATOMIC_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(182,1): warning C4005: 'SIG_ATOMIC_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(115): message : see previous definition of 'SIG_ATOMIC_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(197,1): warning C4005: 'WINT_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(120): message : see previous definition of 'WINT_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(198,1): warning C4005: 'WINT_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(121): message : see previous definition of 'WINT_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(219,1): warning C4005: 'INT8_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(123): message : see previous definition of 'INT8_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(220,1): warning C4005: 'UINT8_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(128): message : see previous definition of 'UINT8_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(221,1): warning C4005: 'INT16_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(124): message : see previous definition of 'INT16_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(222,1): warning C4005: 'UINT16_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(129): message : see previous definition of 'UINT16_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(224,1): warning C4005: 'INT32_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(125): message : see previous definition of 'INT32_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(225,1): warning C4005: 'UINT32_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(130): message : see previous definition of 'UINT32_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(226,1): warning C4005: 'INT64_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(126): message : see previous definition of 'INT64_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(227,1): warning C4005: 'UINT64_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(131): message : see previous definition of 'UINT64_C'
+  tmr_strerror.c
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(113,1): warning C4005: 'INT8_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(49): message : see previous definition of 'INT8_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(114,1): warning C4005: 'INT16_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(50): message : see previous definition of 'INT16_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(115,1): warning C4005: 'INT32_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(51): message : see previous definition of 'INT32_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(116,1): warning C4005: 'INT64_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(52): message : see previous definition of 'INT64_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(118,1): warning C4005: 'INT8_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(53): message : see previous definition of 'INT8_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(119,1): warning C4005: 'INT16_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(54): message : see previous definition of 'INT16_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(120,1): warning C4005: 'INT32_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(55): message : see previous definition of 'INT32_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(121,1): warning C4005: 'INT64_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(56): message : see previous definition of 'INT64_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(123,1): warning C4005: 'UINT8_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(57): message : see previous definition of 'UINT8_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(124,1): warning C4005: 'UINT16_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(58): message : see previous definition of 'UINT16_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(125,1): warning C4005: 'UINT32_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(59): message : see previous definition of 'UINT32_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(126,1): warning C4005: 'UINT64_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(60): message : see previous definition of 'UINT64_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(146,1): warning C4005: 'INT_FAST16_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(76): message : see previous definition of 'INT_FAST16_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(151,1): warning C4005: 'INT_FAST16_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(80): message : see previous definition of 'INT_FAST16_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(156,1): warning C4005: 'UINT_FAST16_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(84): message : see previous definition of 'UINT_FAST16_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(181,1): warning C4005: 'SIG_ATOMIC_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(114): message : see previous definition of 'SIG_ATOMIC_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(182,1): warning C4005: 'SIG_ATOMIC_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(115): message : see previous definition of 'SIG_ATOMIC_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(197,1): warning C4005: 'WINT_MIN': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(120): message : see previous definition of 'WINT_MIN'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(198,1): warning C4005: 'WINT_MAX': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(121): message : see previous definition of 'WINT_MAX'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(219,1): warning C4005: 'INT8_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(123): message : see previous definition of 'INT8_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(220,1): warning C4005: 'UINT8_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(128): message : see previous definition of 'UINT8_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(221,1): warning C4005: 'INT16_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(124): message : see previous definition of 'INT16_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(222,1): warning C4005: 'UINT16_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(129): message : see previous definition of 'UINT16_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(224,1): warning C4005: 'INT32_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(125): message : see previous definition of 'INT32_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(225,1): warning C4005: 'UINT32_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(130): message : see previous definition of 'UINT32_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(226,1): warning C4005: 'INT64_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(126): message : see previous definition of 'INT64_C'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\stdint_win32.h(227,1): warning C4005: 'UINT64_C': macro redefinition
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29333\include\stdint.h(131): message : see previous definition of 'UINT64_C'
+  nativeSerial.c
+  Generating Code...
+     Creating library C:\Develop\mercury\c\projVS2019\jni\x64\Release\win-x64.lib and object C:\Develop\mercury\c\projVS2019\jni\x64\Release\win-x64.exp
+  jni.vcxproj -> C:\Develop\mercury\c\projVS2019\jni\x64\Release\win-x64.dll
+  Deploy 64-bit DLL
+          1 Datei(en) kopiert.
+          1 Datei(en) kopiert.

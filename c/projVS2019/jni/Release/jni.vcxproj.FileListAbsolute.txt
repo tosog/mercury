@@ -1,0 +1,1 @@
+C:\Develop\mercury\c\projVS2019\jni\Release\win-x86.dll

@@ -1,12 +1,14 @@
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libltkc", "libltkc\libltkc.vcproj", "{B40AD31F-F896-4F59-BDAE-F086C9FDBC70}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30907.101
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libltkc", "libltkc\libltkc.vcxproj", "{B40AD31F-F896-4F59-BDAE-F086C9FDBC70}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libltkcllrporg", "libltkcllrporg\libltkcllrporg.vcproj", "{4E89CB57-DFEB-4D17-8DCD-158FB22BD1E6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libltkcllrporg", "libltkcllrporg\libltkcllrporg.vcxproj", "{4E89CB57-DFEB-4D17-8DCD-158FB22BD1E6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtlkc_WinCE", "libtlkc_WinCE\libtlkc_WinCE.vcproj", "{4A0067BC-C937-4B56-ADE7-A502832D9FC5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtlkc_WinCE", "libtlkc_WinCE\libtlkc_WinCE.vcxproj", "{4A0067BC-C937-4B56-ADE7-A502832D9FC5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libltkcllrporg_WinCE", "libltkcllrporg_WinCE\libltkcllrporg_WinCE.vcproj", "{60FEB75F-28B0-44CC-BB61-C1B8D0BE7260}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libltkcllrporg_WinCE", "libltkcllrporg_WinCE\libltkcllrporg_WinCE.vcxproj", "{60FEB75F-28B0-44CC-BB61-C1B8D0BE7260}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -145,5 +147,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DB380876-8A24-439B-B6B7-BE45D8812589}
 	EndGlobalSection
 EndGlobal

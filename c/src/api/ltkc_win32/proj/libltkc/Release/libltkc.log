@@ -1,0 +1,245 @@
+﻿  ltkc_array.c
+  ltkc_connection.c
+  ltkc_element.c
+  ltkc_encdec.c
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_encdec.c(32,55): warning C4098: 'LLRP_Decoder_destruct': 'void' function returning a value
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_encdec.c(46,55): warning C4098: 'LLRP_Encoder_destruct': 'void' function returning a value
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_encdec.c(54,70): warning C4098: 'LLRP_Encoder_encodeElement': 'void' function returning a value
+  ltkc_error.c
+  ltkc_framedecode.c
+  ltkc_frameencode.c
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_frameencode.c(452,56): warning C4244: '=': conversion from 'llrp_u64_t' to 'unsigned char', possible loss of data
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_frameencode.c(453,56): warning C4244: '=': conversion from 'llrp_u64_t' to 'unsigned char', possible loss of data
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_frameencode.c(454,56): warning C4244: '=': conversion from 'llrp_u64_t' to 'unsigned char', possible loss of data
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_frameencode.c(456,56): warning C4244: '=': conversion from 'llrp_u64_t' to 'unsigned char', possible loss of data
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_frameencode.c(457,56): warning C4244: '=': conversion from 'llrp_u64_t' to 'unsigned char', possible loss of data
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_frameencode.c(458,55): warning C4244: '=': conversion from 'llrp_u64_t' to 'unsigned char', possible loss of data
+  ltkc_frameextract.c
+  ltkc_genout.c
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(1343,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(1406,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(1559,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(2410,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(2437,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(2725,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(2752,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(3040,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(3067,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(3355,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(3382,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(3670,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(3697,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(3962,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(3972,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(4611,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(4638,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(4926,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(4953,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(5241,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(5268,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(5533,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(5543,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(5955,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(6951,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(7557,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(7567,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(7828,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(7838,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(7976,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(8208,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(8218,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(8326,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(8336,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(8597,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(8607,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(8891,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(8918,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(9053,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(9080,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(9263,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(9326,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(10072,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(10116,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(10301,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(10362,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(10530,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(10576,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(10738,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(10782,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(11176,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(11390,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(11614,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(12136,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(12180,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(12341,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(12595,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(12641,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(12784,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(12813,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(13525,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(13768,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(14023,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(14084,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(14262,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(14812,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(15137,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(15232,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(15428,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(16063,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(16124,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(16782,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(16826,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(17219,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(17246,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(17406,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(17452,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(17616,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(17660,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(17824,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(17868,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(18055,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(18116,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(18291,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(18537,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(18564,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(18745,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(18806,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(18997,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(19058,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(19205,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(19232,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(19875,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(20264,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(20291,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(21132,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(21161,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(21296,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(21323,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(21458,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(21485,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(21620,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(21647,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(21782,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(21809,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(21944,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(21971,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(22106,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(22133,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(22268,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(22295,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(22430,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(22457,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(22592,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(22619,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(22754,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(22781,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(22916,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(22943,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(23078,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(23105,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(23240,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(23267,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(24217,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(24261,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(25003,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(25047,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(25211,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(25255,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(25442,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(25503,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(25646,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(25673,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(25785,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(25795,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(25998,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(26342,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(26369,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(26550,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(26611,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(26810,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(27066,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(27110,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(27249,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(27276,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(27388,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(27398,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(27574,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(27830,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(27874,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(28056,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(28335,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(28396,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(28944,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(29141,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(29360,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(29966,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(30029,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(30197,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(30241,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(30380,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(30407,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(30565,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(30609,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(30806,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(31061,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(31105,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(31515,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(31614,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(31861,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(31956,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(32205,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(32302,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(32478,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(32522,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(32943,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(32987,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(33220,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(33315,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(33564,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(33661,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(33839,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(33883,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(34024,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(34051,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(34186,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(34213,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(34371,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(34415,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(34602,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(34665,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(34854,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(34915,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(35081,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(35125,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(35287,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(35331,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(35493,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(35537,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(35722,10): warning C4102: 'missing': unreferenced label
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(35783,34): warning C4101: 'pType': unreferenced local variable
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(35813,1): warning C4047: 'initializing': 'unsigned int' differs in levels of indirection from 'void *'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(35871,1): warning C4047: 'initializing': 'unsigned int' differs in levels of indirection from 'void *'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(35949,1): warning C4047: 'initializing': 'unsigned int' differs in levels of indirection from 'void *'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(36027,1): warning C4047: 'initializing': 'unsigned int' differs in levels of indirection from 'void *'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(36080,1): warning C4047: 'initializing': 'unsigned int' differs in levels of indirection from 'void *'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(36133,1): warning C4047: 'initializing': 'unsigned int' differs in levels of indirection from 'void *'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(36186,1): warning C4047: 'initializing': 'unsigned int' differs in levels of indirection from 'void *'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(36234,1): warning C4047: 'initializing': 'unsigned int' differs in levels of indirection from 'void *'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(36287,1): warning C4047: 'initializing': 'unsigned int' differs in levels of indirection from 'void *'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(36335,1): warning C4047: 'initializing': 'unsigned int' differs in levels of indirection from 'void *'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(36383,1): warning C4047: 'initializing': 'unsigned int' differs in levels of indirection from 'void *'
+C:\Develop\mercury\c\src\api\ltkc_win32\inc\out_ltkc.inc(36436,1): warning C4047: 'initializing': 'unsigned int' differs in levels of indirection from 'void *'
+  ltkc_hdrfd.c
+  ltkc_typeregistry.c
+  ltkc_xmltextencode.c
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_xmltextencode.c(900,24): warning C4996: 'localtime': This function or variable may be unsafe. Consider using localtime_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_xmltextencode.c(1372,28): warning C4018: '<': signed/unsigned mismatch
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_xmltextencode.c(1413,24): warning C4018: '<': signed/unsigned mismatch
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_xmltextencode.c(1538,11): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_xmltextencode.c(1524,5): warning C4996: '_vsnprintf': This function or variable may be unsafe. Consider using _vsnprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_xmltextencode.c(1575,15): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_xmltextencode.c(1585,15): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_xmltextencode.c(1622,15): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Develop\mercury\c\src\api\ltkc_win32\src\ltkc_xmltextencode.c(1608,9): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  Generating Code...
+  libltkc.vcxproj -> C:\Develop\mercury\c\src\api\ltkc_win32\lib\libltkc.lib

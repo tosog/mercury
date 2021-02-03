@@ -1,0 +1,1 @@
+C:\Develop\mercury\c\projVS2019\jni\x64\Release\win-x64.dll
