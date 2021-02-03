@@ -212,7 +212,7 @@ namespace ThingMagic
             /// </summary>
             NA3 = 14,
             /// <summary>
-            /// IS
+            /// IS region applicable for Micro, M6e-JIC, M6ePlus
             /// </summary>
             IS = 15,
             /// <summary>
@@ -279,6 +279,14 @@ namespace ThingMagic
             /// Universal region is applicable for M3e product
             /// </summary>
             UNIVERSAL=31,
+            /// <summary>
+            /// Israel2(IS2) region applicable for Micro and Nano 
+            /// </summary>
+            IS2 = 32,
+            /// <summary>
+            /// NA4 region applicable for Micro and M6e 
+            /// </summary>
+            NA4 = 33,
             /// <summary>
             ///OPEN region with extended frequency range 840-960MHz for M6ePlus module
             /// </summary>
@@ -688,7 +696,7 @@ namespace ThingMagic
                 /// <summary>
                 /// Current temperature (degrees C)
                 /// </summary>
-                private UInt32? temperature = null;
+                private SByte? temperature = null;
                 /// <summary>
                 /// Current tag protocol
                 /// </summary>
@@ -729,7 +737,7 @@ namespace ThingMagic
                 /// <summary>
                 /// Current temperature (degrees C)
                 /// </summary>
-                public UInt32? TEMPERATURE
+                public SByte? TEMPERATURE
                 {
                     get { return temperature; }
                     set { temperature = value; }
@@ -1051,6 +1059,20 @@ namespace ThingMagic
         /// </summary>
         protected Reader.Stat.StatsFlag statFlag = Stat.StatsFlag.NONE;
 
+        /// <summary>
+        /// Cache reader stats flag
+        /// </summary>
+        public Reader.Stat.StatsFlag _StatFlag
+        {
+            get { return statFlag; }
+            set { statFlag = value; }
+        }
+        
+        /// <summary>
+        /// Flag to show read status during Read stop trigger
+        /// </summary>
+        protected Boolean finishedReading = false;
+
         #endregion
 
         #region Properties
@@ -1331,6 +1353,19 @@ namespace ThingMagic
         /// </summary>
         public abstract void StopReading();
 
+        #endregion
+
+        #region Read status
+        
+        /// <summary>
+        /// This function will check for Stop reading status and will return true once the reader has stopped reading.
+        /// </summary>
+        /// <returns></returns>
+        public Boolean isReadStopped()
+        {
+            // This flag will be true only after receiving Stop Read response.
+            return finishedReading;
+        }
         #endregion
 
         #region FirmwareLoad
@@ -2398,8 +2433,7 @@ namespace ThingMagic
                 {
                     throw new ReaderException("Adding both the reader stats and status listener is not supported");
                 }
-                StatsListener(this, new StatsReportEventArgs(sReport));
-            }           
+            }
             StatsListener(this, new StatsReportEventArgs(sReport));
         }
 

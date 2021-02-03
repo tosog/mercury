@@ -200,6 +200,7 @@ int ReaderInfo(int portnumber)
   }
 
   model.value = string;
+  model.max   = sizeof(string);
   TMR_paramGet(rp, TMR_PARAM_VERSION_MODEL, &model);
   checkerr(rp, ret, 1, "Getting version model");
 

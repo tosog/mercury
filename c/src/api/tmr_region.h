@@ -74,6 +74,10 @@ typedef enum TMR_Region
       918.7MHz)**/        TMR_REGION_EU4 = 30,
   /** Universal region 
       applicable for M3e product */ TMR_REGION_UNIVERSAL = 31,
+  /** Israel2(IS2) region 
+  applicable for Micro and Nano */ TMR_REGION_IS2 = 32,
+  /** NA4 region 
+  applicable for Micro and M6e */ TMR_REGION_NA4 = 33,
   /** OPEN region with extended 
       frequency range 840-960MHz 
       for M6ePlus module**/         TMR_REGION_OPEN_EXTENDED = 254,

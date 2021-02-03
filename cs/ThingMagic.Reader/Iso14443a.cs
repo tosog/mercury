@@ -67,7 +67,11 @@ namespace ThingMagic
             /// <summary>
             /// Mifare Mini tag type
             /// </summary>
-            MIFARE_MINI = 0x00000040
+            MIFARE_MINI = 0x00000040,
+            /// <summary>
+            /// Ultralight NTAG tag type
+            /// </summary>
+            ULTRALIGHT_NTAG = 0x00000080
         }
         #endregion
 

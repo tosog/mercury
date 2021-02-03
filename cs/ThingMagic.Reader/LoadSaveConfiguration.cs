@@ -100,7 +100,7 @@ namespace ThingMagic
                         str = valstr.Remove(0, 14);
                         //Remove leading and trailing square brackets
                         string remove = Regex.Replace(str, @"]$|^\[", "");
-                        int CurrentIndex = 0,PreviousIndex = 1;
+                        int CurrentIndex = 0, PreviousIndex = 1;
                         List<string> Plans = new List<string>();
                         while (CurrentIndex != -1)
                         {
@@ -118,7 +118,7 @@ namespace ThingMagic
                             }
                             if (st != string.Empty)
                             {
-                                st = st.Remove(st.Length - 1,1);
+                                st = st.Remove(st.Length - 1, 1);
                                 Plans.Add(st);
                             }
                         }
@@ -143,10 +143,10 @@ namespace ThingMagic
                     }
                     break;
                 case "/reader/gen2/accesspassword":
-                    value = new Gen2.Password(Convert.ToUInt32(valstr,16));
+                    value = new Gen2.Password(Convert.ToUInt32(valstr, 16));
                     break;
                 case "/reader/gen2/session":
-                   value = (Gen2.Session)Enum.Parse(typeof(Gen2.Session), valstr, true);
+                    value = (Gen2.Session)Enum.Parse(typeof(Gen2.Session), valstr, true);
                     break;
                 case "/reader/gen2/blf":
                     value = (Gen2.LinkFrequency)Enum.Parse(typeof(Gen2.LinkFrequency), valstr, true);
@@ -155,31 +155,31 @@ namespace ThingMagic
                     value = (Gen2.TagEncoding)Enum.Parse(typeof(Gen2.TagEncoding), valstr, true);
                     break;
                 case "/reader/iso180006b/blf":
-                      value = (Iso180006b.LinkFrequency)Enum.Parse(typeof(Iso180006b.LinkFrequency), valstr, true);
+                    value = (Iso180006b.LinkFrequency)Enum.Parse(typeof(Iso180006b.LinkFrequency), valstr, true);
                     break;
                 case "/reader/gen2/target":
-                   value = (Gen2.Target)Enum.Parse(typeof(Gen2.Target), valstr, true);
-                   break;
+                    value = (Gen2.Target)Enum.Parse(typeof(Gen2.Target), valstr, true);
+                    break;
                 case "/reader/gen2/tari":
-                   value = (Gen2.Tari)Enum.Parse(typeof(Gen2.Tari), valstr, true);
-                   break;
-               case "/reader/gen2/protocolextension":
-                   value = (Gen2.Tari)Enum.Parse(typeof(Gen2.ProtocolExtension), valstr, true);
-                   break;
-               case "/reader/regulatory/mode":
-                   value = Enum.Parse(typeof(Reader.RegulatoryMode), valstr, true);
-                   break;
-               case "/reader/regulatory/modulation":
-                   value = Enum.Parse(typeof(Reader.RegulatoryModulation), valstr, true);
-                   break;
+                    value = (Gen2.Tari)Enum.Parse(typeof(Gen2.Tari), valstr, true);
+                    break;
+                case "/reader/gen2/protocolextension":
+                    value = (Gen2.Tari)Enum.Parse(typeof(Gen2.ProtocolExtension), valstr, true);
+                    break;
+                case "/reader/regulatory/mode":
+                    value = Enum.Parse(typeof(Reader.RegulatoryMode), valstr, true);
+                    break;
+                case "/reader/regulatory/modulation":
+                    value = Enum.Parse(typeof(Reader.RegulatoryModulation), valstr, true);
+                    break;
                 case "/reader/usermode":
-                     value = (SerialReader.UserMode)Enum.Parse(typeof(SerialReader.UserMode), (string)valstr, true);
-                break;
+                    value = (SerialReader.UserMode)Enum.Parse(typeof(SerialReader.UserMode), (string)valstr, true);
+                    break;
                 case "/reader/stats/enable":
-                    valstr = valstr.Trim(new char[] {'[', ']'});
+                    valstr = valstr.Trim(new char[] { '[', ']' });
                     value = valstr != string.Empty
-                        ? (Reader.Stat.StatsFlag) Enum.Parse(typeof (Reader.Stat.StatsFlag), valstr, true)
-                        : (Reader.Stat.StatsFlag) Enum.Parse(typeof (Reader.Stat.StatsFlag), "NONE", true);
+                        ? (Reader.Stat.StatsFlag)Enum.Parse(typeof(Reader.Stat.StatsFlag), valstr, true)
+                        : (Reader.Stat.StatsFlag)Enum.Parse(typeof(Reader.Stat.StatsFlag), "NONE", true);
                     break;
                 case "/reader/gen2/writemode":
                     value = (Gen2.WriteMode)Enum.Parse(typeof(Gen2.WriteMode), valstr, true);
@@ -191,15 +191,15 @@ namespace ThingMagic
                     value = (Iso180006b.ModulationDepth)Enum.Parse(typeof(Iso180006b.ModulationDepth), valstr, true);
                     break;
                 case "/reader/gen2/q":
-                    Gen2.Q setQ=null;
+                    Gen2.Q setQ = null;
                     if (-1 != valstr.IndexOf("DynamicQ"))
                     {
                         setQ = new Gen2.DynamicQ();
                     }
                     else
                     {
-                       string resultString = Regex.Match(valstr, @"\d+").Value;
-                        int q=Int32.Parse(resultString);
+                        string resultString = Regex.Match(valstr, @"\d+").Value;
+                        int q = Int32.Parse(resultString);
                         setQ = new Gen2.StaticQ((byte)q);
                     }
                     value = setQ;
@@ -213,17 +213,17 @@ namespace ThingMagic
                     break;
                 case "/reader/gen2/initq":
                     Gen2.InitQ queue = new Gen2.InitQ();
-                    if(valstr.StartsWith("[") && valstr.EndsWith("]"))
+                    if (valstr.StartsWith("[") && valstr.EndsWith("]"))
                     {
-                        valstr = valstr.Substring(1, valstr.Length-2);
-                        string[] qValue= valstr.Split(',');
+                        valstr = valstr.Substring(1, valstr.Length - 2);
+                        string[] qValue = valstr.Split(',');
                         foreach (string str1 in qValue)
                         {
                             string str = str1.Trim();
-                            if(str.StartsWith("qEnable:"))
+                            if (str.StartsWith("qEnable:"))
                             {
                                 int index = str.IndexOf(":");
-                                string qEnableVal = str.Substring(index+1).Trim();
+                                string qEnableVal = str.Substring(index + 1).Trim();
                                 queue.qEnable = Convert.ToBoolean(qEnableVal);
                             }
                             else if (str.StartsWith("initialQ:"))
@@ -251,7 +251,7 @@ namespace ThingMagic
                                 val |= SerialReader.TagMetadataFlag.NONE;
                                 break;
                             case "ANTENNAID":
-                                val  |= SerialReader.TagMetadataFlag.ANTENNAID;
+                                val |= SerialReader.TagMetadataFlag.ANTENNAID;
                                 break;
                             case "DATA":
                                 val |= SerialReader.TagMetadataFlag.DATA;
@@ -373,25 +373,25 @@ namespace ThingMagic
                         {
                             throw new Exception("Invalid number of arguments for ReadPlan filter");
                         }
-                        foreach (string  arg in select)
+                        foreach (string arg in select)
                         {
-                            if(-1!= arg.IndexOf("Invert"))
+                            if (-1 != arg.IndexOf("Invert"))
                             {
                                 Invert = Convert.ToBoolean(arg.Split('=')[1]);
                             }
-                            else if(-1!= arg.IndexOf("Bank"))
+                            else if (-1 != arg.IndexOf("Bank"))
                             {
                                 bank = (Gen2.Bank)Enum.Parse(typeof(Gen2.Bank), arg.Split('=')[1], true);
                             }
-                            else if(-1!= arg.IndexOf("BitPointer"))
+                            else if (-1 != arg.IndexOf("BitPointer"))
                             {
                                 BitPointer = Convert.ToUInt32(arg.Split('=')[1]);
                             }
-                            else if(-1!= arg.IndexOf("BitLength"))
+                            else if (-1 != arg.IndexOf("BitLength"))
                             {
                                 BitLength = Convert.ToUInt16(arg.Split('=')[1]);
                             }
-                            else if(-1!= arg.IndexOf("Mask"))
+                            else if (-1 != arg.IndexOf("Mask"))
                             {
                                 mask = StringToByteArray(arg.Split('=')[1]);
                             }
@@ -400,7 +400,7 @@ namespace ThingMagic
                                 throw new Exception("Invalid Argument in ReadPlan");
                             }
                         }
-                        tf = new Gen2.Select(Invert,bank,BitPointer,BitLength,mask);
+                        tf = new Gen2.Select(Invert, bank, BitPointer, BitLength, mask);
                     }
                     else if (-1 != filterData.IndexOf("EPC"))
                     {
@@ -410,8 +410,8 @@ namespace ThingMagic
                     }
                     else
                     {
-                        if(!filterData.Equals("null"))
-                        throw new Exception("Invalid Argument in ReadPlan");
+                        if (!filterData.Equals("null"))
+                            throw new Exception("Invalid Argument in ReadPlan");
                     }
                 }
                 else if (-1 != line.IndexOf("Op"))
@@ -437,29 +437,29 @@ namespace ThingMagic
                                 }
                                 else if (-1 != arg.IndexOf("WordAddress"))
                                 {
-                                   wordAddress = Convert.ToUInt32(arg.Split('=')[1]);
+                                    wordAddress = Convert.ToUInt32(arg.Split('=')[1]);
                                 }
                                 else if (-1 != arg.IndexOf("Len"))
                                 {
-                                   length = Convert.ToByte(arg.Split('=')[1]);
+                                    length = Convert.ToByte(arg.Split('=')[1]);
                                 }
                                 else
                                 {
                                     throw new Exception("Invalid Argument in ReadPlan TagOp");
                                 }
                             }
-                            op = new Gen2.ReadData(bank,wordAddress,length);
+                            op = new Gen2.ReadData(bank, wordAddress, length);
                         }
                         else
                         {
-                            if(!tagOpData.Equals("null"))
-                            throw new Exception("Invalid Argument in ReadPlan");
+                            if (!tagOpData.Equals("null"))
+                                throw new Exception("Invalid Argument in ReadPlan");
                         }
                     }
                 }
                 else if (-1 != line.IndexOf("UseFastSearch"))
                 {
-                    srp.UseFastSearch= Convert.ToBoolean(line.Split('=')[1]);
+                    srp.UseFastSearch = Convert.ToBoolean(line.Split('=')[1]);
                 }
                 else if (-1 != line.IndexOf("Weight"))
                 {
@@ -507,6 +507,9 @@ namespace ThingMagic
                         break;
                     case "MIFARE_MINI":
                         types |= Iso14443a.TagType.MIFARE_MINI;
+                        break;
+                    case "ULTRALIGHT_NTAG":
+                        types |= Iso14443a.TagType.ULTRALIGHT_NTAG;
                         break;
                     default:
                         throw new Exception(tag.Trim() + " is invalid tagtype");
@@ -646,6 +649,12 @@ namespace ThingMagic
                     case "EM_4100":
                         types |= Lf125khz.TagType.EM_4100;
                         break;
+                    case "KERI":
+                        types |= Lf125khz.TagType.KERI;
+                        break;
+                    case "INDALA":
+                        types |= Lf125khz.TagType.INDALA;
+                        break;
                     default:
                         throw new Exception(tag.Trim() + " is invalid tagtype");
                 }
@@ -784,7 +793,7 @@ namespace ThingMagic
                 {
                     throw new FileNotFoundException("Unable to find the configuration properties file in" + filePath);
                 }
-                List<KeyValuePair<string,string>> loadConfigProperties = new List<KeyValuePair<string, string>>();
+                List<KeyValuePair<string, string>> loadConfigProperties = new List<KeyValuePair<string, string>>();
                 loadConfigProperties = GetProperties(filePath);
                 tempFilePath = Path.Combine(Path.GetDirectoryName(filePath), "DeviceConfig." + DateTime.Now.ToString("yyyyMMdd_HHmmss"));
                 r.SaveConfig(tempFilePath);
@@ -817,9 +826,9 @@ namespace ThingMagic
                             {
                                 r.notifyExceptionListeners(new ReaderException("\"" + item.Key + "\" is either read only or not supported by reader. Skipping this param"));
                             }
-                            else if(-1 != ex.Message.IndexOf("Illegal set of GPI for trigger read"))
+                            else if (-1 != ex.Message.IndexOf("Illegal set of GPI for trigger read"))
                             {
-                                r.notifyExceptionListeners(new ReaderException("Invalid value " + item.Value + " for " + item.Key + " " + ex.Message+". Skipping this param"));
+                                r.notifyExceptionListeners(new ReaderException("Invalid value " + item.Value + " for " + item.Key + " " + ex.Message + ". Skipping this param"));
                             }
                             else
                             {
@@ -839,7 +848,7 @@ namespace ThingMagic
                             if (item.Key.Equals("/reader/tagReadData/reportRssiInDbm"))
                                 r.notifyExceptionListeners(new ReaderException(ex.Message + ". Skipping this param"));
                             else
-                            r.notifyExceptionListeners(new ReaderException(item.Key + " is " +ex.Message+". Skipping this param"));
+                                r.notifyExceptionListeners(new ReaderException(item.Key + " is " + ex.Message + ". Skipping this param"));
                         }
                         else if (ex is ReaderCommException)
                         {
@@ -861,7 +870,7 @@ namespace ThingMagic
                                 RollbackConfigData(r, tempFilePath);
                                 break;
                             }
-                            r.notifyExceptionListeners(new ReaderException("Invalid value " + item.Value + 
+                            r.notifyExceptionListeners(new ReaderException("Invalid value " + item.Value +
                                 " for " + item.Key + " " + ex.Message));
                         }
                     }
@@ -870,8 +879,8 @@ namespace ThingMagic
             }
             catch (Exception ex)
             {
-                if(tempFilePath!=string.Empty)
-                File.Delete(tempFilePath);
+                if (tempFilePath != string.Empty)
+                    File.Delete(tempFilePath);
                 throw new ReaderException(ex.Message);
             }
         }
@@ -898,7 +907,7 @@ namespace ThingMagic
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public List<KeyValuePair<string,string>> GetProperties(string path)
+        public List<KeyValuePair<string, string>> GetProperties(string path)
         {
             List<KeyValuePair<string, string>> Properties = new List<KeyValuePair<string, string>>();
             //KeyValuePair<string, string> Properties = new KeyValuePair<string, string>();
@@ -930,16 +939,16 @@ namespace ThingMagic
                 }
                 bool flag1 = true, flag2 = true;
                 for (int i = 0; i < Properties.Count; i++)
-                {                    
-                    if (Properties[i].Key== "/reader/radio/portReadPowerList"&&flag1)
-                    {                        
+                {
+                    if (Properties[i].Key == "/reader/radio/portReadPowerList" && flag1)
+                    {
                         KeyValuePair<string, string> keyValuePair = Properties[i];
                         Properties.RemoveAt(i);
                         Properties.Add(keyValuePair);
                         i--;
                         flag1 = false;
                     }
-                    else if (Properties[i].Key== "/reader/radio/portWritePowerList"&&flag2)
+                    else if (Properties[i].Key == "/reader/radio/portWritePowerList" && flag2)
                     {
                         KeyValuePair<string, string> keyValuePair = Properties[i];
                         Properties.RemoveAt(i);
@@ -947,7 +956,7 @@ namespace ThingMagic
                         i--;
                         flag2 = false;
                     }
-                }                
+                }
             }
             return Properties;
         }
@@ -985,11 +994,11 @@ namespace ThingMagic
             Dictionary<string, string> saveConfigurationList = new Dictionary<string, string>();
             string[] names;
             names = r.ParamList();
-            
+
             foreach (string name in names)
             {
-                if(!ReadOnlyPararameters.Contains(name))
-                AddParameterToList(name, r, ref saveConfigurationList);
+                if (!ReadOnlyPararameters.Contains(name))
+                    AddParameterToList(name, r, ref saveConfigurationList);
             }
             return saveConfigurationList;
         }
@@ -1084,15 +1093,15 @@ namespace ThingMagic
             ReadPlan rp = (ReadPlan)value;
             readPlan += "SimpleReadPlan:[";
             SimpleReadPlan srp = (SimpleReadPlan)rp;
-            readPlan += "Antennas="+ArrayToString(srp.Antennas);
+            readPlan += "Antennas=" + ArrayToString(srp.Antennas);
             readPlan += "," + "Protocol=" + srp.Protocol.ToString();
             if (srp.Filter != null)
             {
-                if(srp.Filter is Gen2.Select)
+                if (srp.Filter is Gen2.Select)
                 {
-                    Gen2.Select sf =(Gen2.Select)srp.Filter;
-                    readPlan+= ","+string.Format("Filter=Gen2.Select:[Invert={0},Bank={1},BitPointer={2},BitLength={3},Mask={4}]",
-                        (sf.Invert?"true" : "false"),sf.Bank,sf.BitPointer,sf.BitLength,ByteFormat.ToHex(sf.Mask));
+                    Gen2.Select sf = (Gen2.Select)srp.Filter;
+                    readPlan += "," + string.Format("Filter=Gen2.Select:[Invert={0},Bank={1},BitPointer={2},BitLength={3},Mask={4}]",
+                        (sf.Invert ? "true" : "false"), sf.Bank, sf.BitPointer, sf.BitLength, ByteFormat.ToHex(sf.Mask));
                 }
                 else
                 {
@@ -1124,7 +1133,7 @@ namespace ThingMagic
             {
                 readPlan += "," + "UseFastSearch=" + srp.UseFastSearch.ToString();
             }
-            readPlan += ","+ "Weight=" + srp.Weight.ToString() + "]";
+            readPlan += "," + "Weight=" + srp.Weight.ToString() + "]";
             return readPlan;
         }
         #endregion

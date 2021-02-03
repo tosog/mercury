@@ -26,13 +26,14 @@
 /***  ENABLE_FILTER  ***/
 #endif
 
-#define ENABLE_EMBEDDED_TAGOP 0
+#define ENABLE_EMBEDDED_READ 0
 
 #ifdef TMR_ENABLE_HF_LF
 #define ENABLE_SYSTEM_INFORMATION_MEMORY 0
-#define ENABLE_BLOCK_PROTECTION_STATUS 0
-#define ENABLE_SECURE_ID 0
+#define ENABLE_BLOCK_PROTECTION_STATUS   0
+#define ENABLE_SECURE_ID_EMBEDDED_READ   0
 #endif /* TMR_ENABLE_HF_LF */
+
 
 /* Enable this to use transportListener */
 #ifndef USE_TRANSPORT_LISTENER
@@ -123,6 +124,8 @@ void parseAntennaList(uint8_t *antenna, uint8_t *antennaCount, char *args)
   }
   *antennaCount = i;
 }
+
+bool isModelM3e = false;
 
 #ifdef TMR_ENABLE_HF_LF
 #if ENABLE_SYSTEM_INFORMATION_MEMORY
@@ -238,36 +241,9 @@ void parseBlockProtectionStatusResponse(uint8_t *data, uint32_t address, uint8_t
   }
 }
 #endif /* ENABLE_BLOCK_PROTECTION_STATUS */
-
-#if ENABLE_SECURE_ID
-void parseSecureIdResponse(uint8_t *data)
-{
-  uint8_t  idx = 0, secureIdLen = 0;
-  uint8_t uid[8], secureID[8];
-  char uidStr[17], secureIDStr[17];
-
-  //Extract UID length
-  uint8_t uidLength = data[idx++];
-
-  //Copy the uid into uid array.
-  memcpy(uid, &data[idx], uidLength);
-  TMR_bytesToHex(uid, uidLength, uidStr);
-  idx += uidLength;
-  printf("UID: %s\n", uidStr);
-
-  // Extract Secure id length and ID
-  secureIdLen = data[idx++];
-
-  //Copy the Secure id into secureID array.
-  memcpy(secureID, &data[idx], secureIdLen);
-  TMR_bytesToHex(secureID, secureIdLen, secureIDStr);
-  idx += secureIdLen;
-  printf("Secure ID: %s\n", secureIDStr);
-}
-#endif /* ENABLE_SECURE_ID */
 #endif /* TMR_ENABLE_HF_LF */
 
-#if ENABLE_EMBEDDED_TAGOP
+#if ENABLE_EMBEDDED_READ || ENABLE_SECURE_ID_EMBEDDED_READ
 void ReadTags(TMR_Reader* rp)
 {
   TMR_Status ret;
@@ -298,22 +274,29 @@ void ReadTags(TMR_Reader* rp)
 
     TMR_bytesToHex(trd.tag.epc, trd.tag.epcByteCount, epcStr);
     printf("Embedded opeartion is successful.");
-    printf("\nTag ID %s", epcStr);
+    printf("\nTag ID  : %s\n", epcStr);
 
     if (0 < trd.data.len)
     {
-      char dataStr[512];
-      TMR_bytesToHex(trd.data.list, trd.data.len, dataStr);
 #ifdef TMR_ENABLE_HF_LF
       if (0x8000 == trd.data.len)
       {
-        ret = GETU16AT(trd.data.list, 0);
+        ret = TMR_translateErrorCode(GETU16AT(trd.data.list, 0));
         checkerr(rp, ret, 0, "Embedded tagOp failed:");
       }
       else
 #endif /* TMR_ENABLE_HF_LF */
       {
-        printf("  data(%d): %s\n", trd.data.len, dataStr);
+        char dataStr[512];
+        uint32_t dataLen = trd.data.len;
+
+        if(isModelM3e)
+        {
+          dataLen = tm_u8s_per_bits(trd.data.len);
+        }
+
+        TMR_bytesToHex(trd.data.list, dataLen, dataStr);
+        printf("Data(%d): %s\n", trd.data.len, dataStr);
       }
     }
   }
@@ -339,7 +322,7 @@ void performEmbeddedOperation(TMR_Reader *reader, TMR_ReadPlan *plan, TMR_TagOp 
 
   ReadTags(reader);
 }
-#endif /* ENABLE_EMBEDDED_TAGOP */
+#endif /* ENABLE_EMBEDDED_READ */
 
 int main(int argc, char *argv[])
 {
@@ -403,8 +386,15 @@ int main(int argc, char *argv[])
   checkerr(rp, ret, 1, "connecting reader");
 
   model.value = string;
+  model.max   = sizeof(string);
   TMR_paramGet(rp, TMR_PARAM_VERSION_MODEL, &model);
   checkerr(rp, ret, 1, "Getting version model");
+
+  //Enable "isModelM3e" flag if module is M3e.
+  if (0 == strcmp("M3e", model.value))
+  {
+    isModelM3e = true;
+  }
 
   if (0 != strcmp("M3e", model.value))
   {
@@ -533,9 +523,9 @@ int main(int argc, char *argv[])
 #else
     pfilter = NULL;
 #endif
-#ifdef ENABLE_EMBEDDED_TAGOP
+#ifdef ENABLE_EMBEDDED_READ
       TMR_RP_init_simple(&plan, antennaCount, antennaList, TMR_TAG_PROTOCOL_GEN2, 1000);
-#endif /* ENABLE_EMBEDDED_TAGOP */
+#endif /* ENABLE_EMBEDDED_READ */
 
     /* WriteData and ReadData */
     {
@@ -575,10 +565,10 @@ int main(int argc, char *argv[])
       TMR_bytesToHex(response.list, response.len, dataStr);
       printf("\nRead Data:%s,length : %d words\n", dataStr, response.len/2);
 
-      // Enable embedded ReadAfterWrite operation by enabling macro ENABLE_EMBEDDED_TAGOP
-#if ENABLE_EMBEDDED_TAGOP
+      // Enable embedded ReadAfterWrite operation by enabling macro ENABLE_EMBEDDED_READ
+#if ENABLE_EMBEDDED_READ
         performEmbeddedOperation(rp, &plan, &listop, pfilter);
-#endif /* ENABLE_EMBEDDED_TAGOP */
+#endif /* ENABLE_EMBEDDED_READ */
     }
     /* Clear the tagopList for next operation */
     tagopList.list = NULL;
@@ -621,8 +611,9 @@ int main(int argc, char *argv[])
       TMR_bytesToHex(response.list, response.len, dataStr);
       printf("\nRead Data:%s,length : %d words\n", dataStr, response.len/2);
 
-      // Enable embedded ReadAfterWrite operation by enabling macro ENABLE_EMBEDDED_TAGOP
-#if ENABLE_EMBEDDED_TAGOP
+      // Enable embedded ReadAfterWrite operation by enabling macro ENABLE_EMBEDDED_READ
+#if ENABLE_EMBEDDED_READ
+      {
 #if ENABLE_FILTER
        /* Here in stand-alone ReadAfterWrite operation EPC has been changed.
        * To read the same tag in Embedded ReadAfterWrite operation, filter has to replace by new written EPC.
@@ -631,7 +622,8 @@ int main(int argc, char *argv[])
        TMR_TF_init_gen2_select(pfilter, false, TMR_GEN2_BANK_EPC, 32, bitCount, epcData);
 #endif /* ENABLE_FILTER */
         performEmbeddedOperation(rp, &plan, &listop, pfilter);
-#endif /* ENABLE_EMBEDDED_TAGOP */
+      }
+#endif /* ENABLE_EMBEDDED_READ */
     }
   }
 #endif
@@ -698,9 +690,9 @@ int main(int argc, char *argv[])
     filterList.tagFilterList = filterArray;
     filterList.len = 0;
 
-    // Filters the tag based on UID
+    // Filters the tag based on tagType
     TMR_TF_init_tagtype_select(&tagtypeSelect, trd.tagType);
-    // Filters the tag based on tagtype
+    // Filters the tag based on UID
     TMR_TF_init_uid_select(&uidSelect, (trd.tag.epcByteCount * 8), trd.tag.epc);
 
     /*Assemble two filters in filterArray*/
@@ -775,10 +767,10 @@ int main(int argc, char *argv[])
       printf("\n");
     }
 
-    // Enable embedded Read operation by enabling macro ENABLE_EMBEDDED_TAGOP
-#if ENABLE_EMBEDDED_TAGOP
+    // Enable embedded Read operation by enabling macro ENABLE_EMBEDDED_READ
+#if ENABLE_EMBEDDED_READ
       performEmbeddedOperation(rp, &plan, &readop, pfilter);
-#endif /* ENABLE_EMBEDDED_TAGOP */
+#endif /* ENABLE_EMBEDDED_READ */
 
 #if ENABLE_SYSTEM_INFORMATION_MEMORY
     /** 
@@ -827,7 +819,7 @@ int main(int argc, char *argv[])
     }
 #endif /* ENABLE_BLOCK_PROTECTION_STATUS */
 
-#if ENABLE_SECURE_ID
+#if ENABLE_SECURE_ID_EMBEDDED_READ
     /* Read secure id of tag. Address and length fields have no significance if memory type is SECURE_ID. */
     {
       address = 0;
@@ -837,17 +829,10 @@ int main(int argc, char *argv[])
       ret = TMR_TagOp_init_ReadMemory(&readop, TMR_TAGOP_SECURE_ID, address, dataLen);
       checkerr(rp, ret, 1, "creating Secure read ID tagop");
 
-      // Perform the read memory standalone tag operation
-      ret = TMR_executeTagOp(rp, &readop, pfilter, &response);
-      checkerr(rp, ret, 1, "executing Secure read ID tagop");
-
-      // parse secure id operation response.
-      if (response.len)
-      {
-        parseSecureIdResponse(response.list);
-      }
+      // Perform embedded read operation for Secure read as standalone is unsupported for it.
+      performEmbeddedOperation(rp, &plan, &readop, pfilter);
     }
-#endif /* ENABLE_SECURE_ID */
+#endif /* ENABLE_SECURE_ID_EMBEDDED_READ */
 #endif /* TMR_ENABLE_HF_LF */
   }
 

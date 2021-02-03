@@ -487,6 +487,11 @@
             Mifare Mini tag type
             </summary>
         </member>
+        <member name="F:ThingMagic.Iso14443a.TagType.ULTRALIGHT_NTAG">
+            <summary>
+            Ultralight NTAG tag type
+            </summary>
+        </member>
         <member name="T:ThingMagic.Iso14443a.TagData">
             <summary>
             ISO14443A specific version of TagData.
@@ -703,24 +708,34 @@
             Auto detect - supports all tag types
             </summary>
         </member>
-        <member name="F:ThingMagic.Lf125khz.TagType.AWID">
-            <summary>
-            AWID tag type
-            </summary>
-        </member>
         <member name="F:ThingMagic.Lf125khz.TagType.HID_PROX">
             <summary>
             HID PROX II tag type
             </summary>
         </member>
-        <member name="F:ThingMagic.Lf125khz.TagType.HITAG_1">
+        <member name="F:ThingMagic.Lf125khz.TagType.AWID">
             <summary>
-            NXP HITAG 1 tag type
+            AWID tag type
+            </summary>
+        </member>
+        <member name="F:ThingMagic.Lf125khz.TagType.KERI">
+            <summary>
+            KERI tag type
+            </summary>
+        </member>
+        <member name="F:ThingMagic.Lf125khz.TagType.INDALA">
+            <summary>
+            INDALA tag type
             </summary>
         </member>
         <member name="F:ThingMagic.Lf125khz.TagType.HITAG_2">
             <summary>
             NXP HITAG 2 tag type
+            </summary>
+        </member>
+        <member name="F:ThingMagic.Lf125khz.TagType.HITAG_1">
+            <summary>
+            NXP HITAG 1 tag type
             </summary>
         </member>
         <member name="F:ThingMagic.Lf125khz.TagType.EM_4100">
@@ -4078,6 +4093,11 @@
             Impinj Monza4 silicon
             </summary>
         </member>
+        <member name="F:ThingMagic.Gen2.Gen2_SiliconType.GEN2_EMMICRO_EM4325_SILICON">
+            <summary>
+            EM Micro EM4325 silicon
+            </summary>
+        </member>
         <member name="F:ThingMagic.Gen2.Gen2_SiliconType.GEN2_IAV_DENATRAN_SILICON">
             <summary>
             IAV Denatran silicon
@@ -5596,6 +5616,92 @@
             </summary>
             <param name="accessPassword"></param>
         </member>
+        <member name="T:ThingMagic.Gen2.EMMicro">
+            <summary>
+            EMMicro class
+            </summary>
+        </member>
+        <member name="T:ThingMagic.Gen2.EMMicro.EM4325">
+            <summary>
+            EM4325
+            </summary>
+        </member>
+        <member name="M:ThingMagic.Gen2.EMMicro.EM4325.#ctor">
+            <summary>
+            default constructor
+            </summary>
+        </member>
+        <member name="T:ThingMagic.Gen2.EMMicro.EM4325.CommandCode">
+            <summary>
+            Enum to hold the command code of each tag operation type
+            </summary>
+        </member>
+        <member name="F:ThingMagic.Gen2.EMMicro.EM4325.CommandCode.GET_SENSOR_DATA_COMMAND">
+            <summary>
+            Gets the sensor data command
+            </summary>
+        </member>
+        <member name="F:ThingMagic.Gen2.EMMicro.EM4325.CommandCode.RESET_ALARMS_COMMAND">
+            <summary>
+            resets the alarm command
+            </summary>
+        </member>
+        <member name="T:ThingMagic.Gen2.EMMicro.EM4325.GetSensorData">
+            <summary>
+            GetSensorData
+            </summary>
+        </member>
+        <member name="F:ThingMagic.Gen2.EMMicro.EM4325.GetSensorData.sendUid">
+            <summary>
+            sendUid - when set to 
+            true, sends UID in response
+            false, response do not include UID.
+            </summary>
+        </member>
+        <member name="F:ThingMagic.Gen2.EMMicro.EM4325.GetSensorData.sendNewSample">
+            <summary>
+            sendNewSample - when set to 
+            true, gets the new sample
+            false, gets the last sample
+            </summary>
+        </member>
+        <member name="F:ThingMagic.Gen2.EMMicro.EM4325.GetSensorData.commandCode">
+            <summary>
+            commandCode indicates the code associated with each operation - be it a getting sensor data or resetting alarms.
+            </summary>
+        </member>
+        <member name="F:ThingMagic.Gen2.EMMicro.EM4325.GetSensorData.bitsToSet">
+            <summary>
+            bitsToSet holds the byte value when sendUid or sendNewSample or both is enabled
+            </summary>
+        </member>
+        <member name="M:ThingMagic.Gen2.EMMicro.EM4325.GetSensorData.#ctor(System.Boolean,System.Boolean)">
+            <summary>
+            GetSensorData
+            </summary>
+            <param name="sendUid">sends/doesnot send Uid in the response</param>
+            <param name="sendNewSample">sends last /new sample</param>
+        </member>
+        <member name="T:ThingMagic.Gen2.EMMicro.EM4325.ResetAlarms">
+            <summary>
+            Class for RESET ALARMS
+            </summary>
+        </member>
+        <member name="F:ThingMagic.Gen2.EMMicro.EM4325.ResetAlarms.fillValue">
+            <summary>
+            fillValue
+            </summary>
+        </member>
+        <member name="F:ThingMagic.Gen2.EMMicro.EM4325.ResetAlarms.commandCode">
+            <summary>
+            commandCode indicates the code associated with each operation - be it a getting sensor data or resetting alarms.
+            </summary>
+        </member>
+        <member name="M:ThingMagic.Gen2.EMMicro.EM4325.ResetAlarms.#ctor">
+            <summary>
+            ResetAlarms default constructor
+            </summary>
+        </member>
         <member name="T:ThingMagic.GpioPin">
             <summary>
             Class representing GPIO pin number and state
@@ -6061,6 +6167,11 @@
             Cache reader stats flag
             </summary>
         </member>
+        <member name="F:ThingMagic.Reader.finishedReading">
+            <summary>
+            Flag to show read status during Read stop trigger
+            </summary>
+        </member>
         <member name="M:ThingMagic.Reader.OnLog(System.String)">
             <summary>
             Generate a debug log message
@@ -6119,6 +6230,12 @@
             <summary>
             Stop reading RFID tags in the background.
             </summary>
+        </member>
+        <member name="M:ThingMagic.Reader.isReadStopped">
+            <summary>
+            This function will check for Stop reading status and will return true once the reader has stopped reading.
+            </summary>
+            <returns></returns>
         </member>
         <member name="M:ThingMagic.Reader.FirmwareLoad(System.IO.Stream)">
             <summary>
@@ -6604,6 +6721,11 @@
             <param name="antennaList">Contains set of antennas provided by user</param>
             <returns>bool representing value</returns>
         </member>
+        <member name="P:ThingMagic.Reader._StatFlag">
+            <summary>
+            Cache reader stats flag
+            </summary>
+        </member>
         <member name="E:ThingMagic.Reader.TagRead">
             <summary>
             Occurs when each tag is read.
@@ -6777,7 +6899,7 @@
         </member>
         <member name="F:ThingMagic.Reader.Region.IS">
             <summary>
-            IS
+            IS region applicable for Micro, M6e-JIC, M6ePlus
             </summary>
         </member>
         <member name="F:ThingMagic.Reader.Region.MY">
@@ -6858,6 +6980,16 @@
         <member name="F:ThingMagic.Reader.Region.UNIVERSAL">
             <summary>
             Universal region is applicable for M3e product
+            </summary>
+        </member>
+        <member name="F:ThingMagic.Reader.Region.IS2">
+            <summary>
+            Israel2(IS2) region applicable for Micro and Nano 
+            </summary>
+        </member>
+        <member name="F:ThingMagic.Reader.Region.NA4">
+            <summary>
+            NA4 region applicable for Micro and M6e 
             </summary>
         </member>
         <member name="F:ThingMagic.Reader.Region.OPEN_EXTENDED">
@@ -9249,6 +9381,11 @@
             Get the Supported Protocol
             </summary>
         </member>
+        <member name="F:ThingMagic.SerialReader.autonomousStreaming">
+            <summary>
+            Flag to show if autonomous streaming is on
+            </summary>
+        </member>
         <member name="F:ThingMagic.SerialReader.model">
             <summary>
             Get the model name.
@@ -9413,6 +9550,13 @@
             <param name="opcode">opcode</param>
             <param name="timeout">Command timeout -- how long we expect the command itself to take (milliseconds)</param>
             <returns>M5e response as byte array, including framing (SOH, length, status, CRC)</returns>
+        </member>
+        <member name="M:ThingMagic.SerialReader.receiveResponse(ThingMagic.SerialTransport,System.String)">
+            <summary>
+            Function to receive the first streaming response after serial port opened and initializes certain variables
+            </summary>
+            <param name="serial"></param>
+            <param name="mdl"></param>
         </member>
         <member name="M:ThingMagic.SerialReader.ReadAll(ThingMagic.SerialTransport,System.Byte[],System.Int32,System.Int32)">
             <summary>
@@ -11073,6 +11217,13 @@
             <param name="serant">M5e serial protocol antenna ID (TX: 4 msbs, RX: 4 lsbs)</param>
             <returns>Logical antenna number</returns>
         </member>
+        <member name="M:ThingMagic.SerialReader.TranslateSerialAntenna(System.Byte)">
+            <summary>
+            Translates the serial antenna
+            </summary>
+            <param name="txrx"></param>
+            <returns></returns>
+        </member>
         <member name="M:ThingMagic.SerialReader.GetDefaultVirt(System.Byte)">
             <summary>
             Map (tx,rx) ports to virtual antenna
@@ -11940,6 +12091,11 @@
             and returns the data in byte array. readoffset variable is updated according the flags retrieved.
             </summary>
         </member>
+        <member name="P:ThingMagic.SerialReader.IsProtocolDynamicSwitching">
+            <summary>
+            Enable/Disable Dynamic Protocol Switching
+            </summary>
+        </member>
         <member name="P:ThingMagic.SerialReader.CurrentProtocol">
             <summary>
             Set the current protocol
@@ -12130,6 +12286,16 @@
         <member name="F:ThingMagic.SerialReader.SerialRegion.UNIVERSAL">
             <summary>
             Universal region is applicable for M3e product
+            </summary>
+        </member>
+        <member name="F:ThingMagic.SerialReader.SerialRegion.IS2">
+            <summary>
+            Israel2(IS2) region 
+            </summary>
+        </member>
+        <member name="F:ThingMagic.SerialReader.SerialRegion.NA4">
+            <summary>
+            NA4 region applicable for Micro and M6e 
             </summary>
         </member>
         <member name="F:ThingMagic.SerialReader.SerialRegion.OPEN_EXTENDED">
@@ -15095,6 +15261,13 @@
         <member name="F:ThingMagic.TagReadData.isErrorData">
             <summary>
             This flag is used to differentiate data is error data or actual data. Data is considered as error when any tag operation fails.
+            </summary>
+        </member>
+        <member name="F:ThingMagic.TagReadData.dataLength">
+            <summary>
+            This indicates length of data in bits for M3e and in bytes for UHF.
+            In case of data length not a multiple of 8, data gets padded since it is represented in bytes.
+            In this case, dataLength tells the actual size of data
             </summary>
         </member>
         <member name="M:ThingMagic.TagReadData.ToString">

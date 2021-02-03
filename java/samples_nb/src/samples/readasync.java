@@ -11,9 +11,19 @@ import java.util.Calendar;
 
 public class readasync
 {
-    static SerialPrinter serialPrinter;
+  static SerialPrinter serialPrinter;
   static StringPrinter stringPrinter;
   static TransportListener currentListener;
+  /** controlFlag controls the issuing of stopRead command multiple times 
+   * in exception listener.
+   */
+  static boolean controlFlag;
+  /** isStopReadSentFromExceptionListener indicates the whether stopRead
+   *  command is sent. If not from main, stopRead command will be sent.
+   */
+  static boolean isStopReadSentFromExceptionListener = false;
+  static ReadListener rl;
+  static ReadExceptionListener exceptionListener;
 
   static void usage()
   {
@@ -154,24 +164,29 @@ public class readasync
             r.paramSet(TMConstants.TMR_PARAM_READ_PLAN, plan);
         }
         
-        ReadExceptionListener exceptionListener = new TagReadExceptionReceiver();
+        exceptionListener = new TagReadExceptionReceiver();
         r.addReadExceptionListener(exceptionListener);
         // Create and add tag listener
-        ReadListener rl = new PrintListener();
+        rl = new PrintListener();
         r.addReadListener(rl);
+        controlFlag = true;
         // search for tags in the background
-        r.startReading();   
+        r.startReading();
         System.out.println("Do other work here");
         Thread.sleep(500);
         System.out.println("Do other work here");
         Thread.sleep(500);
-        r.stopReading();
 
-        r.removeReadListener(rl);
-        r.removeReadExceptionListener(exceptionListener);
+        if(!isStopReadSentFromExceptionListener)
+        {
+            r.stopReading();
 
-        // Shut down reader
-        r.destroy();
+            r.removeReadListener(rl);
+            r.removeReadExceptionListener(exceptionListener);
+
+            // Shut down reader
+            r.destroy();
+        }
     } 
     catch (ReaderException re)
     {
@@ -213,6 +228,24 @@ public class readasync
             if(re.getMessage().equals("Connection Lost"))
             {
                 System.exit(1);
+            }
+            if(re.getMessage().equals("The reader received a valid command with an unsupported or invalid parameter"))
+            {
+                if(controlFlag)
+                {
+                    // Interrupt the current thread
+                    Thread.currentThread().interrupt();
+                    controlFlag = false;
+                    //Indicate stop read command is sent by enabling isStopReadSentFromExceptionListener flag
+                    isStopReadSentFromExceptionListener = true;
+                    //Issue stop read
+                    r.stopReading();
+                    //Remove all the listeners
+                    r.removeReadListener(rl);
+                    r.removeReadExceptionListener(exceptionListener);
+                    //destroy the reader object
+                    r.destroy();
+                }
             }
         }
     }

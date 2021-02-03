@@ -32,8 +32,8 @@
                 <DataGridTextColumn x:Name="epcColumnInAscii" FontFamily="Consolas" Visibility="Collapsed" />
                 <DataGridTextColumn x:Name="epcColumnInReverseBase36" Visibility="Collapsed" />
                 <DataGridTextColumn x:Name="dataColumn" Visibility="Collapsed" />
-                <DataGridTextColumn x:Name="dataSecureColumn" Visibility="Collapsed" />
                 <DataGridTextColumn x:Name="dataColumnInAscii" FontFamily="Consolas" Visibility="Collapsed" />
+                <DataGridTextColumn x:Name="dataSecureColumn" Visibility="Collapsed" />
                 <!--<DataGridTextColumn x:Name="dataColumnReverseBase36" Visibility="Collapsed" />-->
                 <DataGridTextColumn x:Name="timeStampColumn" Binding="{Binding Mode=OneWay}"/>
                 <DataGridTextColumn x:Name="rssiColumn" />

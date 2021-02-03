@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
   checkerr(rp, ret, 1, "connecting reader");
 
   model.value = string;
+  model.max   = sizeof(string);
   TMR_paramGet(rp, TMR_PARAM_VERSION_MODEL, &model);
   checkerr(rp, ret, 1, "Getting version model");
 

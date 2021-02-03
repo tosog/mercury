@@ -99,6 +99,10 @@ public class TagReadData
 
   boolean isAsyncRead = false;
   public boolean isErrorData = false;
+  // This indicates length of data in bits for M3e and in bytes for UHF.
+  // In case of data length not a multiple of 8, data gets padded since it is represented in bytes.
+  // In this case, dataLength tells the actual size of data
+  public int dataLength = 0;
   // Non-public constructor
   TagReadData()
   {

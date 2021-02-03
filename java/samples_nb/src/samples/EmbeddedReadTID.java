@@ -150,11 +150,12 @@ public class EmbeddedReadTID
             tagReads = r.read(500);
             for (TagReadData tr : tagReads)
             {
+                System.out.println("Tag ID: " + tr.epcString());
                 for (byte b : tr.getData())
                 {
-                    System.out.printf("%02x", b);
-                    System.out.printf("\n");
+                    System.out.printf("%02x\t", b);
                 }
+                System.out.printf("\n");
             }
         }
         catch (ReaderException re)

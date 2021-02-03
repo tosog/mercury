@@ -562,6 +562,11 @@ public class LLRPReader extends Reader implements com.thingmagic.Logger
                         try
                         {
                             metaDataFlags = (Set<TagReadData.TagMetadataFlag>)value;
+                            //tagType metadata flag is not supported for llrp readers. Hence throw error when user sets.
+                            if(metaDataFlags.contains(TagReadData.TagMetadataFlag.TAGTYPE))
+                            {
+                                throw new ReaderException("Invalid Argument in \"/reader/metadata\" : " + metaDataFlags);
+                            }
                             int mFlagValue = 0;
                             /**
                              * Need to pass all Gen2 custom parameters and not single values.
@@ -605,8 +610,15 @@ public class LLRPReader extends Reader implements com.thingmagic.Logger
                         }
                         catch(ReaderException re)
                         {
-                            metaDataFlags = EnumSet.of(TagReadData.TagMetadataFlag.NONE);
-                            throw new UnsupportedOperationException("Unsupported parameter : "+TMR_PARAM_READER_METADATA);
+                            if(re.getMessage().contains("Invalid Argument in \"/reader/metadata\" :"))
+                            {
+                                throw re;
+                            }
+                            else
+                            {
+                                metaDataFlags = EnumSet.of(TagReadData.TagMetadataFlag.NONE);
+                                throw new UnsupportedOperationException("Unsupported parameter : "+TMR_PARAM_READER_METADATA);
+                            }
                         }
                     }
                     @Override
@@ -3446,6 +3458,7 @@ public class LLRPReader extends Reader implements com.thingmagic.Logger
         // Build RO Spec based on the read plan        
         log("Building the ROSpec based on Read Plan");
         int aiSpecIterations;
+        UnsignedShortArray antennaIDs = new UnsignedShortArray();
         if(readPlan instanceof MultiReadPlan)
         {
             //roSpecList = new ArrayList<ROSpec>();
@@ -3750,7 +3763,7 @@ public class LLRPReader extends Reader implements com.thingmagic.Logger
 
             // Select which antenna ports we want to use.
             // Setting this property to 0 means all antenna ports.
-            UnsignedShortArray antennaIDs = new UnsignedShortArray(antennaList.length);
+            antennaIDs = new UnsignedShortArray(antennaList.length);
 
             if(antennaList.length == 0)
             {
@@ -4365,8 +4378,8 @@ public class LLRPReader extends Reader implements com.thingmagic.Logger
         if(continuousReading && !(statsListeners == null || statsListeners.isEmpty()))
         {
             RFSurveySpec rFSurveySpec = new RFSurveySpec();
-            SimpleReadPlan rp = (SimpleReadPlan) readPlan;
-            rFSurveySpec.setAntennaID(new UnsignedShort(rp.antennas[0]));
+            // In RFSurveyspec, setting antenna id doesnot have any significance w.r.t antennas. Hence setting it to the first element in antennaIDs[]
+            rFSurveySpec.setAntennaID((antennaIDs.get(0)));
             rFSurveySpec.setStartFrequency(new UnsignedInteger(frequencyHopTableList.get(0).getFrequency().get(0).toInteger()));
             rFSurveySpec.setEndFrequency(new UnsignedInteger(frequencyHopTableList.get(0).getFrequency().get(frequencyHopTableList.get(0).getFrequency().size()-1).toInteger()));
             RFSurveySpecStopTrigger rFSurveySpecStopTrigger = new RFSurveySpecStopTrigger();

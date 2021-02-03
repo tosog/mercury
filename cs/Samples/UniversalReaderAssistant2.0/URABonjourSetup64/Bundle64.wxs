@@ -3,7 +3,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
-  <Bundle Name="Universal Reader Assistant 5.0" Version="$(var.ProductVersion)" Manufacturer="Jadaktech" AboutUrl="https://www.jadaktech.com" IconSourceFile="$(var.SolutionDir)CommanResources\jadakfaviconbg.ico"
+  <Bundle Name="Universal Reader Assistant 5.1" Version="$(var.ProductVersion)" Manufacturer="Jadaktech" AboutUrl="https://www.jadaktech.com" IconSourceFile="$(var.SolutionDir)CommanResources\jadakfaviconbg.ico"
           Copyright="Copyright © 2020 JADAK, a business unit of Novanta Corporation." UpgradeCode="83866c85-5694-4fa7-89ab-ccaaf2a68593">
 
     <bal:Condition Message='You are attempting to run the 64-bit installer on a 32-bit version of Windows. Please check the bit version of Windows type prior to installation of this product.'>

@@ -83,6 +83,13 @@ namespace ThingMagic
         /// This flag is used to differentiate data is error data or actual data. Data is considered as error when any tag operation fails.
         /// </summary>
         public bool isErrorData = false;
+        /// <summary>
+        /// This indicates length of data in bits for M3e and in bytes for UHF.
+        /// In case of data length not a multiple of 8, data gets padded since it is represented in bytes.
+        /// In this case, dataLength tells the actual size of data
+        /// </summary>
+        public int dataLength = 0;
+
         #endregion
 
         #region Properties

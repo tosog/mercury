@@ -1,3 +1,4 @@
+
 /*  @file Lf125Khz.cs
  *  @brief Mercury API - Lf125Khz tag information and interfaces
  *  @author Bindhu Priya Chanda
@@ -46,25 +47,33 @@ namespace ThingMagic
             /// </summary>
             AUTO_DETECT = 0x00000001,
             /// <summary>
-            /// AWID tag type
-            /// </summary>
-            AWID = 0x01000000,
-            /// <summary>
             /// HID PROX II tag type
             /// </summary>
-            HID_PROX = 0x02000000,
+            HID_PROX = 0x01000000,
             /// <summary>
-            /// NXP HITAG 1 tag type
+            /// AWID tag type
             /// </summary>
-            HITAG_1 = 0x04000000,
+            AWID = 0x02000000,
+            /// <summary>
+            /// KERI tag type
+            /// </summary>
+            KERI = 0x04000000,
+            /// <summary>
+            /// INDALA tag type
+            /// </summary>
+            INDALA = 0x08000000,
             /// <summary>
             /// NXP HITAG 2 tag type
             /// </summary>
-            HITAG_2 = 0x08000000,
+            HITAG_2 = 0x10000000,
+            /// <summary>
+            /// NXP HITAG 1 tag type
+            /// </summary>
+            HITAG_1 = 0x20000000,
             /// <summary>
             /// EM4100 tag type
             /// </summary>
-            EM_4100 = 0x10000000,
+            EM_4100 = 0x40000000
         }
         #endregion
 

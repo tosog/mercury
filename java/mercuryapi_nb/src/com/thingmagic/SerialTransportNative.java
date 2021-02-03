@@ -48,7 +48,7 @@ import java.io.IOException;
 import java.net.URI;
 
 
-class SerialTransportNative implements SerialTransport
+public class SerialTransportNative implements SerialTransport
 {
 
   private static native int nativeInit();

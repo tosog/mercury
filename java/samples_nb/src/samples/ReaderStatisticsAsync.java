@@ -1,3 +1,4 @@
+
 /**
  * Sample program that get stats in the background and prints the
  * stats.
@@ -9,6 +10,7 @@ import com.thingmagic.*;
 import com.thingmagic.SerialReader.StatusReport;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
@@ -19,6 +21,7 @@ public class ReaderStatisticsAsync
     static TransportListener currentListener;
     static Reader r = null;
     static SerialReader.ReaderStatsFlag[] getReaderStatisticFlag;
+    static String model;
     static void usage()
     {
         System.out.printf("Usage: Please provide valid arguments, such as:\n"
@@ -129,7 +132,7 @@ public class ReaderStatisticsAsync
                 }
             }
             
-            String model = r.paramGet("/reader/version/model").toString();
+            model = r.paramGet("/reader/version/model").toString();
             if (!model.equalsIgnoreCase("M3e"))
             {
                 if (r.isAntDetectEnabled(antennaList))
@@ -167,7 +170,7 @@ public class ReaderStatisticsAsync
             SerialReader.ReaderStatsFlag[] READER_STATISTIC_FLAGS = {SerialReader.ReaderStatsFlag.ALL};
 
             r.paramSet(TMConstants.TMR_PARAM_READER_STATS_ENABLE, READER_STATISTIC_FLAGS);
-            SerialReader.ReaderStatsFlag[] getReaderStatisticFlag = (SerialReader.ReaderStatsFlag[]) r.paramGet(TMConstants.TMR_PARAM_READER_STATS_ENABLE);
+            getReaderStatisticFlag = (SerialReader.ReaderStatsFlag[]) r.paramGet(TMConstants.TMR_PARAM_READER_STATS_ENABLE);
             if (READER_STATISTIC_FLAGS.equals(getReaderStatisticFlag))
             {
                 System.out.println("GetReaderStatsEnable--pass");
@@ -262,25 +265,29 @@ public class ReaderStatisticsAsync
           }
         try
         {
-            if(readerStats.connectedAntennaPorts.length != 0 )
+            if(Arrays.asList(getReaderStatisticFlag).contains(SerialReader.ReaderStatsFlag.CONNECTED_ANTENNA_PORTS) ||
+                    (Arrays.asList(getReaderStatisticFlag).contains(SerialReader.ReaderStatsFlag.ALL) && !model.equalsIgnoreCase("M3e")))
             {
                 int portList[] = (int[])r.paramGet("/reader/antenna/portList");
                 int[] connectedAntennaPorts = readerStats.connectedAntennaPorts;
                 List<Integer> list = new ArrayList<Integer>();
-                for(int index = 0; index < connectedAntennaPorts.length; index++)
+                if(connectedAntennaPorts != null)
                 {
-                    list.add(connectedAntennaPorts[index]);
-                }
-
-                for(int i = 1; i <= portList.length; i++)
-                {
-                    if(list.contains(i))
+                    for(int index = 0; index < connectedAntennaPorts.length; index++)
                     {
-                        System.out.println("Antenna " + (i) + " is : Connected" );
+                        list.add(connectedAntennaPorts[index]);
                     }
-                    else
+
+                    for(int i = 1; i <= portList.length; i++)
                     {
-                        System.out.println("Antenna " + (i) + " is : Disconnected" );
+                        if(list.contains(i))
+                        {
+                            System.out.println("Antenna " + (i) + " is : Connected" );
+                        }
+                        else
+                        {
+                            System.out.println("Antenna " + (i) + " is : Disconnected" );
+                        }
                     }
                 }
             }
@@ -289,7 +296,8 @@ public class ReaderStatisticsAsync
         {
             e.printStackTrace();
         }
-        if(readerStats.rfOnTime.length != 0)
+
+        if(readerStats.rfOnTime != null)
         {
             int[] rfontimes = readerStats.rfOnTime;
             for (int antenna = 0; antenna < rfontimes.length; antenna++)
@@ -298,7 +306,7 @@ public class ReaderStatisticsAsync
             }
         }
         
-        if(readerStats.noiseFloorTxOn.length != 0)
+        if(readerStats.noiseFloorTxOn != null)
         {
             byte[] noiseFloorTxOn = readerStats.noiseFloorTxOn;
             for (int antenna = 0; antenna < noiseFloorTxOn.length; antenna++)

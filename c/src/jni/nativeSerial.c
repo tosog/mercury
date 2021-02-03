@@ -70,7 +70,7 @@ JNIEXPORT jint JNICALL Java_com_thingmagic_SerialTransportNative_nativeCreate
     throwCommError(env, ret);
   }
 
-  (*env)->SetLongField(env, obj, transportPtrID, (long)transport);
+  (*env)->SetLongField(env, obj, transportPtrID, (jlong)transport);
   (*env)->ReleaseStringUTFChars(env, port, portStr);
 
   return ret;

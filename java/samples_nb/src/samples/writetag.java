@@ -80,7 +80,10 @@ public class writetag
     boolean enableM3eFilter = false;
     boolean enableM3eBlockReadWrite = true;
     boolean enableM3eGetSystemInfo = false;
-    boolean enableM3eSecureID = false;
+    /** Enable this to read secure id of tag.
+     *  Only embedded tag op is supported. Standalone is not supported
+     */
+    boolean enableM3eSecureIDEmbeddedRead = false;
     boolean enableM3eBlkProtectionStatus = false;
     MultiFilter multiFilter = null;
     TagFilter tagTypeFilter = null;
@@ -269,7 +272,8 @@ public class writetag
                 }
             }
         }
-
+        if (model.equalsIgnoreCase("M3e"))
+        {
             // Perform read and apply first tag found as filter
             SimpleReadPlan plan = new SimpleReadPlan(antennaList, TagProtocol.ISO15693, null, null, 1000);
             r.paramSet("/reader/read/plan", plan);
@@ -280,95 +284,93 @@ public class writetag
             int address;
             byte length;
 
-        if (enableM3eFilter)
-        {
-            //Initialize filter
-            tagTypeFilter = new Select_TagType(tagReads[0].TagType());
-            uidFilter = new Select_UID(32, ReaderUtil.hexStringToByteArray(tagReads[0].getTag().epcString().substring(0, 8)));
-            multiFilter = new MultiFilter(new TagFilter[] {tagTypeFilter, uidFilter});
-        }
-        if (enableM3eBlockReadWrite)
-        {
-            //Initialize all the fields required for BlockWrite Tag operation
-            type = MemoryType.BLOCK_MEMORY;
-            address = 0;
-            length = 1;
-            byte[] data = new byte[]{(byte)0x11, (byte)0x22, (byte)0x33, (byte)0x44};
-
-            // Read data before block write
-            ReadMemory bRead = new ReadMemory(type, address, length);
-            byte[] dataRead = (byte[])r.executeTagOp(bRead, multiFilter);
-
-            // prints the data read
-            System.out.println("Read Data before performing block write:");
-            for (byte i : dataRead)
+            if (enableM3eFilter)
             {
-                System.out.printf("%02x\t", i);
+                //Initialize filter
+                tagTypeFilter = new Select_TagType(tagReads[0].TagType());
+                uidFilter = new Select_UID(32, ReaderUtil.hexStringToByteArray(tagReads[0].getTag().epcString().substring(0, 8)));
+                multiFilter = new MultiFilter(new TagFilter[] {tagTypeFilter, uidFilter});
             }
-            System.out.printf("\n");
-            //Uncomment to enable embedded read
-            //performEmbeddedOperation(multiFilter, TagProtocol.ISO15693, bRead);
-
-            // Initialize block write
-            WriteMemory writeOp = new WriteMemory(type, address, data);
-
-            // Execute the tagop
-            r.executeTagOp(writeOp, multiFilter);
-
-            //Read data after block write
-            ReadMemory readOp = new ReadMemory(type, address, length);
-            byte[] readData = (byte[])r.executeTagOp(readOp, multiFilter);
-
-            // prints the data read
-            System.out.println("Read Data after performing block write operation: ");
-            for (byte i : readData)
+            if (enableM3eBlockReadWrite)
             {
-                System.out.printf("%02x\t", i);
+                //Initialize all the fields required for BlockWrite Tag operation
+                type = MemoryType.BLOCK_MEMORY;
+                address = 0;
+                length = 1;
+                byte[] data = new byte[]{(byte)0x11, (byte)0x22, (byte)0x33, (byte)0x44};
+
+                // Read data before block write
+                ReadMemory bRead = new ReadMemory(type, address, length);
+                byte[] dataRead = (byte[])r.executeTagOp(bRead, multiFilter);
+
+                // prints the data read
+                System.out.println("Read Data before performing block write:");
+                for (byte i : dataRead)
+                {
+                    System.out.printf("%02x\t", i);
+                }
+                System.out.printf("\n");
+                //Uncomment to enable embedded read
+                //performEmbeddedOperation(multiFilter, TagProtocol.ISO15693, bRead);
+
+                // Initialize block write
+                WriteMemory writeOp = new WriteMemory(type, address, data);
+
+                // Execute the tagop
+                r.executeTagOp(writeOp, multiFilter);
+
+                //Read data after block write
+                ReadMemory readOp = new ReadMemory(type, address, length);
+                byte[] readData = (byte[])r.executeTagOp(readOp, multiFilter);
+
+                // prints the data read
+                System.out.println("Read Data after performing block write operation: ");
+                for (byte i : readData)
+                {
+                    System.out.printf("%02x\t", i);
+                }
+                System.out.printf("\n");
             }
-            System.out.printf("\n");
-        }
-        if(enableM3eGetSystemInfo)
-        {
-            //Get the system information of tag. Address and length fields have no significance if memory type is BLOCK_SYSTEM_INFORMATION_MEMORY.
-            type = MemoryType.BLOCK_SYSTEM_INFORMATION_MEMORY;
-            address = 0;
-            length = 0;
-            // Read data before block write
-            ReadMemory sysInfoOp = new ReadMemory(type, address, length);
-            byte[] systemInfo = (byte[])r.executeTagOp(sysInfoOp, multiFilter);
-            if (systemInfo.length > 0)
+            if(enableM3eGetSystemInfo)
             {
-                parseGetSystemInfoResponse(systemInfo);
+                //Get the system information of tag. Address and length fields have no significance if memory type is BLOCK_SYSTEM_INFORMATION_MEMORY.
+                type = MemoryType.BLOCK_SYSTEM_INFORMATION_MEMORY;
+                address = 0;
+                length = 0;
+                // Read data before block write
+                ReadMemory sysInfoOp = new ReadMemory(type, address, length);
+                byte[] systemInfo = (byte[])r.executeTagOp(sysInfoOp, multiFilter);
+                if (systemInfo.length > 0)
+                {
+                    parseGetSystemInfoResponse(systemInfo);
+                }
             }
-        }
-        if(enableM3eSecureID)
-        {
-            //Read secure id of tag. Address and length fields have no significance if memory type is SECURE_ID.
-            type = MemoryType.SECURE_ID;
-            address = 0;
-            length = 0;
-            ReadMemory secureIdOp = new ReadMemory(type, address, length);
-            byte[] rspData = (byte[])r.executeTagOp(secureIdOp, multiFilter);
-
-            // parse secure id operation response.
-            if (rspData.length > 0)
+            if(enableM3eSecureIDEmbeddedRead)
             {
-                parseSecureIdResponse(rspData);
+                //Read secure id of tag. Address and length fields have no significance if memory type is SECURE_ID.
+                type = MemoryType.SECURE_ID;
+                address = 0;
+                length = 0;
+                //Initialize the ReadMemory tag op 
+                ReadMemory secureIdOp = new ReadMemory(type, address, length);
+
+                // perform embedded tag operation for secureId read as standalone is not supported.
+                performEmbeddedOperation(multiFilter, TagProtocol.ISO15693, secureIdOp);
             }
-        }
-        if(enableM3eBlkProtectionStatus)
-        {
-            // Get the block protection status of block 0.
-            type = MemoryType.BLOCK_PROTECTION_STATUS_MEMORY;
-            address = 0;
-            length = 1;
-            ReadMemory blkProtectionOp = new ReadMemory(type, address, length);
-            byte[] statusData = (byte[])r.executeTagOp(blkProtectionOp, multiFilter);
-
-            // parse the block protection status response.
-            if (statusData.length == length)
+            if(enableM3eBlkProtectionStatus)
             {
-                parseGetBlockProtectionStatusResponse(statusData, address, length);
+                // Get the block protection status of block 0.
+                type = MemoryType.BLOCK_PROTECTION_STATUS_MEMORY;
+                address = 0;
+                length = 1;
+                ReadMemory blkProtectionOp = new ReadMemory(type, address, length);
+                byte[] statusData = (byte[])r.executeTagOp(blkProtectionOp, multiFilter);
+
+                // parse the block protection status response.
+                if (statusData.length == length)
+                {
+                    parseGetBlockProtectionStatusResponse(statusData, address, length);
+                }
             }
         }
     }
@@ -434,42 +436,12 @@ public class writetag
             }
             else
             {
-                for (byte b : tr.getData())
-                {
-                    System.out.printf("%02x\t", b);
-                }
-                System.out.printf("\n");
+                System.out.println( String.format("Data[%d]: %s", 
+                    tr.dataLength, ReaderUtil.byteArrayToHexString(tr.getData())));
             }
         }
     }
-    
-    public static void parseSecureIdResponse(byte[] rsp)
-    {
-        int readIndex = 0;
-
-        //Extract UID length
-        int uidLength = rsp[readIndex];
-
-        // Extract UID based on length
-        byte[] uid = new byte[uidLength];
-
-        //Update the read index and copy the uid into uid array.
-        readIndex += 1;
-        System.arraycopy(rsp, readIndex, uid, 0, uidLength);
-        System.out.println("UID: " + ReaderUtil.byteArrayToHexString(uid));
-        readIndex += uidLength;
-
-        // Extract Secure id length and ID
-        int secureIdLen = rsp[readIndex];
-        byte[] secureID = new byte[secureIdLen];
-
-        //Update the read index and copy the Secure id into secureID array.
-        readIndex += 1;
-        System.arraycopy(rsp, readIndex, secureID, 0, secureIdLen);
-        System.out.println("SecureID: " + ReaderUtil.byteArrayToHexString(secureID));
-        readIndex += secureIdLen;
-    }
-    
+ 
     public static void parseGetSystemInfoResponse(byte[] systemInfo)
     {
         int readIndex = 0;

@@ -112,38 +112,6 @@ TMR_startReading(struct TMR_Reader *reader)
   {
 #ifdef TMR_ENABLE_SERIAL_READER
     /**
-     * Currently we are not supporting stop N trigger for async read case.
-     * This is also true for pseudo continuous case as well. Pop up the error
-     * if user is trying to do so.
-     **/
-    if (TMR_READ_PLAN_TYPE_MULTI == reader->readParams.readPlan->type)
-    {
-      uint8_t loop = 0;
-      TMR_MultiReadPlan *multi;
-
-      multi = &reader->readParams.readPlan->u.multi;
-      for (loop = 0; loop < multi->planCount; loop++)
-      {
-        if (multi->plans[loop]->u.simple.stopOnCount.stopNTriggerStatus)
-        {
-          /* Not supporting stop N trigger */
-          return TMR_ERROR_UNSUPPORTED; 
-        }
-      }
-    }
-    else if (TMR_READ_PLAN_TYPE_SIMPLE == reader->readParams.readPlan->type)
-    {
-      if (reader->readParams.readPlan->u.simple.stopOnCount.stopNTriggerStatus)
-      {
-        /* Not supporting stop N trigger */
-        return TMR_ERROR_UNSUPPORTED;
-      }
-    }
-    else
-    {
-      /* do nothing */
-    }
-    /**
 	  * if model is M6e and it's variant
 	  * asyncOffTime == 0
 	  * only then use streaming
@@ -320,6 +288,15 @@ reset_continuous_reading(struct TMR_Reader *reader)
     reader->continuousReading = false;
     reader->dutyCycle = false;
   }
+}
+
+bool
+TMR_isReadStopped(struct TMR_Reader *reader)
+{
+  /* This flag will be true only after
+   * receiveing Stop Read(2f with 02) response.
+   */
+  return reader->finishedReading;
 }
 
 TMR_Status

@@ -240,7 +240,10 @@ typedef struct TM_SR_SerialReader
 
   /* Static storage for the default map */
   TMR_AntennaMap staticTxRxMapData[TMR_SR_MAX_ANTENNA_PORTS];
+  TMR_AntennaMap staticTxRxDefMapData[TMR_SR_MAX_ANTENNA_PORTS];
+
   TMR_AntennaMapList staticTxRxMap;
+  TMR_AntennaMapList staticTxRxDefMap;
 
   /* Mostly-fixed information about the connected reader */
   TMR_SR_VersionInfo versionInfo;

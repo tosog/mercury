@@ -185,7 +185,10 @@ typedef enum TMR_TagOpType
   TMR_TagOP_GEN2_FUDAN_MEASURE,
   /** ILIAN tag select command */
   TMR_TagOP_GEN2_ILIAN_TAG_SELECT_COMMAND,
-
+  /** EM-MICRO EM4325 get sensor data */
+  TMR_TagOP_GEN2_EM4325_GET_SENSOR_DATA,
+  /** EM-MICRO EM4325 reset alarms */
+  TMR_TagOP_GEN2_EM4325_RESET_ALARMS,
   /** List of tag operations */
   TMR_TAGOP_LIST,
 #endif /* TMR_ENABLE_UHF */
@@ -1707,6 +1710,47 @@ typedef struct TMR_TagOP_GEN2_ILIAN
   }u;
 }TMR_TagOP_GEN2_ILIAN;
 
+/** Sub-Class for Gen2 EMMICRO EM4325 get sensor data. */
+typedef struct TMR_TagOP_GEN2_EM4325_Get_Sensor_Data
+{
+  /* Gen2 access password */
+  uint32_t AccessPassword;
+  /* Custom Command Code */
+  uint16_t CommandCode;
+  /* bitsToSet holds the byte value when sendUid or sendNewSample or both is enabled*/
+  uint8_t bitsToSet;
+}TMR_TagOP_GEN2_EM4325_Get_Sensor_Data;
+
+/** Sub-Class for Gen2 EMMICRO EM4325 RESET ALARMS. */
+typedef struct TMR_TagOP_GEN2_EM4325_Reset_Alarms
+{
+  /* Gen2 access password */
+  uint32_t AccessPassword;
+  /* Custom Command Code */
+  uint16_t CommandCode;
+  /* Fill value */
+  uint8_t fillValue;
+}TMR_TagOP_GEN2_EM4325_Reset_Alarms;
+
+/** Sub-class for Gen2 EMMICRO parameters */
+typedef struct TMR_TagOP_GEN2_EM4325
+{
+  union
+  {
+    TMR_TagOP_GEN2_EM4325_Get_Sensor_Data getSensorData;
+    TMR_TagOP_GEN2_EM4325_Reset_Alarms resetAlarms;
+  }u;
+}TMR_TagOP_GEN2_EM4325;
+
+/** Sub-class for Gen2 EMMICRO parameters */
+typedef struct TMR_TagOP_GEN2_EMMICRO
+{
+  union
+  {
+    TMR_TagOP_GEN2_EM4325 em4325;
+  }u;
+}TMR_TagOP_GEN2_EMMICRO;
+
 /** Sub-class for Gen2 custom tagops */
 typedef struct TMR_TagOp_GEN2_Custom
 {
@@ -1720,6 +1764,8 @@ typedef struct TMR_TagOp_GEN2_Custom
     TMR_TagOp_GEN2_Denatran IavDenatran;
     TMR_TagOP_GEN2_FUDAN fdn;
     TMR_TagOP_GEN2_ILIAN ilian;
+    TMR_TagOP_GEN2_EMMICRO emmicro;
+
   } u;
 }TMR_TagOp_GEN2_Custom;
 
@@ -2026,6 +2072,12 @@ TMR_TagOp_init_GEN2_fdn_Measure(TMR_TagOp *tagop, TMR_GEN2_Password accessPasswo
  TMR_Status
  TMR_TagOp_init_GEN2_ILN_TagSelectCommand(TMR_TagOp *tagop, TMR_GEN2_Password accessPassword);
 
+TMR_Status
+TMR_TagOp_init_GEN2_ILN_TagSelectCommand(TMR_TagOp *tagop, TMR_GEN2_Password accessPassword);
+TMR_Status
+TMR_TagOp_init_GEN2_EM4325_GetSensorData(TMR_TagOp *tagop, TMR_GEN2_Password accessPassword, bool sendUID, bool sendNewSample);
+TMR_Status
+TMR_TagOp_init_GEN2_EM4325_ResetAlarms(TMR_TagOp *tagop, TMR_GEN2_Password accessPassword);
 TMR_Status
 TMR_GEN2_init_BapParams(TMR_GEN2_Bap *bapVal, int32_t powerUpDelayUs, int32_t freqHopOfftimeUs);
 #endif /* TMR_ENABLE_UHF */

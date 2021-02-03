@@ -90,7 +90,7 @@ public class SerialReader extends Reader
   int[] probeBaudRates = new int[] { 9600, 115200, 921600, 19200, 38400, 57600, 230400, 460800 };
   int[][] portParamList;
   PowerMode powerMode = PowerMode.INVALID;
-  String model;
+  public String model;
   boolean extendedEPC = false;
   boolean supportsPreamble = false;    
   boolean uniqueByAntenna = false;
@@ -99,7 +99,7 @@ public class SerialReader extends Reader
   int productGroupID = -1;
   int productID = -1;
   int statusFlags = 0x00;
-  int statsFlags = 0x00;
+  public int statsFlags = 0x00;
   int statsDefFlags = 0x00;
   int tagOpSuccessCount = 0;
   int tagOpFailuresCount = 0;
@@ -169,6 +169,9 @@ public class SerialReader extends Reader
   boolean useDefaultDwellTime = false;
   int returnBits = 0;
   public boolean isMultiFilterEnabled = false;
+
+  int gpioNumber = 0;
+  public boolean autonomousStreaming = false;
   static
    {
        logger = (Log4jLoggerAdapter) LoggerFactory.getLogger(SerialReader.class);
@@ -368,25 +371,13 @@ public class SerialReader extends Reader
         {
             tagOpSuccessCount = 0;
             tagOpFailuresCount = 0;
+            finishedReading = false;
             continuousReading = true;
 
             ReadPlan rp= (ReadPlan)paramGet(TMR_PARAM_READ_PLAN);
-            if (rp instanceof StopTriggerReadPlan)
-            {
-               throw new UnsupportedOperationException("Unsupported operation "
-                    + rp.getClass().getName());
-            }
-            else if ( rp instanceof MultiReadPlan)
+            if ( rp instanceof MultiReadPlan)
             {
                  MultiReadPlan mrp = (MultiReadPlan) rp;
-                 for (ReadPlan r : mrp.plans)
-                 {
-                     if (r instanceof StopTriggerReadPlan)
-                     {
-                         throw new UnsupportedOperationException("Unsupported operation "
-                                 + r.getClass().getName());
-                     }
-                 }
                  isValidationSuccess = validateMultiReadPlan(mrp);
             }
             if ((M6E_FAMILY_LIST.contains(model.toUpperCase()) || model.equalsIgnoreCase("M3e"))&&
@@ -862,7 +853,7 @@ public class SerialReader extends Reader
     private void cmdStopContinuousRead(Reader reader, String value) throws ReaderException
     {
         Message m = new Message();
-        
+
         m.setu8(MSG_OPCODE_MULTI_PROTOCOL_TAG_OP);
         m.setu16(0x00); //  currently ignored
         m.setu8(0x02); // option 2 - stop continuous reading
@@ -1144,6 +1135,18 @@ public class SerialReader extends Reader
             }
             return;
         }
+        /** If autonomous mode is already enabled on the reader and if user performs continuous reading,
+         * and presses hard reset while read is in progress, then API notifies user about autonomous read is enabled on the reader through exception listener.
+         * In this case, module restores the auto read and sends acknowledgement of read start in the form of below 2 commands
+         * Received: ff 02 9d 00 00 02 01 db 11
+         * Reader Exception: Autonomous mode is enabled on reader. Please disable it.
+         * Received: ff 04 2f 00 00 01 22 00 00 6d c3
+         * API should not parse these messages in this case. Just return.
+         */
+        if(m.data[2] == (byte)0x9D || (m.data[2] == (byte)0x2f && m.data[5] == (byte)0x01))
+        {
+            return;
+        }
         if(enableMultipleSelect || isreadAfterWriteEnabled)
         {
             m.readIndex++;
@@ -1222,7 +1225,7 @@ public class SerialReader extends Reader
             }
             else  // no status response in the message
             {
-                if ((((m.data[5] & 0x88) == (byte)SINGULATION_OPTION_MULTIPLE_SELECT || (model.equalsIgnoreCase("M3e"))) && (m.data[3] == 0x04) && (m.data[4] == 0x00)))
+                if ((((m.data[5] & 0x88) == (byte)SINGULATION_OPTION_MULTIPLE_SELECT || (!isM6eVariant)) && (m.data[3] == 0x04) && (m.data[4] == 0x00)))
                 {
                     return;
                 }
@@ -1273,6 +1276,38 @@ public class SerialReader extends Reader
                 tagOpFailuresCount += m.getu16();
             }
         }// end of else
+        /** Async Read completion Response in case of Stop on N tags
+          * Received: ff 07 22 00 00 01 00 40 00 00 00 05 26 93
+          * <SOH(FF)> <data length(07)> <opcode(22)> <status response(00 00)> <continuousreading option(01)> <search flags(00 40)>
+          * <Totaltagcount(00 00 00 05)> <crc(26 93)>
+          */
+        if (m.data[1] == 0x07 && m.data[2] == 0x22 && (m.data[3] == 0x00 && m.data[4] == 0x00)) // check if length is 7 and opcode is 22 with success status response  
+        {
+            // check for option byte and search flags
+            m.readIndex = 5;
+            int optionByte = m.getu8();
+            int searchFlags = m.getu16();
+            //Check if Stop N tag feature is enabled.
+            if(((0x01 & optionByte) == 0x01) &&  //TM Option 1, for continuous reading.
+            (isStopNTags && ((searchFlags & READ_MULTIPLE_RETURN_ON_N_TAGS) == READ_MULTIPLE_RETURN_ON_N_TAGS)))
+            {
+                //Retreive total tag count read.
+                int tagCount = m.getu32();
+                
+                //Check if total requested tag count is matching with total tag read count.
+                if(tagCount >= numberOfTagsToRead)
+                {
+                    //Total requested tags are read. Send stop read command to the module.
+                    cmdStopContinuousRead(this);
+                    continuousReader.enabled = false;
+
+                    //Reset all the flags here
+                    continuousReading = false;
+                    useStreaming = false;
+                    finishedReading = true;
+                }
+            }
+        }
     }
     private boolean isContinuousReadParamSupported()
     {
@@ -2613,6 +2648,110 @@ public class SerialReader extends Reader
         filterBytes(TagProtocol.GEN2, m, optByte, filter, tagop.accessPassword, true);
         m.data[optByte] = (byte) (0x40 | (m.data[optByte]));//option
     }
+    
+    /**
+     * EM4325 get sensor data command
+     * @param timeout
+     * @param accessPassword
+     * @param tagop
+     * @param filter
+     * @throws ReaderException
+     */
+    private byte[] cmdEM4325GetSensorData(int timeout, int accessPassword, Gen2.EMMicro.EM4325.GetSensorData tagop, TagFilter filter) throws ReaderException
+    {
+        Message m = new Message();
+        msgEM4325GetSensorData(m, timeout, accessPassword, tagop, filter);
+        sendTimeout(timeout, m);
+        if(enableMultipleSelect)
+        {
+            m.readIndex += 5;//skip chipType(1 byte),select option(2 byte), command code(2 bytes) 
+        }
+        else
+        {
+            m.readIndex += 4;//skip chipType(1 byte),select option(1 byte), command code(2 bytes) 
+        } 
+        int length = m.writeIndex - m.readIndex + 1;
+        byte data[] = new byte[length];
+        System.arraycopy(m.data, m.readIndex, data, 0, length);
+        return data;
+    }
+    
+    private void msgEM4325GetSensorData(Message m, int timeout, int accessPassword, Gen2.EMMicro.EM4325.GetSensorData tagop, TagFilter filter)
+    {
+        msgEM4325GetSensorDataCommonHeader(m, timeout, accessPassword, tagop, filter);
+    }
+    
+    /**
+     * msgEM4325GetSensorDataCommonHeader
+     * @param m
+     * @param timeout
+     * @param accessPassword
+     * @param tagop
+     * @param filter
+     */
+    private void msgEM4325GetSensorDataCommonHeader(Message m, int timeout, int accessPassword, Gen2.EMMicro.EM4325.GetSensorData tagop, TagFilter filter)
+    {
+        m.setu8(MSG_OPCODE_WRITE_TAG_SPECIFIC);
+        m.setu16(timeout);
+        m.setu8(tagop.chipType);
+        // Set 0x88 option only in case of standalone. Hence check for isEmbeddedTagOp flag.
+        if(enableMultipleSelect && (!isEmbeddedTagOp))
+        {
+            m.setu8(SINGULATION_OPTION_MULTIPLE_SELECT); // option byte for multiple select
+        }
+        int optByte = m.writeIndex;
+        m.setu8(0x40); //select option
+        m.setu16(tagop.commandCode);
+        filterBytes(TagProtocol.GEN2, m, optByte, filter, accessPassword, true);
+        m.data[optByte] = (byte) (0x40 | (m.data[optByte]));//option
+        m.setu8(tagop.bitsToSet);
+    }
+    
+    /**
+     * EM4325 Reset Alarm command
+     * @param timeout
+     * @param accessPassword
+     * @param tagop
+     * @param filter
+     * @throws ReaderException
+     */
+    private void cmdEM4325ResetAlarms(int timeout, int accessPassword, Gen2.EMMicro.EM4325.ResetAlarms tagop, TagFilter filter) throws ReaderException
+    {
+        Message msg = new Message();
+        msgEM4325ResetAlarms(msg, timeout, accessPassword, tagop, filter);
+        sendTimeout(timeout, msg);
+    }
+    
+    private void msgEM4325ResetAlarms(Message m, int timeout, int accessPassword, Gen2.EMMicro.EM4325.ResetAlarms tagop, TagFilter filter)
+    {
+        msgEM4325ResetAlarmsCommonHeader(m, timeout, accessPassword, tagop, filter);
+    }
+    
+    /**
+     * msgEM4325ResetAlarmsCommonHeader
+     * @param m
+     * @param timeout
+     * @param accessPassword
+     * @param tagop
+     * @param filter
+     */
+    private void msgEM4325ResetAlarmsCommonHeader(Message m, int timeout, int accessPassword, Gen2.EMMicro.EM4325.ResetAlarms tagop, TagFilter filter)
+    {
+        m.setu8(MSG_OPCODE_WRITE_TAG_SPECIFIC);
+        m.setu16(timeout);
+        m.setu8(tagop.chipType);
+        // Set 0x88 option only in case of standalone. Hence check for isEmbeddedTagOp flag.
+        if(enableMultipleSelect && (!isEmbeddedTagOp))
+        {
+            m.setu8(SINGULATION_OPTION_MULTIPLE_SELECT); // option byte for multiple select
+        }
+        int optByte = m.writeIndex;
+        m.setu8(0x40); //select option
+        m.setu16(tagop.commandCode);
+        filterBytes(TagProtocol.GEN2, m, optByte, filter, accessPassword, true);
+        m.data[optByte] = (byte) (0x40 | (m.data[optByte]));//option
+        m.setu8(tagop.fillValue);
+    }
 
     private void assignStatusFlags()
     {        
@@ -3088,7 +3227,7 @@ public class SerialReader extends Reader
 
       if(m.data[2] == (byte)0x9D)
       {
-          throw new ReaderCommException("Autonomous mode is enabled on reader. Please disable it.");
+          notifyExceptionListeners(new ReaderCommException("Autonomous mode is enabled on reader. Please disable it."));
       }
       else if(m.data[2] == (byte)0x04)
       {
@@ -3857,7 +3996,7 @@ public class SerialReader extends Reader
     {
         m.setu8(singulationOption);
     }
-    if (isStopNTags && !useStreaming) 
+    if (isStopNTags) 
     {
         searchFlags |= READ_MULTIPLE_RETURN_ON_N_TAGS;
     }
@@ -3940,8 +4079,8 @@ public class SerialReader extends Reader
         m.setu16(selectedMetaBits);
     }
 
-    // Add the no of tags to be read requested by user in stop N tag reads. Currently only supported for sync read.
-    if (isStopNTags && !useStreaming)
+    // Add the no of tags to be read requested by user in stop N tag reads.
+    if (isStopNTags)
     {
        m.setu32(numberOfTagsToRead);
     }
@@ -8660,7 +8799,7 @@ public class SerialReader extends Reader
              ANTENNA.value |
              PROTOCOL.value |
              CONNECTED_ANTENNA_PORTS.value);
-        int value;
+        public int value;
 
         ReaderStatsFlag(int v)
         {
@@ -8904,8 +9043,6 @@ public class SerialReader extends Reader
     ReaderStats ps = new ReaderStats();
     try
     {
-        int len = ports.length;
-        ps.numPorts = len;
         while (m1.readIndex < m1.writeIndex)
         {
           long statFlag =0;
@@ -8914,6 +9051,7 @@ public class SerialReader extends Reader
           statFlag = ConvertFromEBV(tagType);
           if ((0 != statFlag) && (statFlag == ReaderStatsFlag.RF_ON_TIME.value))
           {
+                int len = ports.length;
                 int length = m1.getu8at(m1.readIndex);
                 ps.rfOnTime = new int[len];
                 m1.readIndex +=1;
@@ -8933,6 +9071,7 @@ public class SerialReader extends Reader
           }
           else if ((0 !=statFlag) && (statFlag == ReaderStatsFlag.NOISE_FLOOR_SEARCH_RX_TX_WITH_TX_ON.value))
           {
+            int len = ports.length;
             int length = m1.getu8at(m1.readIndex++);
             if (length != 0)
             {
@@ -8981,6 +9120,7 @@ public class SerialReader extends Reader
           }
           else if ((0 !=statFlag) && (statFlag == ReaderStatsFlag.CONNECTED_ANTENNA_PORTS.value))
           {
+            int len = ports.length;
             //For micro the length is zero skip the parsing
             if(m1.getu8() != 0)
             {
@@ -9594,7 +9734,7 @@ public class SerialReader extends Reader
     {
       if (0 != (f.rep & bits))
       {
-          if ((f == TagType.ALL && bits == 0x7F) || (f != TagType.ALL))
+          if ((f == TagType.ALL && bits == 0xFF) || (f != TagType.ALL))
               tagTypeFlags.add(f);
       }
     }
@@ -9642,7 +9782,7 @@ public class SerialReader extends Reader
     {
       if (0 != (f.rep & bits))
       {
-          if ((f == Iso15693.TagType.ALL && bits == 0xff81) || (f != Iso15693.TagType.ALL))
+          if ((f == Iso15693.TagType.ALL && bits == 0x1ff01) || (f != Iso15693.TagType.ALL))
               tagTypeFlags.add(f);
       }
     }
@@ -9665,7 +9805,7 @@ public class SerialReader extends Reader
     {
       if (0 != (f.rep & bits))
       {
-          if ((f == Lf125khz.TagType.ALL && bits == 0x1F000001) || (f != Lf125khz.TagType.ALL))
+          if ((f == Lf125khz.TagType.ALL && bits == 0x7F000001) || (f != Lf125khz.TagType.ALL))
               tagTypeFlags.add(f);
       }
     }
@@ -10550,6 +10690,16 @@ public class SerialReader extends Reader
       if(option == SetUserProfileOption.CLEAR)
       {
           enableAutonomousRead = false;
+          ReadPlan plan;
+          if (!model.equalsIgnoreCase("M3e"))
+          {
+             plan = new SimpleReadPlan(null, TagProtocol.GEN2);
+          }
+          else
+          {
+             plan = new SimpleReadPlan(null, TagProtocol.ISO14443A);
+          }
+          paramSet(TMR_PARAM_READ_PLAN, plan);
       }
       
       if(option == SetUserProfileOption.SAVEWITHREADPLAN)
@@ -10942,22 +11092,34 @@ SerialReader(String serialDevice) throws ReaderException
                public Object set(Object value)
                  throws ReaderException
                {
-                 baudRate = (Integer)value;
+                 currentBaudRate = (Integer)value;
                  /** 
                   *  some transport layer does not support baud rate settings.
                   *  for ex: TCP transport. In that case skip the baud rate settings.
                   **/
                  if ( (false || !(st instanceof BluetoothTransportAndroid))
-                       && (connected && (st.getBaudRate() != baudRate && st.getBaudRate()!=0)))
+                       && (connected && (st.getBaudRate() != currentBaudRate && st.getBaudRate()!=0)))
                  {
-                   cmdSetBaudRate(baudRate);
-                   st.setBaudRate(baudRate);
+                   cmdSetBaudRate(currentBaudRate);
+                   st.setBaudRate(currentBaudRate);
+
+                   if(model.equalsIgnoreCase("M6e Nano"))
+                   {
+                       if(currentBaudRate == 921600)
+                       {
+                           supportsPreamble = true;
+                       }
+                       else
+                       {
+                           supportsPreamble = false;
+                       }
+                   }
                  }
                  return value;
                 }
                public Object get(Object value)
                {
-                 return baudRate;
+                  return currentBaudRate;
                }
              });
     
@@ -12060,6 +12222,15 @@ SerialReader(String serialDevice) throws ReaderException
                             throws ReaderException
                     {
                         TagProtocol[] protocolList = (TagProtocol[])value;
+                        
+                        for(TagProtocol p : protocolList)
+                        {
+                           if (!protocolSet.contains(p))
+                           {
+                                throw new IllegalArgumentException(
+                                    "Unsupported protocol " + p + ".");
+                           }
+                        }
                         cmdSetProtocolsList(protocolList);
                         return protocolList;
                     }
@@ -12288,13 +12459,6 @@ SerialReader(String serialDevice) throws ReaderException
                     throws ReaderException
             {
                 int[][] rpList = (int[][]) value;
-                for (int i = 0; i < rpList.length; i++)
-                {
-                    // fetch the txport mapped to the antenna number passed in rpList and replace antenna number with this txport map value.
-                    int[] pair = antennaPortMap.get(rpList[i][0]); // gets both tx and rx port.
-                    rpList[i][0] = pair[0]; // replaces antenna number with tx port value.
-                }
-
                 setArrayColumn(portParamList, paramColumn, 0);
                 setArrayColumnByPort(portParamList, paramColumn, rpList);
                 cmdSetAntennaPortPowersAndSettlingTime(portParamList,paramColumn);
@@ -12622,7 +12786,7 @@ SerialReader(String serialDevice) throws ReaderException
                             return _enableFiltering;
                         }
                     });
-            if(M6E_FAMILY_LIST.contains(model))
+            if(M6E_FAMILY_LIST.contains(model.toUpperCase()))
             {
                 addParam(TMR_PARAM_READER_STATUS_ANTENNA, Boolean.class, false, true,
                     new SettingAction()
@@ -13158,6 +13322,10 @@ SerialReader(String serialDevice) throws ReaderException
         // Read and set the power mode ASAP
         // so that it can be referenced by sendMessage
          powerMode = cmdGetPowerMode();
+         if(model.equalsIgnoreCase("M6e Nano"))
+         {
+             supportsPreamble = (currentBaudRate == 921600) ? true : false;
+         }
 
         if(M6E_FAMILY_LIST.contains(model.toUpperCase()))
         {
@@ -13569,6 +13737,7 @@ SerialReader(String serialDevice) throws ReaderException
         {
             cmdSetProtocol(protocol);
             currentProtocol = protocol;
+            isProtocolDynamicSwitching = false;
             if (extendedEPC)
             {
                 cmdSetReaderConfiguration(Configuration.EXTENDED_EPC, true);
@@ -13640,6 +13809,7 @@ SerialReader(String serialDevice) throws ReaderException
         }
         if (meta.contains(TagMetadataFlag.DATA))
         {
+            //Store data length in bits only.
             int dataBits = m.getu16();
 
             if(useStreaming)
@@ -13656,8 +13826,21 @@ SerialReader(String serialDevice) throws ReaderException
             }
             else
             {
-                t.data = new byte[(dataBits + 7) / 8];
+                //Convert data bit length into data byte length.
+                int dataLen = (dataBits + 7) / 8;
+                t.data = new byte[dataLen];
                 t.isErrorData = false;
+                if(isM6eVariant)
+                {
+                    //In UHF data length is stored in bytes.
+                    t.dataLength = dataLen;
+                }
+                else
+                {
+                    // In M3e, data length is stored in bits.
+                    t.dataLength = dataBits;
+                }
+
                 m.getbytes(t.data, t.data.length);
                 if (isGen2AllMemoryBankEnabled)
                 {
@@ -13668,24 +13851,30 @@ SerialReader(String serialDevice) throws ReaderException
         if (meta.contains(TagMetadataFlag.GPIO_STATUS))
         {
             byte gpioByte = (byte) m.getu8();
-            int gpioNumber;
-            switch (versionInfo.hardware.part1)
+            if(!autonomousStreaming)
             {
-                case TMR_SR_MODEL_M6E:
-                    gpioNumber = 4;
-                    break;
-                case TMR_SR_MODEL_M5E:
-                    gpioNumber = 2;
-                    break;
-                case TMR_SR_MODEL_M3E:
-                    gpioNumber = 4;
-                    break;
-                case TMR_SR_MODEL_MICRO:
-                    gpioNumber = 2;
-                    break;
-                default:
-                    gpioNumber = 4;
-                    break;
+                switch (versionInfo.hardware.part1)
+                {
+                    case TMR_SR_MODEL_M6E:
+                        gpioNumber = 4;
+                        break;
+                    case TMR_SR_MODEL_M5E:
+                        gpioNumber = 2;
+                        break;
+                    case TMR_SR_MODEL_M3E:
+                        gpioNumber = 4;
+                        break;
+                    case TMR_SR_MODEL_MICRO:
+                        gpioNumber = 2;
+                        break;
+                    default:
+                        gpioNumber = 4;
+                        break;
+                }
+            }
+            else
+            {
+                gpioNumber = 4;
             }
 
             t.gpio = new GpioPin[gpioNumber];
@@ -13739,37 +13928,44 @@ SerialReader(String serialDevice) throws ReaderException
         // Parsing the Correct Antenna ID based on GPO status
         if (meta.contains(TagMetadataFlag.ANTENNAID) || meta.contains(TagMetadataFlag.ALL))
         {
-            //First get the defaultAntennaPortReverseMap map if flag "isTxRxMapSet" is set, otherwise use antennaPortReverseMap to get the antenna 
-            if(isTxRxMapSet)
+            if(!autonomousStreaming)
             {
-                t.antenna = defaultAntennaPortReverseMap.get(t.antenna);
+                //First get the defaultAntennaPortReverseMap map if flag "isTxRxMapSet" is set, otherwise use antennaPortReverseMap to get the antenna 
+                if(isTxRxMapSet)
+                {
+                    t.antenna = defaultAntennaPortReverseMap.get(t.antenna);
+                }
+                else
+                {
+                    t.antenna = antennaPortReverseMap.get(t.antenna);
+                }
+                if (t.gpio != null)
+                {
+                    if (t.gpio.length > 2)
+                    {
+                        if ((versionInfo.hardware.part1 != TMR_SR_MODEL_M6E_NANO )&&(t.gpio[2].high) && !(t.gpio[3].high) && ((portmask & 0x04) != 0x00))
+                        {
+                            t.antenna += 16;
+                        }
+                        if ((versionInfo.hardware.part1 != TMR_SR_MODEL_M6E_NANO )&&!(t.gpio[2].high) && (t.gpio[3].high) && ((portmask & 0x08) != 0x00))
+                        {
+                            t.antenna += 32;
+                        }
+                        if ((versionInfo.hardware.part1 != TMR_SR_MODEL_M6E_NANO )&&(t.gpio[2].high) && (t.gpio[3].high) && ((portmask & 0x0C) != 0x00))
+                        {
+                            t.antenna += 48;
+                        }
+                    }
+                }
+                // fetch the transmit map if isTxRxMapSet is set
+                if(isTxRxMapSet)
+                {
+                    t.antenna = antennaPortTransmitMap.get(t.antenna);
+                }
             }
             else
             {
-                t.antenna = antennaPortReverseMap.get(t.antenna);
-            }
-            if (t.gpio != null)
-            {
-                if (t.gpio.length > 2)
-                {
-                    if ((versionInfo.hardware.part1 != TMR_SR_MODEL_M6E_NANO )&&(t.gpio[2].high) && !(t.gpio[3].high) && ((portmask & 0x04) != 0x00))
-                    {
-                        t.antenna += 16;
-                    }
-                    if ((versionInfo.hardware.part1 != TMR_SR_MODEL_M6E_NANO )&&!(t.gpio[2].high) && (t.gpio[3].high) && ((portmask & 0x08) != 0x00))
-                    {
-                        t.antenna += 32;
-                    }
-                    if ((versionInfo.hardware.part1 != TMR_SR_MODEL_M6E_NANO )&&(t.gpio[2].high) && (t.gpio[3].high) && ((portmask & 0x0C) != 0x00))
-                    {
-                        t.antenna += 48;
-                    }
-                }
-            }
-            // fetch the transmit map if isTxRxMapSet is set
-            if(isTxRxMapSet)
-            {
-                t.antenna = antennaPortTransmitMap.get(t.antenna);
+                t.antenna = translateSerialAntenna(t.antenna);
             }
         }
     }
@@ -13905,7 +14101,7 @@ SerialReader(String serialDevice) throws ReaderException
                 isProtocolDynamicSwitching=false;
                 throw new UnsupportedOperationException("Unsupported operation. ");
             }
-            if (useStreaming || (M6E_FAMILY_LIST.contains(model.toUpperCase()) || model.equalsIgnoreCase("M3e") && isValidationSuccess))
+            if ((useStreaming || (M6E_FAMILY_LIST.contains(model.toUpperCase()) || model.equalsIgnoreCase("M3e"))) && isValidationSuccess)
             {
                 for (ReadPlan r : mrp.plans)
                 {
@@ -13925,16 +14121,8 @@ SerialReader(String serialDevice) throws ReaderException
                     }
                     else
                     {
-                        if (model.equalsIgnoreCase("M3e"))
-                        {
-                            cmdMultiProtocolSearch((int) MSG_OPCODE_READ_TAG_ID_MULTIPLE, planList, metaDataFlags,
-                            ((useStreaming ? READ_MULTIPLE_SEARCH_FLAGS_TAG_STREAMING : 0) | READ_MULTIPLE_SEARCH_FLAGS_ONE_ANT), (int) timeout, tagvec);
-                        }
-                        else
-                        {
-                            cmdMultiProtocolSearch((int) MSG_OPCODE_READ_TAG_ID_MULTIPLE, planList, metaDataFlags,
-                            ((useStreaming ? READ_MULTIPLE_SEARCH_FLAGS_TAG_STREAMING : 0) | READ_MULTIPLE_SEARCH_FLAGS_SEARCH_LIST), (int) timeout, tagvec);
-                        }
+                        cmdMultiProtocolSearch((int) MSG_OPCODE_READ_TAG_ID_MULTIPLE, planList, metaDataFlags,
+                        ((useStreaming ? READ_MULTIPLE_SEARCH_FLAGS_TAG_STREAMING : 0) | READ_MULTIPLE_SEARCH_FLAGS_SEARCH_LIST), (int) timeout, tagvec);
                     }
                 }
                 else
@@ -13953,22 +14141,14 @@ SerialReader(String serialDevice) throws ReaderException
                                     ((useStreaming ? READ_MULTIPLE_SEARCH_FLAGS_TAG_STREAMING : 0) | READ_MULTIPLE_SEARCH_FLAGS_ONE_ANT), (int) readTimeout, tagvec);
                             }
                             else
-                        {
-                            if (model.equalsIgnoreCase("M3e"))
-                            {
-                                cmdMultiProtocolSearch((int) MSG_OPCODE_READ_TAG_ID_MULTIPLE, planList, metaDataFlags,
-                                    ((useStreaming ? READ_MULTIPLE_SEARCH_FLAGS_TAG_STREAMING : 0) | READ_MULTIPLE_SEARCH_FLAGS_ONE_ANT), (int) readTimeout, tagvec);
-                            }
-                            else
                             {
                                 cmdMultiProtocolSearch((int) MSG_OPCODE_READ_TAG_ID_MULTIPLE, planList, metaDataFlags,
                                     ((useStreaming ? READ_MULTIPLE_SEARCH_FLAGS_TAG_STREAMING : 0) | READ_MULTIPLE_SEARCH_FLAGS_SEARCH_LIST), (int) readTimeout, tagvec);
                             }
                         }
-                        }
                         catch(ReaderException re)
                         {
-                                throw re;
+                            throw re;
                         }
                         now = System.currentTimeMillis();
                     }
@@ -14239,7 +14419,8 @@ SerialReader(String serialDevice) throws ReaderException
                         {
                             return;
                         }
-                        else if (re.getCode() == FAULT_MSG_INVALID_PARAMETER_VALUE)
+                        else if (re.getCode() == FAULT_MSG_INVALID_PARAMETER_VALUE ||
+                                 re.getCode() == FAULT_UNIMPLEMENTED_FEATURE)
                         {
                             throw re;
                         }
@@ -14816,6 +14997,18 @@ SerialReader(String serialDevice) throws ReaderException
             Gen2.Ilian.TagSelect tagOp = (Gen2.Ilian.TagSelect) sp.Op;
             tm = prepEmbReadTagMultiple(m, readTimeout, searchflag, readFilter, sp.protocol, metaDataFlags, accPword, fastSearch);
             msgIlianTagSelect(m, readTimeout, tagOp, null);
+        }
+        else if(sp.Op instanceof Gen2.EMMicro.EM4325.GetSensorData)
+        {
+            Gen2.EMMicro.EM4325.GetSensorData tagOp = (Gen2.EMMicro.EM4325.GetSensorData) sp.Op;
+            tm = prepEmbReadTagMultiple(m, readTimeout, searchflag, readFilter, sp.protocol, metaDataFlags, accPword, fastSearch);
+            msgEM4325GetSensorData(m, readTimeout, accPword, tagOp, null);
+        }
+        else if(sp.Op instanceof Gen2.EMMicro.EM4325.ResetAlarms)
+        {
+            Gen2.EMMicro.EM4325.ResetAlarms tagOp = (Gen2.EMMicro.EM4325.ResetAlarms) sp.Op;
+            tm = prepEmbReadTagMultiple(m, readTimeout, searchflag, readFilter, sp.protocol, metaDataFlags, accPword, fastSearch);
+            msgEM4325ResetAlarms(m, readTimeout, accPword, tagOp, null);
         }
         else if(sp.Op instanceof ReadMemory)
         {
@@ -15648,10 +15841,18 @@ SerialReader(String serialDevice) throws ReaderException
         cmdEraseFlash(2, 0x08959121);
 
         address = 0;
-        buf = new byte[240];
+        //Indicates number of bytes to write into application sector for every writeFlash command
+        int packetLen = 240;
         while (len > 0)
         {
-            ret = fwStr.read(buf, 0, 240);
+            //If len(remaining bytes) is less than packetLen, update packetLen.
+            if(packetLen > len)
+            {
+                packetLen = len;
+            }
+            //Create buf array based on packetLen
+            buf = new byte[packetLen];
+            ret = fwStr.read(buf, 0, packetLen);
             if (ret == -1)
             {
                 throw new IllegalArgumentException(
@@ -15885,7 +16086,15 @@ SerialReader(String serialDevice) throws ReaderException
             m.data[optIndex] = SELECT_ON_UID;
             Select_UID uidFilter = (Select_UID)target;
             m.setu8(uidFilter.bitLength);
-            m.setbytes(uidFilter.uidMask);
+            // Validate bitLength and uidMask.length. Always ensure, bitlength should be less than or equal to uidMask.length
+            if(uidFilter.bitLength > (uidFilter.uidMask.length)*8)
+            {
+                throw new IllegalArgumentException("Bitlength can't be greater than uidMask.length");
+            }
+            else
+            {
+                m.setbytes(uidFilter.uidMask, 0 , uidFilter.bitLength / 8 + ((uidFilter.bitLength % 8) == 0 ? 0 : 1 ));
+            }
             m.setu8(SINGULATION_FLAG_END_OF_SELECT_INDICATOR);
         }
         else if(target instanceof MultiFilter)
@@ -16503,6 +16712,20 @@ SerialReader(String serialDevice) throws ReaderException
                 Gen2.Ilian.TagSelect tagOp = (Gen2.Ilian.TagSelect) tagOP;
                 cmdIlianTagSelect(commandTimeout, tagOp, target);
             }
+            else if(tagOP instanceof Gen2.EMMicro.EM4325.GetSensorData)
+            {
+                paramSet(TMR_PARAM_TAGOP_PROTOCOL, TagProtocol.GEN2);
+                int password = ((Gen2.Password) paramGet(TMR_PARAM_GEN2_ACCESSPASSWORD)).value;
+                Gen2.EMMicro.EM4325.GetSensorData getSensorDataOp = (Gen2.EMMicro.EM4325.GetSensorData)tagOP;
+                return cmdEM4325GetSensorData(commandTimeout, password, getSensorDataOp, target);
+            }
+            else if(tagOP instanceof Gen2.EMMicro.EM4325.ResetAlarms)
+            {
+                paramSet(TMR_PARAM_TAGOP_PROTOCOL, TagProtocol.GEN2);
+                int password = ((Gen2.Password) paramGet(TMR_PARAM_GEN2_ACCESSPASSWORD)).value;
+                Gen2.EMMicro.EM4325.ResetAlarms resetAlarmOp = (Gen2.EMMicro.EM4325.ResetAlarms)tagOP;
+                cmdEM4325ResetAlarms(commandTimeout, password, resetAlarmOp, target);
+            }
             else if (tagOP instanceof WriteMemory)
             {
                 WriteMemory writeOp = (WriteMemory)tagOP;
@@ -16581,23 +16804,21 @@ SerialReader(String serialDevice) throws ReaderException
                 }
             }
         }
-        if (isStopNTags & !useStreaming)
+        int searchFlags = 0;
+        if(model.equalsIgnoreCase("M3e") && isProtocolDynamicSwitching && (plans.size() == 1))
         {
-            m.setu16(READ_MULTIPLE_RETURN_ON_N_TAGS);
+           searchFlags = READ_MULTIPLE_SEARCH_DYNAMIC_PROTOCOL_SWITCHING;
+        }
+        if (isStopNTags)
+        {
+            searchFlags |= READ_MULTIPLE_RETURN_ON_N_TAGS;
+        }
+        m.setu16(searchFlags);
+        if (isStopNTags)
+        {
             m.setu32(totalTagsToRead);
         }
-        else
-        {
-            if(model.equalsIgnoreCase("M3e") && isProtocolDynamicSwitching && (plans.size() == 1))
-            {
-               m.setu16(READ_MULTIPLE_SEARCH_DYNAMIC_PROTOCOL_SWITCHING);
-               isProtocolDynamicSwitching = false;
-            }
-            else
-            {
-                m.setu16(0x0000); // search flags
-            }
-        }
+
         int asyncOffTime = (Integer)paramGet(TMR_PARAM_READ_ASYNCOFFTIME);
         for (SimpleReadPlan plan : plans)
         {
@@ -16808,7 +17029,7 @@ SerialReader(String serialDevice) throws ReaderException
                     catch (InterruptedException ie) {
                         System.out.println(ie.getMessage());
                     }
-                }                                
+                }
             } 
             else
             {
@@ -16950,6 +17171,15 @@ SerialReader(String serialDevice) throws ReaderException
               // Reader, are you there?
               st.flush();
               isVersionError = true;
+              //here we don't have information about model of the reader, so if baudrate is 921600, send preambles
+              if(bitRate == 921600)
+              {
+                  supportsPreamble = true; // for nano
+              }
+              else
+              {
+                  supportsPreamble = false; // for nano
+              }
               versionInfo = cmdVersion();
               protocolSet = EnumSet.noneOf(TagProtocol.class);
               protocolSet.addAll(Arrays.asList(versionInfo.protocols));
@@ -16998,10 +17228,19 @@ SerialReader(String serialDevice) throws ReaderException
           }
           catch (ReaderException re)
           {
-              st.shutdown();
-              throw re; // A error response to a version command is bad news
+              if(re.getMessage().startsWith("Timeout"))
+              {
+                  notifyExceptionListeners(new ReaderException("Failed to connect with baudrate "+ bitRate+" and trying with other baudrates..."));
+                  isBaudRateOk = true;
+                  break;
+              }
+              else
+              {
+                st.shutdown();
+                throw re; // A error response to a version command is bad news
               }
           }
+         }
           if(isBaudRateOk)
           {
               continue;
@@ -17109,5 +17348,40 @@ SerialReader(String serialDevice) throws ReaderException
       }// end of else
 
     }//end of method
+
+    // Function to receive the first streaming response after serial port opened and initializes certain variables
+    public void receiveResponse(SerialTransportNative srt, int modelVal) throws ReaderException
+    {
+        //Initialize some variables here
+        st = srt;
+        opCode = 0x22;
+        if(modelVal == 2)
+        {
+            model = "M3e";
+        }
+        else
+        {
+            isM6eVariant = true;
+        }
+
+        Message m = new Message();
+        receiveMessage(1000, m);
+
+        if(m.data[5] == (byte)0x88)
+        {
+           enableMultipleSelect = true;
+        }
+    }
+
+    // Translates the serial antenna
+    public int translateSerialAntenna(int txrx)
+    {
+        int tx = 0;
+        if (((txrx >> 4) & 0xF) == ((txrx >> 0) & 0xF))
+        {
+            tx = (txrx >> 4) & 0xF;
+        }
+        return tx;
+    }
 }//end of class
 

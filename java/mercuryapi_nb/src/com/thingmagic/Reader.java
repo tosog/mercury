@@ -81,6 +81,7 @@ abstract public class Reader
   URI uri;
   boolean isTrueAsyncStopped=false;
   int transportTimeout = 5000;
+  boolean finishedReading = false;
   int commandTimeout = 1000;
   boolean userTransportTimeout;
   public static TransportListener simpleTransportListener;
@@ -121,7 +122,7 @@ abstract public class Reader
       /** Unrestricted access to full hardware range */ MANUFACTURING,
       /** Reduced FCC region */ NA2 ,
       /** 5MHZ FCC band */ NA3 ,
-      /** Israel */ IS,
+      /** Israel applicable for Micro, M6e-JIC, M6ePlus */ IS,
       /** Malaysia */MY,
       /** Indonesia */ID,
       /** Philippines */PH,
@@ -138,6 +139,8 @@ abstract public class Reader
       /** Bangladesh */BD,
       /** European Union (revised) */ EU4,
       /** Universal region applicable for M3e product */UNIVERSAL,
+      /** Israel2(IS2) region applicable for Micro and Nano */IS2,
+      /** NA4 region applicable for Micro and M6e */NA4,
       /** OPEN region with extended frequency range 840-960MHz for M6ePlus module**/OPEN_EXTENDED;
   }
 
@@ -177,6 +180,8 @@ abstract public class Reader
     regionToCodeMap.put(Reader.Region.BD , 29);
     regionToCodeMap.put(Reader.Region.EU4, 30);
     regionToCodeMap.put(Reader.Region.UNIVERSAL, 31);
+    regionToCodeMap.put(Reader.Region.IS2, 32);
+    regionToCodeMap.put(Reader.Region.NA4, 33);
     regionToCodeMap.put(Reader.Region.OPEN_EXTENDED , 254);
     regionToCodeMap.put(Reader.Region.OPEN, 255);
   }
@@ -217,6 +222,8 @@ abstract public class Reader
     codeToRegionMap.put(29, Reader.Region.BD);
     codeToRegionMap.put(30, Reader.Region.EU4);
     codeToRegionMap.put(31, Reader.Region.UNIVERSAL);
+    codeToRegionMap.put(32, Reader.Region.IS2);
+    codeToRegionMap.put(33, Reader.Region.NA4);
     codeToRegionMap.put(254, Reader.Region.OPEN_EXTENDED);
     codeToRegionMap.put(255, Reader.Region.OPEN);
   }
@@ -798,6 +805,27 @@ abstract public class Reader
       }
   }
 
+    /** This function will return the status
+      *  of finishedReading flag
+      */
+    public boolean isReadStopped()
+    {
+        /** finishedReading flag will be true only after
+          * receiving Stop Read response.
+          */
+        
+        /**If finishedReading is true, make continuousReader, backgroundNotifier 
+         * and exceptionNotifier as null to destroy the object
+         */
+        if(finishedReading)
+        {
+            continuousReader = null;
+            backgroundNotifier = null;
+            exceptionNotifier = null;
+        }
+        return finishedReading;
+    }
+
     void notifyReadListeners(TagReadData t) {
 
         synchronized (readListeners) {
@@ -1153,6 +1181,7 @@ abstract public class Reader
    * <li> /reader/powermode
    * <li> /reader/probeBaudRates
    * <li> /reader/protocolList
+   * <li> /reader/protocollist
    * <li> /reader/radio/enablePowerSave
    * <li> /reader/radio/enableSJC
    * <li> /reader/radio/enablepowersave
@@ -1629,12 +1658,12 @@ abstract public class Reader
                   else
                   {
                     running = false;
-                    enabled = false;                    
+                    enabled = false; 
                   }
                   exceptionQueue.put(re);
               }
-          }//end of while                          
-      }      
+          }//end of while
+      }
       catch (InterruptedException ie)
       {
         Thread.currentThread().interrupt();

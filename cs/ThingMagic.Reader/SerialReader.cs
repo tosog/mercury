@@ -96,7 +96,7 @@ namespace ThingMagic
         // 0x8007001F---> A device attached to the system is not functioning.
         private const uint ErrorCodeDeviceNotRecognized = 0x80070016;
         private const uint ErrorCodeDeviceNotFunctioning = 0x8007001F;
-        private static bool enableMultipleSelect = false;
+        private bool enableMultipleSelect = false;
         private bool isMultipleSelectSupported = false;
         private static bool isEmbeddedTagOp = false;
         private static bool enableReadAfterWrite = false;
@@ -123,8 +123,25 @@ namespace ThingMagic
         public List<TagProtocol> validProtocols = new List<TagProtocol>();
 
         private const int LOGICAL_ANTENNAS_ALLOWED = 64;
+
+        private int gpioNumber = 0;
+        /// <summary>
+        /// Flag to show if autonomous streaming is on
+        /// </summary>
+        public Boolean autonomousStreaming = false;
         
 	
+        #endregion
+
+        #region Constants property
+        /// <summary>
+        /// Enable/Disable Dynamic Protocol Switching
+        /// </summary>
+        public bool IsProtocolDynamicSwitching
+        {
+            get { return isProtocolDynamicSwitching; }
+            set { isProtocolDynamicSwitching = value; }
+        }
         #endregion
 
         #region Nested Enums
@@ -345,6 +362,14 @@ namespace ThingMagic
             /// Universal region is applicable for M3e product
             /// </summary>
             UNIVERSAL = 31,
+            /// <summary>
+            /// Israel2(IS2) region 
+            /// </summary>
+            IS2 = 32,
+            /// <summary>
+            /// NA4 region applicable for Micro and M6e 
+            /// </summary>
+            NA4 = 33,
             /// <summary>
             /// OPEN region with extended frequency range 840-960MHz for M6ePlus module
             /// </summary>
@@ -2201,6 +2226,7 @@ namespace ThingMagic
         private bool paramWait = false;
         private List<byte> paramMessage = new List<byte>();
         private bool hasContinuousReadStarted = false;
+        private bool hasTagReportCleared = false;
 
         // Cache value of tagtype here as flags
         private List<byte> tagTypeFlags = new List<byte>();
@@ -2300,6 +2326,8 @@ namespace ThingMagic
             _mapM5eToTmRegion.Add(SerialRegion.BD, Region.BD);
             _mapM5eToTmRegion.Add(SerialRegion.EU4, Region.EU4);
             _mapM5eToTmRegion.Add(SerialRegion.UNIVERSAL, Region.UNIVERSAL);
+            _mapM5eToTmRegion.Add(SerialRegion.IS2, Region.IS2);
+            _mapM5eToTmRegion.Add(SerialRegion.NA4, Region.NA4);
             _mapM5eToTmRegion.Add(SerialRegion.OPEN_EXTENDED, Region.OPEN_EXTENDED);
             _mapM5eToTmRegion.Add(SerialRegion.NONE, Region.UNSPEC);
 
@@ -2344,13 +2372,13 @@ namespace ThingMagic
 
             // Pre-connect params
             ParamAdd(new Setting("/reader/baudRate", typeof(int), _universalBaudRate, true,
-                delegate(Object val) { return _universalBaudRate; },
+                delegate(Object val) { return currentBaudRate; },
                 delegate(Object val)
                 {
-                    _universalBaudRate = (int)val;
+                    currentBaudRate = (int)val;
                     if (_serialPort.IsOpen)
                     {
-                        ChangeBaudRate(_universalBaudRate);
+                        ChangeBaudRate(currentBaudRate);
                         return _serialPort.BaudRate;
                     }
                     return _universalBaudRate;
@@ -2524,6 +2552,7 @@ namespace ThingMagic
                     else
                     {
                         setProtocol((TagProtocol)val);
+                        isProtocolDynamicSwitching = false;
                     }
                     return val;
                 }));
@@ -2719,7 +2748,10 @@ namespace ThingMagic
                         {
                             CmdSetProtocolConfiguration(TagProtocol.GEN2, Gen2Configuration.INITQ, (Gen2.InitQ)val);
                         }
-                        catch (ReaderCodeException) { val = null; }
+                        catch (ReaderCodeException ex) 
+                        {
+                            throw ex;
+                        }
                         return val;
                     }));
                 ParamAdd(new Setting("/reader/gen2/sendSelect", typeof(bool), null, true,
@@ -2857,11 +2889,9 @@ namespace ThingMagic
                         {
                             CmdSetRegionLbt(region, (bool)val);
                         }
-                        catch (ReaderCodeException)
+                        catch (ReaderCodeException ex)
                         {
-                            //removed the below throw as that is not matching with the M5e document guideline error message
-                            //throw new ArgumentException("LBT setting not allowed in region " + region.ToString());
-                            return false;
+                            throw ex;
                         }
                         ParamSet("/reader/region/hopTable", hopTable);
                         try { ParamSet("/reader/region/hopTime", hopTime); }
@@ -2904,7 +2934,10 @@ namespace ThingMagic
                        {
                            CmdSetDwellEnable((Region)ParamGet("/reader/region/id"), (bool)val);
                        }
-                       catch (ReaderCodeException) { }
+                       catch (ReaderCodeException ex)
+                       {
+                           throw ex;
+                       }
                        return null;
                    }));
 
@@ -3536,12 +3569,12 @@ namespace ThingMagic
                             },
                             delegate(Object val)
                             {
-                                if (((MODEL_M6E == _version.Hardware.Part1) ||
-                                    (MODEL_M6E_I == _version.Hardware.Part1) ||
-                                    (MODEL_MICRO == _version.Hardware.Part1) ||
-                                    (MODEL_M6E_NANO == _version.Hardware.Part1))
-                                    && (paramName == "/reader/tagReadData/reportRssiInDbm"))
-                                    throw new FeatureNotSupportedException(paramName + " can not be modified in M6E variants.");
+                                //if (((MODEL_M6E == _version.Hardware.Part1) ||
+                                //    (MODEL_M6E_I == _version.Hardware.Part1) ||
+                                //    (MODEL_MICRO == _version.Hardware.Part1) ||
+                                //    (MODEL_M6E_NANO == _version.Hardware.Part1))
+                                //    && (paramName == "/reader/tagReadData/reportRssiInDbm"))
+                                //    throw new FeatureNotSupportedException(paramName + " can not be modified in M6E variants.");
                                 CmdSetReaderConfiguration(paramId, val);
                                 switch (paramName)
                                 {
@@ -3855,6 +3888,14 @@ namespace ThingMagic
         /// </summary>
         public override void SimpleTransportListener(Object sender, TransportListenerEventArgs e)
         {
+            if (hasTagReportCleared)
+            {
+                if (_backgroundNotifierCallbackCount!=0)
+                {
+                    Thread.Sleep(10);
+                    hasTagReportCleared = false;
+                } 
+            }
             Console.WriteLine(String.Format(
                 "{0}: {1} (timeout={2:D}ms)",
                 e.Tx ? "TX" : "RX",
@@ -3910,6 +3951,18 @@ namespace ThingMagic
             if (_serialPort.BaudRate != 0)
                 CmdSetBaudRate((uint)rate);
             SetSerialBaudRate(rate);
+
+            if (model.Equals("M6e Nano"))
+            {
+                if (rate==921600)
+                {
+                    supportsPreamble = true;
+                }
+                else
+                {
+                    supportsPreamble = false;
+                }
+            }
         }
 
         #endregion
@@ -3939,7 +3992,6 @@ namespace ThingMagic
             // Try multiple serial speeds, in the order we're most likely to encounter them
             Exception lastException = null;
             int rate = 0;
-            _universalBaudRate = (int)ParamGet("/reader/baudRate");
             int[] bps = probeBaudRates;
             for (int count = 0; count < bps.Length + 2; count++)
             {
@@ -3968,6 +4020,15 @@ namespace ThingMagic
                         // Reader, are you there?
                         //_serialPort.DiscardInBuffer();
                         _serialPort.Flush();
+                        //here we don't have information about model of the reader, so if baudrate is 921600, send preambles
+                        if (rate==921600)
+                        {
+                            supportsPreamble = true;
+                        }
+                        else
+                        {
+                            supportsPreamble = false;
+                        }
                         OnLog("Querying reader...");
                         _version = CmdVersion();
                         supportedProtocols = new List<TagProtocol>();
@@ -3997,10 +4058,19 @@ namespace ThingMagic
                     }
                     catch (ReaderException re)
                     {
-                        OnLog("Initial reader query failed.  Closing serial port " + _serialPort.PortName + "...");
-                        _serialPort.Shutdown();
-                        OnLog("Closed serial port " + _serialPort.PortName);
-                        throw re; // A error response to a version command is bad news
+                        if (re.Message.StartsWith("Timeout"))
+                        {
+                            notifyExceptionListeners(new ReaderException("Failed to connect with baudrate " + rate + " and trying with other baudrates..."));
+                            isBaudRateOk = true;
+                            break;
+                        }
+                        else
+                        {
+                            OnLog("Initial reader query failed.  Closing serial port " + _serialPort.PortName + "...");
+                            _serialPort.Shutdown();
+                            OnLog("Closed serial port " + _serialPort.PortName);
+                            throw re; // A error response to a version command is bad news
+                        }
                     }
                 }
                 //Try next baud rate if this doesn't work
@@ -4457,7 +4527,7 @@ namespace ThingMagic
                 {
                     if (response[2] == 0x9D)
                     {
-                        throw new ReaderCommException("Autonomous mode is enabled on reader. Please disable it.");
+                        notifyExceptionListeners(new ReaderException("Autonomous mode is enabled on reader. Please disable it."));
                     }
                     else if (response[2] == 0x04)
                     {
@@ -4502,6 +4572,27 @@ namespace ThingMagic
             }
 
             return response;
+        }
+
+        /// <summary>
+        /// Function to receive the first streaming response after serial port opened and initializes certain variables
+        /// </summary>
+        /// <param name="serial"></param>
+        /// <param name="mdl"></param>
+        public void receiveResponse(SerialTransport serial, string mdl)
+        {
+            AssignStatusFlags();
+            _serialPort = serial;
+            byte[] response = new byte[256];
+            response = receiveMessage(0x22, 1000);
+
+            if (response[5]==(byte)(0x88))
+            {
+                enableMultipleSelect = true;
+            }
+
+            autonomousStreaming = true;
+ 
         }
 
         #endregion
@@ -5126,7 +5217,10 @@ namespace ThingMagic
              * adds a lengthy "wake-up preamble" to every command.
              */
             powerMode = CmdGetPowerMode();
-
+            if (model.Equals("M6e Nano"))
+            {
+                supportsPreamble = (currentBaudRate == 921600) ? true : false;
+            }
             try
             {
                 if (M6eFamilyList.Contains(model))
@@ -6433,6 +6527,10 @@ namespace ThingMagic
                     return SerialRegion.EU4;
                 case 0x1F:
                     return SerialRegion.UNIVERSAL;
+                case 0x20:
+                    return SerialRegion.IS2;
+                case 0x21:
+                    return SerialRegion.NA4;
                 case 0xFE:
                     return SerialRegion.OPEN_EXTENDED;
                 case 0xFF:
@@ -7078,6 +7176,16 @@ namespace ThingMagic
             if (option == UserConfigOperation.CLEAR)
             {
                 rp.enableAutonomousRead = false;
+                ReadPlan plan;
+                if (!model.Equals("M3e"))
+                {
+                    plan = new SimpleReadPlan(null, TagProtocol.GEN2);
+                }
+                else
+                {
+                    plan = new SimpleReadPlan(null, TagProtocol.ISO14443A);
+                }
+                ParamSet("/reader/read/plan", plan);
             }
             if (option == UserConfigOperation.SAVEWITHREADPLAN)
             {
@@ -7228,24 +7336,23 @@ namespace ThingMagic
                     }
                 }
             }
-            if (isStopNTags && (!enableStreaming))
+            #region Search flag logic for Dynamic and Read stop trigger
+            AntennaSelection searchFlags = 0;
+            if (model.Equals("M3e") && isProtocolDynamicSwitching && (readPlanList.Count == 1))
             {
-                cmd.AddRange(ByteConv.EncodeU16(Convert.ToByte(AntennaSelection.READ_MULTIPLE_RETURN_ON_N_TAGS)));
+                searchFlags = AntennaSelection.READ_MULTIPLE_SEARCH_DYNAMIC_PROTOCOL_SWITCHING;
+            }
+            if (isStopNTags)
+            {
+                searchFlags |= AntennaSelection.READ_MULTIPLE_RETURN_ON_N_TAGS;
+
+            }
+            cmd.AddRange(ByteConv.EncodeU16((ushort)searchFlags));
+            if (isStopNTags)
+            {
                 cmd.AddRange(ByteConv.EncodeU32(totalTagCount));
-                antennas |= AntennaSelection.READ_MULTIPLE_RETURN_ON_N_TAGS;
             }
-            else
-            {
-                if (model.Equals("M3e") && isProtocolDynamicSwitching && (readPlanList.Count == 1)) // applicable only for simple readplan
-                {
-                    cmd.AddRange(ByteConv.EncodeU16((ushort)AntennaSelection.READ_MULTIPLE_SEARCH_DYNAMIC_PROTOCOL_SWITCHING));
-                    isProtocolDynamicSwitching = false;
-                }
-                else
-                {
-                   cmd.AddRange(ByteConv.EncodeU16((ushort)0x0000));//search flags
-                }
-            }
+            #endregion
             foreach (SimpleReadPlan readPlan in readPlanList)
             {
                 isTriggerReadEnable = false;
@@ -7283,7 +7390,7 @@ namespace ThingMagic
                             {
                                 antennas |= AntennaSelection.READ_MULTIPLE_SEARCH_DUTY_CYCLE_CONTROL;
                             }
-                            if (isStopNTags && (!enableStreaming))
+                            if (isStopNTags )
                             {
                                 StopTriggerReadPlan strp = (StopTriggerReadPlan)readPlan;
                                 if (strp.stopOnCount is StopOnTagCount)
@@ -7484,11 +7591,11 @@ namespace ThingMagic
             List<byte> cmd = new List<byte>();
             cmd.Add(0x93); //Opcode for setting tag protocol
             cmd.Add(0x01); // sub option indicating list of protocols
-            foreach(TagProtocol proto in protocolList)
+            foreach (TagProtocol proto in protocolList)
             {
-                if(proto == TagProtocol.NONE)
+                if (!supportedProtocols.Contains(proto))
                 {
-                    throw new ReaderException("A Set Protocol command was received for a protocol value that is not supported");
+                    throw new ReaderException("Unsupported protocol " + proto.ToString() + ".");
                 }
                 cmd.Add((byte)0x00);
                 cmd.Add((byte)TranslateProtocol(proto));
@@ -9015,7 +9122,7 @@ namespace ThingMagic
                     antsel |= AntennaSelection.READ_MULTIPLE_SEARCH_FLAGS_FAST_SEARCH;
                 }
 
-                if (isStopNTags && (!enableStreaming))
+                if (isStopNTags)
                 {
                     antsel |= AntennaSelection.READ_MULTIPLE_RETURN_ON_N_TAGS;
                 }
@@ -9169,7 +9276,8 @@ namespace ThingMagic
                                 }
                                 else if (
                                     (ex is FAULT_SYSTEM_UNKNOWN_ERROR_Exception) ||
-                                    (ex is FAULT_TM_ASSERT_FAILED_Exception))
+                                    (ex is FAULT_TM_ASSERT_FAILED_Exception) ||
+                                    (ex is FAULT_UNIMPLEMENTED_FEATURE_Exception))
                                 {
                                     // real exception -- pass it on
                                     throw;
@@ -9469,7 +9577,7 @@ namespace ThingMagic
                     int timeout = (int)ParamGet("/reader/read/asyncOnTime");
                     response = receiveMessage((byte)CmdOpcode.TAG_READ_MULTIPLE, timeout);
                     // Detect end of stream
-                    if ((response != null) && (response[2] == 0x2f))
+                    if ((response != null) && (response[2] == 0x2f) && (response[5] != 0x01))
                     {
                         if (response[5] == 0x04)
                         {
@@ -9490,11 +9598,40 @@ namespace ThingMagic
                             waitForStopResponseEvent.Set();
                         }
                     }
-                    else
+                    else if ((response[5] != 0x01) && (response[2] != 0x2f) && (response[2] != 0x9d))
                     {
+                        // Excluding the process of the response containing 9D and 2F opcode.
                         ProcessStreamingResponse(response);
                     }
-                }
+                    #region Stop on N Tag read response Parsing
+                    else if ((response[2] == 0x22) && (response[1] == 0x07) && (response[3] == 0x00) && (response[4] == 0x00))
+                        {
+                            int option = ByteConv.GetU8(response, 5);
+                            int searchFlag = ByteConv.ToU16(response, 6);
+                            //Check if Stop N tag feature is enabled.
+                            if ((0x01 & option) == 0x01 && (isStopNTags && ((searchFlag & (int)AntennaSelection.READ_MULTIPLE_RETURN_ON_N_TAGS) == (int)AntennaSelection.READ_MULTIPLE_RETURN_ON_N_TAGS)))
+                            {
+                                //Retrieve total tag count read.
+                                uint tagCount = ByteConv.ToU32(response, 8);
+
+                                //Check if total requested tag count is matching with total tag read count.
+                                if (tagCount >= numberOfTagsToRead)
+                                {
+                                    CmdStopReading();
+                                    //_exitNow = true;
+                                    receiveMessage(0x2F, 0);
+                                    _exitNow = true;
+                                    keepReceiving = false;
+                                    continuousReadActive = false;
+                                    hasContinuousReadStarted = false;
+                                    finishedReading = true;
+                                    isReadInitiated = false;
+                                }
+                            }
+                        }
+                    #endregion
+
+                    }
                 catch (ReaderException ex)
                 {
                     // Notify exception listener
@@ -9638,6 +9775,10 @@ namespace ThingMagic
                             // Continue
                             keepReceiving = true;
                         }
+                        else if (ex.Message.Equals("The reader received a valid command with an unsupported or invalid parameter"))
+                        {
+                            notifyExceptionListeners(ex);
+                        }
                         else
                         {
                             // Abort
@@ -9683,6 +9824,17 @@ namespace ThingMagic
                         if (enableMultipleSelect || enableReadAfterWrite)
                         {
                             responseType = response[((response[6] & (byte)0x10) == 0x10) ? 11 : 9];
+                        }
+                        else if (autonomousStreaming)
+                        {
+                            if (model == "M3e")
+                            {
+                                responseType = response[((response[5] & (byte)0x10) == 0x10) ? 10 : 8];
+                            }
+                            else
+                            {
+                                responseType = response[((response[6] & (byte)0x10) == 0x10) ? 11 : 9];
+                            }
                         }
                         else
                         {
@@ -9734,6 +9886,17 @@ namespace ThingMagic
                                     {
                                         offSet = ARGS_RESPONSE_OFFSET + 5;
                                     }
+                                    else if (autonomousStreaming)
+                                    {
+                                        if (model == "M3e")
+                                        {
+                                            offSet = ARGS_RESPONSE_OFFSET + 4;
+                                        }
+                                        else
+                                        {
+                                            offSet = ARGS_RESPONSE_OFFSET + 5;
+                                        }
+                                    }
                                     else
                                     {
                                         offSet = ARGS_RESPONSE_OFFSET + 4;
@@ -9768,7 +9931,7 @@ namespace ThingMagic
                                 if ((((response[5] & 0x88) == (byte)SINGULATION_OPTION_MULTIPLE_SELECT || (model.Equals("M3e"))) && (response[3] == 0x04) && (response[4] == 0x00)))
                                 {
                                     Double elapsedTime = 0;
-                                    if (model.Equals("M3e"))
+                                    if (model == ("M3e"))
                                     {
                                         elapsedTime = Convert.ToDouble(ByteConv.ToU32(response, 11));
                                     }
@@ -9787,6 +9950,19 @@ namespace ThingMagic
                                 {
                                     readOffset = ARGS_RESPONSE_OFFSET + 7; //start of metadata response[12]
                                     metadataFlags = (TagMetadataFlag)ByteConv.ToU16(response, 9);
+                                }
+                                else if (autonomousStreaming)
+                                {
+                                    if (model == "M3e")
+                                    {
+                                        readOffset = ARGS_RESPONSE_OFFSET + 6; //start of metadata response[11]                                    
+                                        metadataFlags = (TagMetadataFlag)ByteConv.ToU16(response, 8);
+                                    }
+                                    else
+                                    {
+                                        readOffset = ARGS_RESPONSE_OFFSET + 7; //start of metadata response[12]
+                                        metadataFlags = (TagMetadataFlag)ByteConv.ToU16(response, 9);
+                                    }
                                 }
                                 else
                                 {
@@ -9807,6 +9983,7 @@ namespace ThingMagic
                                 // Ignoring invalid tag response (epcLen goes to negative), which disturbs further parsing of tagresponse
                                 if (t._tagData._crc != null || model.Equals("M3e"))
                                 {
+                                    hasTagReportCleared = true;
                                     QueueTagReads(new TagReadData[] { t });
                                 }
                             }
@@ -10397,6 +10574,18 @@ namespace ThingMagic
                 tm = prepEmbReadTagMultiple(ref m, timeout, antennas, filt, protocol, metadataFlags, accessPassword, srp);
                 embedLen = msgAddIlian(ref m, timeout, (Gen2.Ilian.GEN2_ILN_TagSelectCommand)opILN, null);
             }
+            else if (srp.Op is Gen2.EMMicro.EM4325.GetSensorData)
+            {
+                Gen2.EMMicro.EM4325.GetSensorData opSensorData = (Gen2.EMMicro.EM4325.GetSensorData)srp.Op;
+                tm = prepEmbReadTagMultiple(ref m, timeout, antennas, filt, protocol, metadataFlags, accessPassword, srp);
+                embedLen = msgAddEM4325GetSensorData(ref m, timeout, 0, opSensorData, null);
+            }
+            else if (srp.Op is Gen2.EMMicro.EM4325.ResetAlarms)
+            {
+                Gen2.EMMicro.EM4325.ResetAlarms opResetAlarms = (Gen2.EMMicro.EM4325.ResetAlarms)srp.Op;
+                tm = prepEmbReadTagMultiple(ref m, timeout, antennas, filt, protocol, metadataFlags, accessPassword, srp);
+                embedLen = msgAddEM4325ResetAlarms(ref m, timeout, 0, opResetAlarms, null);
+            }
             else if (srp.Op is ReadMemory)
             {
                 ReadMemory readOp = (ReadMemory)(srp.Op);
@@ -10432,21 +10621,9 @@ namespace ThingMagic
             tagOpFailuresCount = 0;
             ReadPlan rp = (ReadPlan)this.ParamGet("/reader/read/plan");
 
-            // Stop n trigger feature is not supported for async read. 
-            if (rp is StopTriggerReadPlan)
-            {
-                throw new ReaderException("Unsupported operation");
-            }
-            else if (rp is MultiReadPlan)
+            if (rp is MultiReadPlan)
             {
                 MultiReadPlan multiReadPlan = (MultiReadPlan)rp;
-                foreach (ReadPlan r in multiReadPlan.Plans)
-                {
-                    if (r is StopTriggerReadPlan)
-                    {
-                        throw new ReaderException("Unsupported operation");
-                    }
-                }
                 isValidationSuccess = validateMultiReadPlan(multiReadPlan);
             }
             // True continuous read in M6e variants, if there's a consistent antenna list across the 
@@ -10466,6 +10643,7 @@ namespace ThingMagic
                 _exitNow = false;
                 _runNow = true;
                 enableStreaming = true;
+                finishedReading = false;
                 isTrueContinuousRead = true;
                 userMeta = (TagMetadataFlag)ParamGet("/reader/metadata");
                 if (null == asyncReadThread)
@@ -10827,6 +11005,7 @@ namespace ThingMagic
                 isSecureAccessEnabled = false;
                 isReadInitiated = false;
                 isReadStarted = false;
+                enableMultipleSelect = false;
                 isEmbeddedTagOp = false;
                 fetchTagReads = false;
                 OffTimeAdded = false;
@@ -11914,6 +12093,23 @@ namespace ThingMagic
                     Cmd_init_Ilian(timeout, (Gen2.Ilian.GEN2_ILN_TagSelectCommand)tagOP, target);
                     return null;
                 }
+                else if (tagOP is Gen2.EMMicro.EM4325.GetSensorData)
+                {
+                    ParamSet("/reader/tagop/protocol", TagProtocol.GEN2);
+                    UInt16 timeout = (UInt16)(int)ParamGet("/reader/commandTimeout");
+                    Gen2.Password pwobj = (Gen2.Password)ParamGet("/reader/gen2/accessPassword");
+                    UInt32 accessPassword = pwobj.Value;
+                    return CmdEM4325GetSensorData(timeout, accessPassword, (Gen2.EMMicro.EM4325.GetSensorData)tagOP, target);
+                }
+                else if (tagOP is Gen2.EMMicro.EM4325.ResetAlarms)
+                {
+                    ParamSet("/reader/tagop/protocol", TagProtocol.GEN2);
+                    UInt16 timeout = (UInt16)(int)ParamGet("/reader/commandTimeout");
+                    Gen2.Password pwobj = (Gen2.Password)ParamGet("/reader/gen2/accessPassword");
+                    UInt32 accessPassword = pwobj.Value;
+                    CmdEM4325ResetAlarms(timeout, accessPassword, (Gen2.EMMicro.EM4325.ResetAlarms)tagOP, target);
+                    return null;
+                }
                 else if (tagOP is WriteMemory)
                 {
                     WriteMemory writeOp = (WriteMemory)tagOP;
@@ -12536,7 +12732,7 @@ namespace ThingMagic
                         list.AddRange(ByteConv.EncodeU16((UInt16)(statusFlags)));
                     }
                 }
-                if (isStopNTags && (!enableStreaming))
+                if (isStopNTags)
                 {
                     list.AddRange(ByteConv.EncodeU32(numberOfTagsToRead));
                 }
@@ -12552,6 +12748,10 @@ namespace ThingMagic
             }
             else
             {
+                if (isStopNTags)
+                {
+                    antennas |= AntennaSelection.READ_MULTIPLE_RETURN_ON_N_TAGS;
+                }
                 if (isTriggerReadEnable)
                 {
                     antennas |= AntennaSelection.READ_MULTIPLE_SEARCH_FLAG_GPI_TRIGGER_READ;
@@ -12621,7 +12821,7 @@ namespace ThingMagic
                     }
                 }
 
-                if (isStopNTags && (!enableStreaming))
+                if (isStopNTags)
                 {
                     list.AddRange(ByteConv.EncodeU32(numberOfTagsToRead));
                 }
@@ -12711,7 +12911,7 @@ namespace ThingMagic
                 {
                     list.AddRange(ByteConv.EncodeU16((UInt16)((int)ParamGet("/reader/read/asyncOffTime"))));
                 }
-                if (isStopNTags && (!enableStreaming))
+                if (isStopNTags)
                 {
                     list.AddRange(ByteConv.EncodeU32(numberOfTagsToRead));
                 }
@@ -12734,7 +12934,7 @@ namespace ThingMagic
                     list.AddRange(ByteConv.EncodeU16((UInt16)((int)ParamGet("/reader/read/asyncOffTime"))));
                 }
 
-                if (isStopNTags && (!enableStreaming))
+                if (isStopNTags)
                 {
                     list.AddRange(ByteConv.EncodeU32(numberOfTagsToRead));
                 }
@@ -14127,7 +14327,14 @@ namespace ThingMagic
                 }
                 else
                 {
-                    t._antenna = _txRxMap.TranslateSerialAntenna(response[readOffset++]);
+                    if (!autonomousStreaming)
+                    {
+                        t._antenna = _txRxMap.TranslateSerialAntenna(response[readOffset++]);
+                    }
+                    else
+                    {
+                        t._antenna = TranslateSerialAntenna(response[readOffset++]);
+                    }
                 }
             }
             if (0 != (metadataFlags & TagMetadataFlag.FREQUENCY))
@@ -14175,9 +14382,19 @@ namespace ThingMagic
                 }
                 else
                 {
-                    length = bitlength / 8;
+                    length = ((bitlength + 7) / 8);
                     t.isErrorData = false; // the data here is actual data.
                     t._data = new byte[length];
+                    if (isM6eVariant)
+                    {
+                        //In UHF data length is stored in bytes.
+                        t.dataLength = length;
+                    }
+                    else
+                    {
+                        // In M3e, data length is stored in bits.
+                        t.dataLength = bitlength;
+                    }
                     Array.Copy(response, (readOffset + 2), t._data, 0, length);
                     if (isGen2AllMemoryBankEnabled)
                     {
@@ -14190,22 +14407,24 @@ namespace ThingMagic
             if (0 != (metadataFlags & TagMetadataFlag.GPIO))
             {
                 byte gpioByte = response[readOffset++];
-                int gpioNumber;
-                switch (_version.Hardware.Part1)
+                if (!autonomousStreaming)
                 {
-                    case MODEL_M6E:
-                        gpioNumber = 4;
-                        break;
-                    case MODEL_M5E:
-                    case MODEL_MICRO:
-                        gpioNumber = 2;
-                        break;
-                    case MODEL_M3E:
-                        gpioNumber = 4;
-                        break;
-                    default:
-                        gpioNumber = 4;
-                        break;
+                    switch (_version.Hardware.Part1)
+                    {
+                        case MODEL_M6E:
+                            gpioNumber = 4;
+                            break;
+                        case MODEL_M5E:
+                        case MODEL_MICRO:
+                            gpioNumber = 2;
+                            break;
+                        case MODEL_M3E:
+                            gpioNumber = 4;
+                            break;
+                        default:
+                            gpioNumber = 4;
+                            break;
+                    }
                 }
 
                 t._GPIO = new GpioPin[gpioNumber];
@@ -14267,7 +14486,7 @@ namespace ThingMagic
                 /* Tag Type response is in EBV format. Hence the number of bytes is not fixed. 
                  *  Number of bytes to extract depends on the MSB of the retrieved byte.Hence parse EBV data.
                  */
-                 byte[] tagType = parseEBVData(response, ref readOffset);
+                byte[] tagType = parseEBVData(response, ref readOffset);
 
                 //Convert from EBV format to actual tag type.
                 t._tagType = ConvertFromEBV(tagType);
@@ -14276,25 +14495,28 @@ namespace ThingMagic
             // Parsing the Correct Antenna ID based on GPO status
             if ((0 != (metadataFlags & TagMetadataFlag.ANTENNAID)))
             {
-                if (t._GPIO != null)
+                if (!autonomousStreaming)
                 {
-                    if (t._GPIO.Length > 2)
+                    if (t._GPIO != null)
                     {
-                        if ((_version.Hardware.Part1 != MODEL_M6E_NANO) && (t._GPIO[2].High && !t._GPIO[3].High && ((portmask & 0x04) != 0x00)))
-                            t._antenna += 16;
-                        if ((_version.Hardware.Part1 != MODEL_M6E_NANO) && (!t._GPIO[2].High && t._GPIO[3].High && ((portmask & 0x08) != 0x00)))
-                            t._antenna += 32;
-                        if ((_version.Hardware.Part1 != MODEL_M6E_NANO) && (t._GPIO[2].High && t._GPIO[3].High && ((portmask & 0x0C) != 0x00)))
-                            t._antenna += 48;
+                        if (t._GPIO.Length > 2)
+                        {
+                            if ((_version.Hardware.Part1 != MODEL_M6E_NANO) && (t._GPIO[2].High && !t._GPIO[3].High && ((portmask & 0x04) != 0x00)))
+                                t._antenna += 16;
+                            if ((_version.Hardware.Part1 != MODEL_M6E_NANO) && (!t._GPIO[2].High && t._GPIO[3].High && ((portmask & 0x08) != 0x00)))
+                                t._antenna += 32;
+                            if ((_version.Hardware.Part1 != MODEL_M6E_NANO) && (t._GPIO[2].High && t._GPIO[3].High && ((portmask & 0x0C) != 0x00)))
+                                t._antenna += 48;
+                        }
                     }
-                }
-                if (isTxRxMapSet)
-                {
-                    int[] txrx = GetDefaultTxRx(t._antenna);
-                    int antId = _txRxMap.GetDefaultAntenna(txrx);
-                    if (antId != 0)
+                    if (isTxRxMapSet)
                     {
-                        t._antenna = antId;
+                        int[] txrx = GetDefaultTxRx(t._antenna);
+                        int antId = _txRxMap.GetDefaultAntenna(txrx);
+                        if (antId != 0)
+                        {
+                            t._antenna = antId;
+                        }
                     }
                 }
             }
@@ -14320,6 +14542,25 @@ namespace ThingMagic
                     "Can't find mapping from txrx({0:D},{1:D}) to logical antenna number",
                     tx, rx));
             }
+        }
+
+        #endregion
+
+        #region TranslateSerialAntenna
+
+        /// <summary>
+        /// Translates the serial antenna
+        /// </summary>
+        /// <param name="txrx"></param>
+        /// <returns></returns>
+        public int TranslateSerialAntenna(byte txrx)
+        {
+            int tx = 0;
+            if (((txrx >> 4) & 0xF) == ((txrx >> 0) & 0xF))
+            {
+                tx = (txrx >> 4) & 0xF;
+            }
+            return tx;
         }
 
         #endregion
@@ -14640,6 +14881,7 @@ namespace ThingMagic
             }
             else if (rp is MultiReadPlan)
             {
+                _searchList = null;
                 MultiReadPlan mrp = (MultiReadPlan)rp;
                 if (validateParams(mrp) && (featureflag.Contains(ReaderFeaturesFlag.READER_FEATURES_FLAG_ANTENNA_READ_TIME)))
                 {
@@ -15251,11 +15493,14 @@ namespace ThingMagic
         {
             Reader.Stat.Values values = new Stat.Values();
             List<Stat.PerAntennaValues> perAntennaValuesList = new List<Stat.PerAntennaValues>();
-            for (int j = 0; j < _txRxMap.ValidAntennas.Length; j++)
+            if (!(autonomousStreaming))
             {
-                perAntennaValuesList.Add(new Stat.PerAntennaValues());
+                for (int j = 0; j < _txRxMap.ValidAntennas.Length; j++)
+                {
+                    perAntennaValuesList.Add(new Stat.PerAntennaValues());
+                }
+                values.PERANTENNA = perAntennaValuesList;
             }
-            values.PERANTENNA = perAntennaValuesList;
             int i;
             while (offset < (response.Length))
             {
@@ -15312,7 +15557,7 @@ namespace ThingMagic
                 else if ((tempStatFlag & Reader.Stat.StatsFlag.TEMPERATURE) != 0)
                 {
                     int length = response[offset++];
-                    values.TEMPERATURE = (uint)ByteConv.GetU8(response, offset);
+                    values.TEMPERATURE = (SByte)ByteConv.GetU8(response, offset);
                     offset += length;
                 }
                 else if ((tempStatFlag & Reader.Stat.StatsFlag.PROTOCOL) != 0)
@@ -15367,18 +15612,21 @@ namespace ThingMagic
 
             //Store the requested flags for future validation
             values.VALID = statFlag;
-            List<Stat.PerAntennaValues> tempPerAntennaValuesList = new List<Stat.PerAntennaValues>();
-            // Iterate through the per antenna values,
-            // if found  any 0-antenna rows, don't add to the temporary list so that we can compact out the empty space.
-            for (int index = 0; index < values.PERANTENNA.Count; index++)
+            if (!(autonomousStreaming))
             {
-                if (values.PERANTENNA[index].Antenna != 0)
+                List<Stat.PerAntennaValues> tempPerAntennaValuesList = new List<Stat.PerAntennaValues>();
+                // Iterate through the per antenna values,
+                // if found  any 0-antenna rows, don't add to the temporary list so that we can compact out the empty space.
+                for (int index = 0; index < values.PERANTENNA.Count; index++)
                 {
-                    tempPerAntennaValuesList.Add(values.PERANTENNA[index]);
+                    if (values.PERANTENNA[index].Antenna != 0)
+                    {
+                        tempPerAntennaValuesList.Add(values.PERANTENNA[index]);
+                    }
                 }
+                values.PERANTENNA = null;
+                values.PERANTENNA = tempPerAntennaValuesList;
             }
-            values.PERANTENNA = null;
-            values.PERANTENNA = tempPerAntennaValuesList;
 
             return values;
         }
@@ -16103,7 +16351,7 @@ namespace ThingMagic
             return (byte)(msg.Count - tmp);
         }
 
-        private static int msgAddIdsSL900aCommonHeader(List<byte> msg, UInt16 timeout, Gen2.IDS.SL900A tagop, TagFilter target)
+        private int msgAddIdsSL900aCommonHeader(List<byte> msg, UInt16 timeout, Gen2.IDS.SL900A tagop, TagFilter target)
         {
             SingulationBytes sb = MakeSingulationBytes(target, true, tagop.AccessPassword);
             msg.Add(0x2D);
@@ -18003,6 +18251,116 @@ namespace ThingMagic
             return (byte)(msg.Count - tmp);
         }
 
+        //EM4325GetSensorData
+        private byte[] CmdEM4325GetSensorData(UInt16 timeout, UInt32 accessPassword, Gen2.EMMicro.EM4325.GetSensorData tagop, TagFilter filter)
+        {
+            List<byte> cmd = new List<byte>();
+            msgAddEM4325GetSensorData(ref cmd, timeout, accessPassword, tagop, filter);
+            byte[] response = SendTimeout(cmd, timeout);
+            int i = enableMultipleSelect ? 10 : 9;
+            byte[] responseToSend = SubArray(response, i, (response.Length - i));
+            return responseToSend;
+        }
+
+        //msgAddEM4325GetSensorData
+        private byte msgAddEM4325GetSensorData(ref List<byte> msg, UInt16 timeout, UInt32 accessPassword, Gen2.EMMicro.EM4325.GetSensorData tagop, TagFilter target)
+        {
+            SingulationBytes sb = MakeSingulationBytes(target, true, accessPassword);
+            msg.Add(0x2D);
+            int tmp = msg.Count;
+            msg.AddRange(ByteConv.EncodeU16(timeout));
+            msg.Add(tagop.ChipType);
+            byte[] sbNewArray = new byte[sb.Mask.Length];
+            Array.Copy(sb.Mask, 0, sbNewArray, 0, sb.Mask.Length);
+            if (enableMultipleSelect && (!isEmbeddedTagOp))
+            {
+                msg.Add(SINGULATION_OPTION_MULTIPLE_SELECT);
+            }
+            if (!isMultiFilterEnabled)
+            {
+                msg.Add((byte)(0x40 | sb.Option));
+                msg.AddRange(ByteConv.EncodeU16(tagop.commandCode));
+                if (null != target)
+                {
+                    msg.AddRange(sb.Mask);
+                }
+            }
+            else
+            {
+                if (isEmbeddedTagOp)
+                {
+                    msg.Add((byte)(0x40));
+                    msg.AddRange(ByteConv.EncodeU16(tagop.commandCode));
+                }
+                else
+                {
+                    msg.Add((byte)(0x41));
+                    msg.AddRange(ByteConv.EncodeU16(tagop.commandCode));
+                    byte[] sbModified = new byte[sbNewArray.Length - 1];
+                    Array.Copy(sbNewArray, 1, sbModified, 0, sbNewArray.Length - 1);
+                    if (null != target)
+                    {
+                        msg.AddRange(sbModified);
+                    }
+                }
+            }
+            msg.Add(tagop.bitsToSet);
+            return (byte)(msg.Count - tmp);
+        }
+
+        //EM4325ResetAlarms
+        private void CmdEM4325ResetAlarms(UInt16 timeout, UInt32 accessPassword, Gen2.EMMicro.EM4325.ResetAlarms tagop, TagFilter filter)
+        {
+            List<byte> cmd = new List<byte>();
+            msgAddEM4325ResetAlarms(ref cmd, timeout, accessPassword, tagop, filter);
+            SendTimeout(cmd, timeout);
+        }
+
+        //msgAddEM4325ResetAlarms
+        private byte msgAddEM4325ResetAlarms(ref List<byte> msg, UInt16 timeout, UInt32 accessPassword, Gen2.EMMicro.EM4325.ResetAlarms tagop, TagFilter target)
+        {
+            SingulationBytes sb = MakeSingulationBytes(target, true, accessPassword);
+            msg.Add(0x2D);
+            int tmp = msg.Count;
+            msg.AddRange(ByteConv.EncodeU16(timeout));
+            msg.Add(tagop.ChipType);
+            byte[] sbNewArray = new byte[sb.Mask.Length];
+            Array.Copy(sb.Mask, 0, sbNewArray, 0, sb.Mask.Length);
+            if (enableMultipleSelect && (!isEmbeddedTagOp))
+            {
+                msg.Add(SINGULATION_OPTION_MULTIPLE_SELECT);
+            }
+            if (!isMultiFilterEnabled)
+            {
+                msg.Add((byte)(0x40 | sb.Option));
+                msg.AddRange(ByteConv.EncodeU16(tagop.commandCode));
+                if (null != target)
+                {
+                    msg.AddRange(sb.Mask);
+                }
+            }
+            else
+            {
+                if (isEmbeddedTagOp)
+                {
+                    msg.Add((byte)(0x40));
+                    msg.AddRange(ByteConv.EncodeU16(tagop.commandCode));
+                }
+                else
+                {
+                    msg.Add((byte)(0x41));
+                    msg.AddRange(ByteConv.EncodeU16(tagop.commandCode));
+                    byte[] sbModified = new byte[sbNewArray.Length - 1];
+                    Array.Copy(sbNewArray, 1, sbModified, 0, sbNewArray.Length - 1);
+                    if (null != target)
+                    {
+                        msg.AddRange(sbModified);
+                    }
+                }
+            }
+            msg.Add(tagop.fillValue);
+            return (byte)(msg.Count - tmp);
+        }
         #endregion
 
         #endregion
@@ -18500,7 +18858,7 @@ namespace ThingMagic
         /// the "singulation option" byte that says, "No singulation, please."
         /// </summary>
         /// <returns></returns>
-        private static SingulationBytes MakePasswordSingulationBytes(UInt32 accessPassword)
+        private SingulationBytes MakePasswordSingulationBytes(UInt32 accessPassword)
         {
             SingulationBytes sb = new SingulationBytes();
             sb.Option = 0x05;  // Password only
@@ -18552,7 +18910,7 @@ namespace ThingMagic
         /// The workaround is to provide a select with empty mask.</param>
         /// <param name="accessPassword">The tag access password</param>
         /// <returns>Singulation specification bytes for M5e protocol.  If tf is null, returns default singulation.</returns>
-        private static SingulationBytes MakeSingulationBytes(TagFilter tf, bool needAccessPassword,
+        private SingulationBytes MakeSingulationBytes(TagFilter tf, bool needAccessPassword,
                                                              UInt32 accessPassword)
         {
             if (null == tf)
@@ -18694,7 +19052,7 @@ namespace ThingMagic
         /// If true, tags NOT matching the mask will be selected.
         /// If false, tags matching mask are selected (normal behavior)</param>
         /// <returns>Singulation specification bytes for M5e protocol.</returns>
-        private static SingulationBytes MakeSingulationBytes(List<Byte> list, Gen2.Bank bank, UInt32 address, UInt16 bitCount, ICollection<byte> data, bool invert, byte target, byte action)
+        private SingulationBytes MakeSingulationBytes(List<Byte> list, Gen2.Bank bank, UInt32 address, UInt16 bitCount, ICollection<byte> data, bool invert, byte target, byte action)
         {
             SingulationBytes sb = new SingulationBytes();
             byte option = BankToSelectOption(bank);

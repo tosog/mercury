@@ -194,7 +194,7 @@ public class SimpleReadPlan extends ReadPlan
     }
     else
     {
-      sb.append(" auto");
+      sb.append(" null");
     }
     if (filter != null)
     {

@@ -734,6 +734,9 @@ TMR_Status TMR_SR_cmdRaw(TMR_Reader *reader, uint32_t timeout, uint8_t msgLen,
             uint8_t msg[]);
 #endif /* TMR_ENABLE_UHF */
 
+TMR_Status
+TMR_SR_boot(TMR_Reader *reader, uint32_t currentBaudRate);
+
 TMR_Status TMR_SR_setSerialBaudRate(TMR_Reader *reader, uint32_t rate);
 TMR_Status TMR_SR_cmdVersion(TMR_Reader *reader, TMR_SR_VersionInfo *info);
 TMR_Status TMR_SR_cmdBootFirmware(TMR_Reader *reader);
@@ -899,6 +902,12 @@ TMR_SR_cmdFDNMeasure(TMR_Reader *reader, uint16_t timeout, TMR_GEN2_Password acc
 TMR_Status
 TMR_SR_cmdILIANTagSelect(TMR_Reader *reader, uint16_t timeout, TMR_GEN2_Password accessPassword,
                          uint16_t CommandCode, TMR_TagFilter* target);
+TMR_Status
+TMR_SR_cmdEM4325GetSensorData(TMR_Reader *reader, uint16_t timeout, TMR_GEN2_Password accessPassword,
+                         uint16_t CommandCode, TMR_TagFilter* target, uint8_t bitToSet, TMR_uint8List *data);
+TMR_Status
+TMR_SR_cmdEM4325ResetAlarms(TMR_Reader *reader, uint16_t timeout, TMR_GEN2_Password accessPassword,
+                         uint16_t CommandCode, TMR_TagFilter* target, uint8_t fillValue);
 TMR_Status TMR_SR_cmdHibikiReadLock(TMR_Reader *reader, uint16_t timeout,
             TMR_GEN2_Password accessPassword, uint16_t mask, uint16_t action);
 TMR_Status TMR_SR_cmdHibikiGetSystemInformation(TMR_Reader *reader, uint16_t timeout,
@@ -1267,6 +1276,12 @@ TMR_SR_msgAddFDNMeasure(uint8_t *msg, uint8_t *i, uint16_t timeout, TMR_GEN2_Pas
 TMR_Status
 TMR_SR_msgAddILIANTagSelect(uint8_t *msg, uint8_t *i, uint16_t timeout, TMR_GEN2_Password accessPassword, 
                          uint16_t CommandCode, TMR_TagFilter* target);
+TMR_Status
+TMR_SR_msgAddEM4325GetSensorData(uint8_t *msg, uint8_t *i, uint16_t timeout, TMR_GEN2_Password accessPassword,
+                         uint16_t CommandCode, TMR_TagFilter* target, uint8_t bitToSet);
+TMR_Status
+TMR_SR_msgAddEM4325ResetAlarms(uint8_t *msg, uint8_t *i, uint16_t timeout, TMR_GEN2_Password accessPassword,
+                         uint16_t CommandCode, TMR_TagFilter* target, uint8_t fillValue);
 TMR_Status TMR_SR_cmdISO180006BWriteTagData(TMR_Reader *reader,
       uint16_t timeout, uint8_t address, uint8_t count, const uint8_t data[],
       const TMR_TagFilter *filter);

@@ -48,39 +48,39 @@ namespace ThingMagic
             /// <summary>
             /// HID Iclass SE tagtype
             /// </summary>
-            HID_ICLASS_SE = 0x00000080,
+            HID_ICLASS_SE = 0x00000100,
             /// <summary>
             /// NXP Icode SLI tagtype
             /// </summary>
-            ICODE_SLI = 0x00000100,
+            ICODE_SLI = 0x00000200,
             /// <summary>
             /// NXP Icode SLI-L tagtype
             /// </summary>
-            ICODE_SLI_L = 0x00000200,
+            ICODE_SLI_L = 0x00000400,
             /// <summary>
             /// NXP Icode SLI-S tag type
             /// </summary>
-            ICODE_SLI_S = 0x00000400,
+            ICODE_SLI_S = 0x00000800,
             /// <summary>
             /// NXP ICODE DNA tagtype
             /// </summary>
-            ICODE_DNA = 0x00000800,
+            ICODE_DNA = 0x00001000,
             /// <summary>
             /// NXP ICODE SLIX tagtype
             /// </summary>
-            ICODE_SLIX = 0x00001000,
+            ICODE_SLIX = 0x00002000,
             /// <summary>
             /// NXP ICODE SLIX-L tagtype
             /// </summary>
-            ICODE_SLIX_L = 0x00002000,
+            ICODE_SLIX_L = 0x00004000,
             /// <summary>
             /// NXP ICODE SLIX-S tagtype
             /// </summary>
-            ICODE_SLIX_S = 0x00004000,
+            ICODE_SLIX_S = 0x00008000,
             /// <summary>
             /// NXP Icode SLIX-2 tagtype
             /// </summary>
-            ICODE_SLIX_2 = 0x00008000,
+            ICODE_SLIX_2 = 0x00010000,
         }
         #endregion
 

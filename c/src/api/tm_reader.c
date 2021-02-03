@@ -253,7 +253,7 @@ else
 else
 #endif /* TMR_ENABLE_UHF */
 {
-#if !(defined(TMR_ENABLE_HF_LF) || defined(BARE_METAL))
+#if !((!defined(TMR_ENABLE_UHF)) || defined(BARE_METAL))
   /**
    * we are here means user requested for custom transport
    * scheme.
@@ -307,6 +307,8 @@ return TMR_ERROR_INVALID;
 TMR_Status
 TMR_reader_init_internal(struct TMR_Reader *reader)
 {
+  char errMsg[256];
+
   reader->readParams.readPlan = &reader->readParams.defaultReadPlan;
   reader->connected = false;
   reader->pSupportsResetStats = NULL;
@@ -366,7 +368,7 @@ TMR_reader_init_internal(struct TMR_Reader *reader)
   reader->isReadAfterWrite = false;
   reader->extendedAntOption = 0;
 #endif /* TMR_ENABLE_UHF */
-#if !(defined(TMR_ENABLE_HF_LF) || defined(BARE_METAL))
+#if !((!defined(TMR_ENABLE_UHF)) || defined(BARE_METAL))
   reader->regulatoryParams.RegMode = TIMED;
   reader->regulatoryParams.RegModulation = CW;
   reader->regulatoryParams.regOnTime = 500;
@@ -376,6 +378,19 @@ TMR_reader_init_internal(struct TMR_Reader *reader)
 #ifdef TMR_ENABLE_HF_LF
   reader->isProtocolDynamicSwitching = false;
 #endif /* TMR_ENABLE_HF_LF */
+
+  //Set default error message.
+  sprintf(errMsg, "Unknown error");
+  if(TMR_READER_TYPE_SERIAL == reader->readerType)
+  {
+    sprintf(reader->u.serialReader.errMsg, "%s", errMsg);
+  }
+#ifdef TMR_ENABLE_LLRP_READER
+  else
+  {
+    sprintf(reader->u.llrpReader.errMsg,  "%s", errMsg);
+  }
+#endif /* TMR_ENABLE_LLRP_READER */
 
   return TMR_SUCCESS;
 }
@@ -4279,6 +4294,42 @@ TMR_TagOp_init_GEN2_fdn_Measure(TMR_TagOp *tagop, TMR_GEN2_Password accessPasswo
 
   return TMR_SUCCESS;
 }
+TMR_Status
+TMR_TagOp_init_GEN2_EM4325_GetSensorData(TMR_TagOp *tagop, TMR_GEN2_Password accessPassword, bool sendUID, bool sendNewSample)
+{
+  uint8_t bitsToSet = 0;
+
+  tagop->type                                                              = TMR_TagOP_GEN2_EM4325_GET_SENSOR_DATA;
+  tagop->u.gen2.u.custom.chipType                                          = TMR_SR_GEN2_EMMICRO_EM4325_SILICON;
+  tagop->u.gen2.u.custom.u.emmicro.u.em4325.u.getSensorData.AccessPassword = accessPassword;
+  tagop->u.gen2.u.custom.u.emmicro.u.em4325.u.getSensorData.CommandCode    = 0x0001;
+
+  /* Set appropriate bits based on sendUid and sendNewSample flags.
+   * a) sendUid flag.
+   * If true  : sends UID in response.
+   * If false : response doesn't include UID.
+   *
+   * b) sendNewSample flag.
+   * If true  : gets the new sample.
+   * If false : gets the last sample.
+   */
+  bitsToSet  = (uint8_t)(sendUID ? 0x80 : 0);
+  bitsToSet |= (uint8_t)(sendNewSample ? 0x40 : 0);
+  tagop->u.gen2.u.custom.u.emmicro.u.em4325.u.getSensorData.bitsToSet      = bitsToSet;
+
+  return TMR_SUCCESS;
+}
+TMR_Status
+TMR_TagOp_init_GEN2_EM4325_ResetAlarms(TMR_TagOp *tagop, TMR_GEN2_Password accessPassword)
+{
+  tagop->type                                                            = TMR_TagOP_GEN2_EM4325_RESET_ALARMS;
+  tagop->u.gen2.u.custom.chipType                                        = TMR_SR_GEN2_EMMICRO_EM4325_SILICON;
+  tagop->u.gen2.u.custom.u.emmicro.u.em4325.u.resetAlarms.AccessPassword = accessPassword;
+  tagop->u.gen2.u.custom.u.emmicro.u.em4325.u.resetAlarms.CommandCode    = 0x0004;
+  tagop->u.gen2.u.custom.u.emmicro.u.em4325.u.resetAlarms.fillValue      = 0x50;
+
+  return TMR_SUCCESS;
+}
 #endif /* TMR_ENABLE_UHF */
 
 #ifdef TMR_ENABLE_HF_LF
@@ -4443,7 +4494,7 @@ TMR_SR_convertToEBV(uint8_t *msg, uint8_t *i, uint64_t value)
 uint64_t
 TMR_SR_convertFromEBV(uint8_t *msg, uint8_t length)
 {
-  uint64_t value, temp;
+  uint64_t value = 0, temp = 0;
 
   switch (length)
   {

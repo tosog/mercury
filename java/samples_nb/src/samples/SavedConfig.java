@@ -126,12 +126,9 @@ public class SavedConfig {
 
         r.paramSet("/reader/userConfig", new SerialReader.UserConfigOp(SerialReader.SetUserProfileOption.RESTORE));
         System.out.println("User profile set option:restore all configuration");
-        //For M3e, Verify configuration is not supported.
-        if(!model.equalsIgnoreCase("M3e"))
-        {
-            r.paramSet("/reader/userConfig", new SerialReader.UserConfigOp(SerialReader.SetUserProfileOption.VERIFY));
-            System.out.println("User profile set option:verify all configuration");
-        }
+
+        r.paramSet("/reader/userConfig", new SerialReader.UserConfigOp(SerialReader.SetUserProfileOption.VERIFY));
+        System.out.println("User profile set option:verify all configuration");
 
         // Get User Profile
 

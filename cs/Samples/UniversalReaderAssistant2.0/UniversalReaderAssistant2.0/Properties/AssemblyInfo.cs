@@ -53,6 +53,6 @@ using System.Windows;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 // changing the minor version
-[assembly: AssemblyVersion("5.0.82.82")]
-[assembly: AssemblyFileVersion("5.0.82.82")]
+[assembly: AssemblyVersion("5.1.43.43")]
+[assembly: AssemblyFileVersion("5.1.43.43")]
 [assembly: NeutralResourcesLanguageAttribute("en-US")]

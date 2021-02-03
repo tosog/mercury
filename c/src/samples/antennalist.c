@@ -11,6 +11,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <inttypes.h>
+#ifdef TMR_ENABLE_HF_LF
+#include <tmr_utils.h>
+#endif /* TMR_ENABLE_HF_LF */
 
 /* Enable this to use transportListener */
 #ifndef USE_TRANSPORT_LISTENER
@@ -165,6 +168,7 @@ int main(int argc, char *argv[])
   checkerr(rp, ret, 1, "connecting reader");
 
   model.value = string;
+  model.max   = sizeof(string);
   TMR_paramGet(rp, TMR_PARAM_VERSION_MODEL, &model);
   checkerr(rp, ret, 1, "Getting version model");
 
@@ -273,12 +277,6 @@ int main(int argc, char *argv[])
 
       TMR_bytesToHex(trd.tag.epc, trd.tag.epcByteCount, epcStr);
       printf("%s\n", epcStr);
-      if (0 < trd.data.len)
-      {
-        char dataStr[128];
-        TMR_bytesToHex(trd.data.list, trd.data.len, dataStr);
-        printf("  data(%d): %s\n", trd.data.len, dataStr);
-      }
     }
   }
 

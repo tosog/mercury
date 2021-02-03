@@ -36,7 +36,8 @@
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td colspan="2"><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">TMR_Status&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__reader.html#gaad5e5df913bb9150c9d6c1fc12bebe7e">TMR_startReading</a> (struct <a class="el" href="struct_t_m_r___reader.html">TMR_Reader</a> *reader)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">TMR_Status&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__reader.html#ga82c3f389ceda58871e9c35975390231d">TMR_stopReading</a> (struct <a class="el" href="struct_t_m_r___reader.html">TMR_Reader</a> *reader)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__reader.html#ga8331bcfcfa63aafad4f71b372f1cff45">TMR_isReadStopped</a> (struct <a class="el" href="struct_t_m_r___reader.html">TMR_Reader</a> *reader)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">TMR_Status&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="tm__reader__async_8c.html#a82c3f389ceda58871e9c35975390231d">TMR_stopReading</a> (struct <a class="el" href="struct_t_m_r___reader.html">TMR_Reader</a> *reader)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">TMR_Status&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__reader.html#gada68ed4d7d5dfc41d29eb578d1d8b802">TMR_addReadExceptionListener</a> (<a class="el" href="struct_t_m_r___reader.html">TMR_Reader</a> *reader, <a class="el" href="struct_t_m_r___read_exception_listener_block.html">TMR_ReadExceptionListenerBlock</a> *b)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">TMR_Status&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__reader.html#ga18745261e79dccc89a516eaf38cd83f2">TMR_addReadListener</a> (<a class="el" href="struct_t_m_r___reader.html">TMR_Reader</a> *reader, <a class="el" href="struct_t_m_r___read_listener_block.html">TMR_ReadListenerBlock</a> *b)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">TMR_Status&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__reader.html#ga46534b9ccf0d47550602d4d66f2d6e16">TMR_addStatsListener</a> (<a class="el" href="struct_t_m_r___reader.html">TMR_Reader</a> *reader, <a class="el" href="struct_t_m_r___stats_listener_block.html">TMR_StatsListenerBlock</a> *b)</td></tr>
@@ -45,8 +46,34 @@
 <p>Mercury API - background reading implementation. </p>
 <dl class="author"><dt><b>Author:</b></dt><dd>Nathan Williams </dd></dl>
 <dl class="date"><dt><b>Date:</b></dt><dd>11/18/2009 </dd></dl>
+<hr/><h2>Function Documentation</h2>
+<a class="anchor" id="a82c3f389ceda58871e9c35975390231d"></a><!-- doxytag: member="tm_reader_async.c::TMR_stopReading" ref="a82c3f389ceda58871e9c35975390231d" args="(struct TMR_Reader *reader)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">TMR_Status TMR_stopReading </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="struct_t_m_r___reader.html">TMR_Reader</a> *&nbsp;</td>
+          <td class="paramname"> <em>reader</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
 </div>
-<hr class="footer"/><address style="text-align: right;"><small>Generated on Tue Aug 11 10:03:47 2020 for Mercury C API by&nbsp;
+<div class="memdoc">
+<p>Stop reading tags in the background. This function will wait until the reader has stopped.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>reader</em>&nbsp;</td><td>The reader to operate on. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+</div>
+<hr class="footer"/><address style="text-align: right;"><small>Generated on Tue Jan 12 16:50:28 2021 for Mercury C API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.3 </small></address>
 </body>

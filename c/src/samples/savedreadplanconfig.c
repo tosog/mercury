@@ -10,6 +10,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <inttypes.h>
+#ifdef TMR_ENABLE_HF_LF
+#include <tmr_utils.h>
+#endif /* TMR_ENABLE_HF_LF */
 
 /* Enable this to use transportListener */
 #ifndef USE_TRANSPORT_LISTENER
@@ -132,6 +135,8 @@ const char* protocolName(TMR_TagProtocol protocol)
 	}
 }
 
+bool isModelM3e = false;
+
 void callback(TMR_Reader *reader, const TMR_TagReadData *t, void *cookie);
 void statsCallback (TMR_Reader *reader, const TMR_Reader_StatsValues* stats, void *cookie);
 
@@ -210,6 +215,12 @@ int main(int argc, char *argv[])
   model.value = string;
   TMR_paramGet(rp, TMR_PARAM_VERSION_MODEL, &model);
   checkerr(rp, ret, 1, "Getting version model");
+
+  //Enable "isModelM3e" flag if module is M3e.
+  if (0 == strcmp("M3e", model.value))
+  {
+    isModelM3e = true;
+  }
 
   if (0 != strcmp("M3e", model.value))
   {
@@ -439,9 +450,35 @@ void
 callback(TMR_Reader *reader, const TMR_TagReadData *t, void *cookie)
 {
   char epcStr[128];
+  TMR_Status ret = TMR_SUCCESS;
 
   TMR_bytesToHex(t->tag.epc, t->tag.epcByteCount, epcStr);
   printf("%s %s\n", protocolName(t->tag.protocol), epcStr);
+
+  if (0 < t->data.len)
+  {
+#ifdef TMR_ENABLE_HF_LF
+    if (0x8000 == t->data.len)
+    {
+      ret = TMR_translateErrorCode(GETU16AT(t->data.list, 0));
+      checkerr(reader, ret, 0, "Embedded tagOp failed:");
+    }
+    else
+#endif /* TMR_ENABLE_HF_LF */
+    {
+      char dataStr[255];
+      uint32_t dataLen = t->data.len;
+
+      //Convert data len from bits to byte(For M3e only).
+      if(isModelM3e)
+      {
+        dataLen = tm_u8s_per_bits(t->data.len);
+      }
+
+      TMR_bytesToHex(t->data.list, dataLen, dataStr);
+      printf("  data(%d): %s\n", t->data.len, dataStr);
+    }
+  }
 }
 
 void 

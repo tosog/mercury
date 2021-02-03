@@ -965,6 +965,16 @@ TMR_LLRP_paramSet(struct TMR_Reader *reader, TMR_Param key, const void *value)
     case TMR_PARAM_METADATAFLAG:
       {
         uint16_t metadata = *(uint16_t *)value;
+#ifdef TMR_ENABLE_HF_LF
+        if (metadata != TMR_TRD_METADATA_FLAG_ALL)
+        {
+          if (metadata & TMR_TRD_METADATA_FLAG_TAGTYPE)
+          {
+            return TMR_ERROR_METADATA_INVALID;
+          }
+        }
+#endif /* TMR_ENABLE_HF_LF */
+        metadata &= 0xDFFF;
         ret = TMR_LLRP_cmdSetTMMetadataFlag(reader, metadata);
         break;
       }
@@ -972,6 +982,18 @@ TMR_LLRP_paramSet(struct TMR_Reader *reader, TMR_Param key, const void *value)
      case TMR_PARAM_READER_STATS_ENABLE:
       {
         uint16_t statsEnable = *(uint16_t *)value;
+
+#ifdef TMR_ENABLE_HF_LF
+        if (statsEnable != TMR_READER_STATS_FLAG_ALL)
+        {
+          if(statsEnable & TMR_READER_STATS_FLAG_DC_VOLTAGE)
+          {
+            return TMR_ERROR_INVALID_READER_STATS;
+          }
+        }
+#endif /* TMR_ENABLE_HF_LF */
+
+        statsEnable &= 0xBFFF;
         ret = TMR_LLRP_cmdSetTMStatsEnable(reader, statsEnable);
         if( TMR_SUCCESS == ret)
         {

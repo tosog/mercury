@@ -493,8 +493,8 @@ namespace WriteTag
                 {
                     Console.WriteLine("Page protection is not locked for block {0}", address);
                 }
+                address++;
             }
-            address++;
         }
         #endregion
     }

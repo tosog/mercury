@@ -582,268 +582,277 @@ namespace ThingMagic.URA2
         /// <param name="lockStatus">Lock Status of each block</param>
         private void GenerateControls(byte[] data, byte blockSizeByte, byte blockCountByte, List<byte> lockStatus)
         {
-            if (data.Length != cacheData.Count)
+            try
             {
-                List<byte> tempData = new List<byte>();
-                for (int i = 0; i < cacheData.Count; i++)
+
+
+                if (data.Length != cacheData.Count)
                 {
-                    if (i < data.Length)
+                    List<byte> tempData = new List<byte>();
+                    for (int i = 0; i < cacheData.Count; i++)
                     {
-                        tempData.Add(data[i]);
+                        if (i < data.Length)
+                        {
+                            tempData.Add(data[i]);
+                        }
+                        else
+                        {
+                            tempData.Add(0x00);
+                        }
                     }
-                    else
+                    data = tempData.ToArray();
+                }
+                bool isLastTagBlockAdded = false;
+                //TextBox[] txtBlockCellList = new TextBox[data.Length];
+                List<TextBox> txtBlockCellList = new List<TextBox>();
+                txtHexList = new TextBox[data.Length];
+                int count = 0;
+
+                // Create new label the represent byte's in next address eg: Byte 1, Byte 2 etc.
+                Label lblEmptyGridCell = new Label();
+                lblEmptyGridCell.Height = 30;
+                lblEmptyGridCell.Width = 57;
+                lblEmptyGridCell.VerticalAlignment = VerticalAlignment.Top;
+                lblEmptyGridCell.HorizontalAlignment = HorizontalAlignment.Left;
+                lblEmptyGridCell.Content = "";
+                stkpnlM3eByteAddressHex.Children.Add(lblEmptyGridCell);
+                // Create a namescope for the yte Address panel
+                NameScope.SetNameScope(stkpnlM3eByteAddressHex, new NameScope());
+                int byteAddressCount = Convert.ToInt32(blockSizeByte) + 1;
+                for (int i = 0; i < byteAddressCount; i++)//here we will Add the total byte address count
+                {
+                    // Create a new label to represent Byte Address eg: Byte 1, Byte 2 etc.
+                    Label lblAddressGridCell = new Label();
+                    lblAddressGridCell.Height = 50;
+                    lblAddressGridCell.Width = 65;
+                    lblAddressGridCell.VerticalAlignment = VerticalAlignment.Top;
+                    lblAddressGridCell.HorizontalAlignment = HorizontalAlignment.Left;
+                    lblAddressGridCell.HorizontalContentAlignment = HorizontalAlignment.Center;
+                    lblAddressGridCell.Content = ((i) != (byteAddressCount - 1)) ? ("Byte " + i.ToString()) : ("Lock Status");
+                    if (lblAddressGridCell.Content == "Lock Status")
                     {
-                        tempData.Add(0x00);
+                        lblAddressGridCell.Width = 90;
                     }
+                    stkpnlM3eByteAddressHex.Children.Add(lblAddressGridCell);
                 }
-                data = tempData.ToArray();
-            }
-            bool isLastTagBlockAdded = false;
-            //TextBox[] txtBlockCellList = new TextBox[data.Length];
-            List<TextBox> txtBlockCellList = new List<TextBox>();
-            txtHexList = new TextBox[data.Length];
-            int count = 0;
-
-            // Create new label the represent byte's in next address eg: Byte 1, Byte 2 etc.
-            Label lblEmptyGridCell = new Label();
-            lblEmptyGridCell.Height = 30;
-            lblEmptyGridCell.Width = 57;
-            lblEmptyGridCell.VerticalAlignment = VerticalAlignment.Top;
-            lblEmptyGridCell.HorizontalAlignment = HorizontalAlignment.Left;
-            lblEmptyGridCell.Content = "";
-            stkpnlM3eByteAddressHex.Children.Add(lblEmptyGridCell);
-            // Create a namescope for the yte Address panel
-            NameScope.SetNameScope(stkpnlM3eByteAddressHex, new NameScope());
-            int byteAddressCount = Convert.ToInt32(blockSizeByte) + 1;
-            for (int i = 0; i < byteAddressCount; i++)//here we will Add the total byte address count
-            {
-                // Create a new label to represent Byte Address eg: Byte 1, Byte 2 etc.
-                Label lblAddressGridCell = new Label();
-                lblAddressGridCell.Height = 50;
-                lblAddressGridCell.Width = 65;
-                lblAddressGridCell.VerticalAlignment = VerticalAlignment.Top;
-                lblAddressGridCell.HorizontalAlignment = HorizontalAlignment.Left;
-                lblAddressGridCell.HorizontalContentAlignment = HorizontalAlignment.Center;
-                lblAddressGridCell.Content = ((i) != (byteAddressCount - 1)) ? ("Byte " + i.ToString()) : ("Lock Status");
-                if (lblAddressGridCell.Content == "Lock Status")
+                int byteCount = Convert.ToInt32(blockSizeByte);//here we will add the byte count of the tag.
+                int blockCount = Convert.ToInt32(blockCountByte);
+                for (int i = 0; i < blockCount; i++)//here we will add the Block count
                 {
-                    lblAddressGridCell.Width = 90;
-                }
-                stkpnlM3eByteAddressHex.Children.Add(lblAddressGridCell);
-            }
-            int byteCount = Convert.ToInt32(blockSizeByte);//here we will add the byte count of the tag.
-            int blockCount = Convert.ToInt32(blockCountByte);
-            for (int i = 0; i < blockCount; i++)//here we will add the Block count
-            {
-                StackPanel stkPanel = new StackPanel();
-                stkPanel.Orientation = Orientation.Horizontal;
-                stkPanel.Name = "stkpnlMemoryAddress" + i.ToString();
-                stkPanel.VerticalAlignment = VerticalAlignment.Top;
-                stkPanel.HorizontalAlignment = HorizontalAlignment.Left;
+                    StackPanel stkPanel = new StackPanel();
+                    stkPanel.Orientation = Orientation.Horizontal;
+                    stkPanel.Name = "stkpnlMemoryAddress" + i.ToString();
+                    stkPanel.VerticalAlignment = VerticalAlignment.Top;
+                    stkPanel.HorizontalAlignment = HorizontalAlignment.Left;
 
-                // Create a name scope for the stackpanel. 
-                NameScope.SetNameScope(stkPanel, new NameScope());
+                    // Create a name scope for the stackpanel. 
+                    NameScope.SetNameScope(stkPanel, new NameScope());
 
-                // Create a new label to represent block Address eg: Block 1, Block 2 etc.
-                Label txtBlockAddress = new Label();
-                txtBlockAddress.Content = "Block " + i.ToString();
-                txtBlockAddress.Height = 30;
-                txtBlockAddress.Width = 65;
-                txtBlockAddress.VerticalAlignment = VerticalAlignment.Top;
-                txtBlockAddress.HorizontalAlignment = HorizontalAlignment.Left;
-                txtBlockAddress.Visibility = Visibility.Visible;
-                stkPanel.Children.Add(txtBlockAddress);
+                    // Create a new label to represent block Address eg: Block 1, Block 2 etc.
+                    Label txtBlockAddress = new Label();
+                    txtBlockAddress.Content = "Block " + i.ToString();
+                    txtBlockAddress.Height = 30;
+                    txtBlockAddress.Width = 65;
+                    txtBlockAddress.VerticalAlignment = VerticalAlignment.Top;
+                    txtBlockAddress.HorizontalAlignment = HorizontalAlignment.Left;
+                    txtBlockAddress.Visibility = Visibility.Visible;
+                    stkPanel.Children.Add(txtBlockAddress);
 
-                for (int j = 0; j < byteCount; j++)
-                {
-                    isLastTagBlockAdded = true;
-                    // Create Textbox to represent tag data.
-                    TextBox txtCellAddress = new TextBox();
-                    //txtCellAddress.IsReadOnly = false;
-                    txtCellAddress.Name = "txtCellNumber" + i.ToString() + "_" + j.ToString();
-                    txtCellAddress.Text = "00";
-                    txtCellAddress.CaretBrush = Brushes.Black;
-                    txtCellAddress.Background = (SolidColorBrush)new BrushConverter().ConvertFrom("#0A000000");
-                    txtCellAddress.TextAlignment = TextAlignment.Center;
-                    txtCellAddress.Height = 30;
-                    txtCellAddress.Width = 65;
-                    txtCellAddress.VerticalAlignment = VerticalAlignment.Top;
-                    txtCellAddress.HorizontalAlignment = HorizontalAlignment.Left;
-                    txtCellAddress.TextAlignment = TextAlignment.Center;
-                    txtCellAddress.VerticalContentAlignment = VerticalAlignment.Center;
-                    txtCellAddress.MaxLength = 2;
-                    txtCellAddress.Visibility = Visibility.Visible;
+                    for (int j = 0; j < byteCount; j++)
+                    {
+                        isLastTagBlockAdded = true;
+                        // Create Textbox to represent tag data.
+                        TextBox txtCellAddress = new TextBox();
+                        //txtCellAddress.IsReadOnly = false;
+                        txtCellAddress.Name = "txtCellNumber" + i.ToString() + "_" + j.ToString();
+                        txtCellAddress.Text = "00";
+                        txtCellAddress.CaretBrush = Brushes.Black;
+                        txtCellAddress.Background = (SolidColorBrush)new BrushConverter().ConvertFrom("#0A000000");
+                        txtCellAddress.TextAlignment = TextAlignment.Center;
+                        txtCellAddress.Height = 30;
+                        txtCellAddress.Width = 65;
+                        txtCellAddress.VerticalAlignment = VerticalAlignment.Top;
+                        txtCellAddress.HorizontalAlignment = HorizontalAlignment.Left;
+                        txtCellAddress.TextAlignment = TextAlignment.Center;
+                        txtCellAddress.VerticalContentAlignment = VerticalAlignment.Center;
+                        txtCellAddress.MaxLength = 2;
+                        txtCellAddress.Visibility = Visibility.Visible;
+                        if (lockStatus.Count == 0)
+                        {
+                            txtCellAddress.IsReadOnly = false;
+                        }
+                        else
+                        {
+                            txtCellAddress.IsReadOnly = ((lockStatus[i] == 0) ? false : true);
+                        }
+                        #region TextBox Command Binding
+                        txtCellAddress.PreviewKeyDown += new KeyEventHandler(this.txtblk0ByteAddressClmn1_PreviewKeyDown);
+                        txtCellAddress.PreviewTextInput += new TextCompositionEventHandler(this.txtblk0ByteAddressClmn1_PreviewTextInput);
+                        #endregion
+                        int cellNumber = Convert.ToInt32((i).ToString() + (j).ToString());
+                        stkPanel.Children.Add(txtCellAddress);
+                        stkPanel.RegisterName(txtCellAddress.Name, txtCellAddress);
+                        //NameScope.SetNameScope(txtCellAddress.Name,txtCellAddress); enable when the Binding is done
+                        //txtBlockCellList[cellNumber] = txtCellAddress;
+                        txtHexList[count++] = txtCellAddress;
+                        txtBlockCellList.Add(txtCellAddress);
+                    }
+
+                    //Image imgLockStatus = new Image();
+                    //imgLockStatus.Height = 30;
+                    //imgLockStatus.Width = 130;
+                    //imgLockStatus.VerticalAlignment = VerticalAlignment.Center;
+                    //imgLockStatus.HorizontalAlignment = HorizontalAlignment.Center;
+                    ////imgLockStatus.Visibility = Visibility = Visibility.Visible;
+                    ////imgLockStatus.
+                    TextBox txtLockStatus = new TextBox();
+                    txtLockStatus.IsReadOnly = false;
+                    txtLockStatus.Name = "txtBlockLockStatus" + i.ToString();
                     if (lockStatus.Count == 0)
                     {
-                        txtCellAddress.IsReadOnly = false;
+                        txtLockStatus.Text = "Unlocked";
                     }
                     else
                     {
-                        txtCellAddress.IsReadOnly = ((lockStatus[i] == 0) ? false : true);
+                        txtLockStatus.Text = ((lockStatus[i] == 0) ? "Unlocked" : "Locked");
                     }
-                    #region TextBox Command Binding
-                    txtCellAddress.PreviewKeyDown += new KeyEventHandler(this.txtblk0ByteAddressClmn1_PreviewKeyDown);
-                    txtCellAddress.PreviewTextInput += new TextCompositionEventHandler(this.txtblk0ByteAddressClmn1_PreviewTextInput);
+                    txtLockStatus.CaretBrush = Brushes.Black;
+                    txtLockStatus.Background = (SolidColorBrush)new BrushConverter().ConvertFrom("#0A000000");
+                    txtLockStatus.TextAlignment = TextAlignment.Center;
+                    txtLockStatus.Height = 30;
+                    txtLockStatus.Width = 90;
+                    txtLockStatus.IsReadOnly = true;
+                    txtLockStatus.VerticalAlignment = VerticalAlignment.Top;
+                    txtLockStatus.HorizontalAlignment = HorizontalAlignment.Left;
+                    txtLockStatus.Visibility = Visibility.Visible;
+                    txtLockStatus.VerticalContentAlignment = VerticalAlignment.Center;
+                    #region Click Binding Lock Textbox;
+
                     #endregion
-                    int cellNumber = Convert.ToInt32((i).ToString() + (j).ToString());
-                    stkPanel.Children.Add(txtCellAddress);
-                    stkPanel.RegisterName(txtCellAddress.Name, txtCellAddress);
-                    //NameScope.SetNameScope(txtCellAddress.Name,txtCellAddress); enable when the Binding is done
-                    //txtBlockCellList[cellNumber] = txtCellAddress;
-                    txtHexList[count++] = txtCellAddress;
-                    txtBlockCellList.Add(txtCellAddress);
+                    stkPanel.Children.Add(txtLockStatus);
+                    stkpnlBlockAddressHex.Children.Add(stkPanel);
+                    stkpnlBlockAddressHex.RegisterName(stkPanel.Name, stkPanel);
+
                 }
 
-                //Image imgLockStatus = new Image();
-                //imgLockStatus.Height = 30;
-                //imgLockStatus.Width = 130;
-                //imgLockStatus.VerticalAlignment = VerticalAlignment.Center;
-                //imgLockStatus.HorizontalAlignment = HorizontalAlignment.Center;
-                ////imgLockStatus.Visibility = Visibility = Visibility.Visible;
-                ////imgLockStatus.
-                TextBox txtLockStatus = new TextBox();
-                txtLockStatus.IsReadOnly = false;
-                txtLockStatus.Name = "txtBlockLockStatus" + i.ToString();
-                if (lockStatus.Count == 0)
+                if (cacheData != null)
                 {
-                    txtLockStatus.Text = "Unlocked";
-                }
-                else
-                {
-                    txtLockStatus.Text = ((lockStatus[i] == 0) ? "Unlocked" : "Locked");
-                }
-                txtLockStatus.CaretBrush = Brushes.Black;
-                txtLockStatus.Background = (SolidColorBrush)new BrushConverter().ConvertFrom("#0A000000");
-                txtLockStatus.TextAlignment = TextAlignment.Center;
-                txtLockStatus.Height = 30;
-                txtLockStatus.Width = 90;
-                txtLockStatus.IsReadOnly = true;
-                txtLockStatus.VerticalAlignment = VerticalAlignment.Top;
-                txtLockStatus.HorizontalAlignment = HorizontalAlignment.Left;
-                txtLockStatus.Visibility = Visibility.Visible;
-                txtLockStatus.VerticalContentAlignment = VerticalAlignment.Center;
-                #region Click Binding Lock Textbox;
-
-                #endregion
-                stkPanel.Children.Add(txtLockStatus);
-                stkpnlBlockAddressHex.Children.Add(stkPanel);
-                stkpnlBlockAddressHex.RegisterName(stkPanel.Name, stkPanel);
-
-            }
-
-            if (cacheData != null)
-            {
-                int cellBlock = 0;
-                int lockFlag = 0;
-                byte[] orignalHexData = cacheData.ToArray();
-                if (orignalHexData.Length == data.Length)
-                {
-                    for (int i = 0; i < data.Length; i++)
+                    int cellBlock = 0;
+                    int lockFlag = 0;
+                    byte[] orignalHexData = cacheData.ToArray();
+                    if (orignalHexData.Length == data.Length)
                     {
-                        if (orignalHexData[i] == data[i])
+                        for (int i = 0; i < data.Length; i++)
                         {
-                            txtBlockCellList[i].Foreground = Brushes.Black;
-                        }
-                        else
-                        {
-                            txtBlockCellList[i].Foreground = Brushes.Red;
-                        }
-                        if (lockStatus[lockFlag] == 0)
-                        {
-                            txtBlockCellList[i].Text = data[i].ToString("X2");
-                        }
-                        else
-                        {
-                            txtBlockCellList[i].Text = "";
-                        }
-                        cellBlock++;
-                        if (cellBlock == blockSizeByte)
-                        {
-                            if (lockStatus.Count != (lockFlag + 1))
+                            if (orignalHexData[i] == data[i])
                             {
-                                if (cellBlock == blockSizeByte)
-                                {
-                                    cellBlock = 0;
-                                    lockFlag++;
-                                }
+                                txtBlockCellList[i].Foreground = Brushes.Black;
                             }
-                        }
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < orignalHexData.Length; i++)
-                    {
-                        if (orignalHexData[i] == data[i])
-                        {
-                            txtBlockCellList[i].Foreground = Brushes.Black;
-                        }
-                        else
-                        {
-                            txtBlockCellList[i].Foreground = Brushes.Red;
-                        }
-                        if (lockStatus[lockFlag] == 0)
-                        {
-                            txtBlockCellList[i].Text = data[i].ToString("X2");
-                        }
-                        else
-                        {
-                            txtBlockCellList[i].Text = "";
-                        }
-                        cellBlock++;
-                        if (cellBlock == blockSizeByte)
-                        {
-                            if (lockStatus.Count != (lockFlag + 1))
+                            else
                             {
-                                if (cellBlock == blockSizeByte)
-                                {
-                                    cellBlock = 0;
-                                    lockFlag++;
-                                }
+                                txtBlockCellList[i].Foreground = Brushes.Red;
                             }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                int cellBlock = 0;
-                int lockFlag = 0;
-                for (int i = 0; i < data.Length; i++)
-                {
-                    if (lockStatus[lockFlag] == 0)
-                    {
-                        txtBlockCellList[i].Text = data[i].ToString("X2");
-                    }
-                    else
-                    {
-                        txtBlockCellList[i].Text = "";
-                    }
-                    cellBlock++;
-                    if (cellBlock == blockSizeByte)
-                    {
-                        if (lockStatus.Count != (lockFlag + 1))
-                        {
+                            if (lockStatus[lockFlag] == 0)
+                            {
+                                txtBlockCellList[i].Text = data[i].ToString("X2");
+                            }
+                            else
+                            {
+                                txtBlockCellList[i].Text = "";
+                            }
+                            cellBlock++;
                             if (cellBlock == blockSizeByte)
                             {
-                                cellBlock = 0;
-                                lockFlag++;
+                                if (lockStatus.Count != (lockFlag + 1))
+                                {
+                                    if (cellBlock == blockSizeByte)
+                                    {
+                                        cellBlock = 0;
+                                        lockFlag++;
+                                    }
+                                }
                             }
                         }
                     }
+                    else
+                    {
+                        for (int i = 0; i < orignalHexData.Length; i++)
+                        {
+                            if (orignalHexData[i] == data[i])
+                            {
+                                txtBlockCellList[i].Foreground = Brushes.Black;
+                            }
+                            else
+                            {
+                                txtBlockCellList[i].Foreground = Brushes.Red;
+                            }
+                            if (lockStatus[lockFlag] == 0)
+                            {
+                                txtBlockCellList[i].Text = data[i].ToString("X2");
+                            }
+                            else
+                            {
+                                txtBlockCellList[i].Text = "";
+                            }
+                            cellBlock++;
+                            if (cellBlock == blockSizeByte)
+                            {
+                                if (lockStatus.Count != (lockFlag + 1))
+                                {
+                                    if (cellBlock == blockSizeByte)
+                                    {
+                                        cellBlock = 0;
+                                        lockFlag++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    int cellBlock = 0;
+                    int lockFlag = 0;
+                    for (int i = 0; i < data.Length; i++)
+                    {
+                        if (lockStatus[lockFlag] == 0)
+                        {
+                            txtBlockCellList[i].Text = data[i].ToString("X2");
+                        }
+                        else
+                        {
+                            txtBlockCellList[i].Text = "";
+                        }
+                        cellBlock++;
+                        if (cellBlock == blockSizeByte)
+                        {
+                            if (lockStatus.Count != (lockFlag + 1))
+                            {
+                                if (cellBlock == blockSizeByte)
+                                {
+                                    cellBlock = 0;
+                                    lockFlag++;
+                                }
+                            }
+                        }
 
+                    }
+                }
+
+                // Generate word address mapping
+                // word address = (byte address of cell 1, byte address of cell 2)
+                // 0x0000 = (0x0000, 0x0001)
+                uint temp = 0;
+                WordAddressMapping.Clear();
+                for (int i = 0; i < data.Length / 2; i++)
+                {
+                    WordAddressMapping.Add((uint)i, new uint[] { (uint)temp, (uint)++temp });
+                    ++temp;
                 }
             }
-
-            // Generate word address mapping
-            // word address = (byte address of cell 1, byte address of cell 2)
-            // 0x0000 = (0x0000, 0x0001)
-            uint temp = 0;
-            WordAddressMapping.Clear();
-            for (int i = 0; i < data.Length / 2; i++)
+            catch (Exception ex)
             {
-                WordAddressMapping.Add((uint)i, new uint[] { (uint)temp, (uint)++temp });
-                ++temp;
+                throw new Exception("No data could be read from a tag");
             }
         }
 

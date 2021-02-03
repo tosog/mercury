@@ -10,9 +10,12 @@ import com.thingmagic.Iso15693;
 import com.thingmagic.ReadExceptionListener;
 import com.thingmagic.ReadListener;
 import com.thingmagic.Reader;
+import com.thingmagic.ReaderCodeException;
 import com.thingmagic.ReaderException;
+import com.thingmagic.ReaderUtil;
 import com.thingmagic.SerialReader;
 import com.thingmagic.SimpleReadPlan;
+import com.thingmagic.StatsListener;
 import com.thingmagic.TMConstants;
 import com.thingmagic.TagOp;
 import com.thingmagic.TagProtocol;
@@ -24,6 +27,7 @@ import java.util.Calendar;
 
 public class SavedReadplanConfig
 {
+    static StatsListener statsListener;
     static void usage()
     {
         System.out.printf("Usage: Please provide valid arguments, such as:\n"
@@ -49,6 +53,8 @@ public class SavedReadplanConfig
         boolean trace = false;
         int[] antennaList = null;
         SimpleReadPlan srp;
+        TagOp op = null;
+        Gen2.TagData epcFilter = null;
 
         if (argv.length < 1)
         {
@@ -133,8 +139,8 @@ public class SavedReadplanConfig
                  */
 //                if (!model.equalsIgnoreCase("M3e"))
 //                {
-//                   TagOp op = new Gen2.ReadData(Gen2.Bank.RESERVED, 2, (byte)2);
-//                   Gen2.TagData epcFilter = new Gen2.TagData("112233445566778899009999");
+//                   op = new Gen2.ReadData(Gen2.Bank.RESERVED, 2, (byte)2);
+//                   epcFilter = new Gen2.TagData("112233445566778899009999");
 //                }
                 GpiPinTrigger gpiTrigger = new GpiPinTrigger();
                 //Gpi trigger option not there for M6e Micro USB
@@ -151,7 +157,7 @@ public class SavedReadplanConfig
                 }
                 else
                 {
-                   srp = new SimpleReadPlan(antennaList, TagProtocol.GEN2, null, null, 1000);
+                   srp = new SimpleReadPlan(antennaList, TagProtocol.GEN2, null, op, 1000);
                 }
                 if(!model.equalsIgnoreCase("M6e Micro USB"))
                 {
@@ -169,6 +175,8 @@ public class SavedReadplanConfig
                 r.addReadListener(readListener);
                 ReadExceptionListener exceptionListener = new TagReadExceptionReceiver();
                 r.addReadExceptionListener(exceptionListener);
+                statsListener = new ReaderStatsListener();
+                r.addStatsListener(statsListener);
                 
                 r.paramSet("/reader/userConfig", new SerialReader.UserConfigOp(SerialReader.SetUserProfileOption.SAVEWITHREADPLAN));
                 System.out.println("User profile set option:save all configuration with read plan");
@@ -201,10 +209,35 @@ public class SavedReadplanConfig
   {
     public void tagRead(Reader r, TagReadData tr)
     {
-      System.out.println("Background read: " + tr.toString());
+        System.out.println("Background read: " + tr.toString());
+        if (tr.getData().length > 0)
+        {
+            if (tr.isErrorData)
+            {
+                // In case of error, show the error to user. Extract error code.
+                byte[] errorCodeBytes = tr.getData();
+                int offset = 0;
+                //converts byte array to int value
+                int errorCode = ((errorCodeBytes[offset] & 0xff) <<  8)| ((errorCodeBytes[offset + 1] & 0xff) <<  0);
+                System.out.println("Embedded Tag operation failed. Error: " + new ReaderCodeException(errorCode));
+            }
+            else
+            {
+                System.out.println( String.format("Data[%d]: %s", 
+                        tr.dataLength, ReaderUtil.byteArrayToHexString(tr.getData())));
+            }
+        }
     }
   }
   
+  static class ReaderStatsListener implements StatsListener
+    {
+        public void statsRead(SerialReader.ReaderStats readerStats)
+        {
+            System.out.println("Temperature: " + readerStats.temperature);
+        }
+    }
+
   static  int[] parseAntennaList(String[] args,int argPosition)
     {
         int[] antennaList = null;

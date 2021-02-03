@@ -36,18 +36,22 @@ public class Lf125khz
     {
         // Auto detect - supports all tag types
         AUTO_DETECT(0x00000001),
-        // AWID Tagtype
-        AWID(0x01000000),
         // HID PROX II tag type
-        HID_PROX(0x02000000),
-        // NXP HITAG 1 tag type
-        HITAG_1(0x04000000),
+        HID_PROX(0x01000000),
+        // AWID Tagtype
+        AWID(0x02000000),
+        // Keri tag type
+        KERI(0x04000000),
+        //Indala tag type
+        INDALA(0x08000000),
         // NXP HITAG 2 tag type
-        HITAG_2(0x08000000),
+        HITAG_2(0x10000000),
+        // NXP HITAG 1 tag type
+        HITAG_1(0x20000000),
         // EM4100 tag type
-        EM_4100(0x10000000),
+        EM_4100(0x40000000),
         //ALL
-        ALL(0x1F000001);
+        ALL(0x7F000001);
         int rep;
 
         TagType(int rep) {

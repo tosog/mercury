@@ -41,25 +41,25 @@ public class Iso15693
         // Auto detect - supports all tag types
         AUTO_DETECT(0x00000001),
         // HID Iclass SE tagtype
-        HID_ICLASS_SE(0x00000080),
+        HID_ICLASS_SE(0x00000100),
         // NXP Icode SLI tagtype
-        ICODE_SLI(0x00000100),
+        ICODE_SLI(0x00000200),
         // NXP Icode SLI-L tagtype
-        ICODE_SLI_L(0x00000200),
+        ICODE_SLI_L(0x00000400),
         // NXP Icode SLI-S tag type
-        ICODE_SLI_S(0x00000400),
+        ICODE_SLI_S(0x00000800),
         // NXP ICODE DNA tagtype
-        ICODE_DNA(0x00000800),
+        ICODE_DNA(0x00001000),
         // NXP ICODE SLIX tagtype
-        ICODE_SLIX(0x00001000),
+        ICODE_SLIX(0x00002000),
         // NXP ICODE SLIX-L tagtype
-        ICODE_SLIX_L(0x00002000),
+        ICODE_SLIX_L(0x00004000),
         // NXP ICODE SLIX-S tagtype
-        ICODE_SLIX_S(0x00004000),
+        ICODE_SLIX_S(0x00008000),
         // NXP Icode SLIX-2 tagtype
-        ICODE_SLIX_2(0x00008000),
+        ICODE_SLIX_2(0x00010000),
         // ALL tag types
-        ALL(0x0000FF81);
+        ALL(0x0001FF01);
         
         int rep;
         TagType(int rep)

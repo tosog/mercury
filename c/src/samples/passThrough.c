@@ -13,9 +13,11 @@
 #define USE_TRANSPORT_LISTENER 0
 #endif
 
-#define OPCODE_GET_RANDOM_NUMBER 0xB2
-#define  IC_MFG_CODE_NXP 0x04
-#define MAX_RESPONSE_LENGTH 240
+#define OPCODE_SELECT_TAG         0x25
+#define MAX_UID_LEN               0x08
+#define OPCODE_GET_RANDOM_NUMBER  0xB2
+#define IC_MFG_CODE_NXP           0x04
+#define MAX_RESPONSE_LENGTH       240
 
 #define usage() {errx(1, "Please provide valid reader URL, such as: reader-uri\n"\
                          "reader-uri : e.g., 'tmr:///COM1' or 'tmr:///dev/ttyS0/' or 'tmr://readerIP'\n"\
@@ -65,6 +67,9 @@ void stringPrinter(bool tx,uint32_t dataLen, const uint8_t data[],uint32_t timeo
   fprintf(out, "%s\n", data);
 }
 
+//Forward declarations.
+void appendReverseUID(uint8_t *cmdStr, uint8_t *uidISO15693);
+
 int main(int argc, char *argv[])
 {
   TMR_Reader r, *rp;
@@ -77,12 +82,19 @@ int main(int argc, char *argv[])
   uint8_t flags, responseData[MAX_RESPONSE_LENGTH];
   TMR_Reader_configFlags configFlags;
   uint8_t cmdStr[TMR_SR_MAX_PACKET_SIZE];
+  TMR_ReadPlan plan;
+  uint8_t buffer[20];
+  uint8_t *antennaList = NULL;
+  uint8_t antennaCount = 0x0;
+  TMR_TagReadData trd;
 #endif /* TMR_ENABLE_HF_LF */
 
 #if USE_TRANSPORT_LISTENER
   TMR_TransportListenerBlock tb;
 #endif
  
+  antennaList = buffer;
+
   if (argc < 2)
   {
     usage();
@@ -111,6 +123,45 @@ int main(int argc, char *argv[])
   checkerr(rp, ret, 1, "connecting reader");
 
 #ifdef TMR_ENABLE_HF_LF
+  // initialize the read plan
+  ret = TMR_RP_init_simple(&plan, antennaCount, antennaList, TMR_TAG_PROTOCOL_ISO15693, 1000);
+
+#ifndef BARE_METAL
+  checkerr(rp, ret, 1, "initializing the  read plan");
+#endif
+
+  /* Commit read plan */
+  ret = TMR_paramSet(rp, TMR_PARAM_READ_PLAN, &plan);
+#ifndef BARE_METAL
+  checkerr(rp, ret, 1, "setting read plan");
+#endif
+  ret = TMR_read(rp, 500, NULL);
+#ifndef BARE_METAL
+  if (TMR_ERROR_TAG_ID_BUFFER_FULL == ret)
+  {
+    /* In case of TAG ID Buffer Full, extract the tags present
+    * in buffer.
+    */
+    fprintf(stdout, "reading tags:%s\n", TMR_strerr(rp, ret));
+  }
+  else
+  {
+    checkerr(rp, ret, 1, "reading tags");
+  }
+#endif
+  if(TMR_SUCCESS == TMR_hasMoreTags(rp))
+  {
+    char idStr[128];
+
+    ret = TMR_getNextTag(rp, &trd);
+#ifndef BARE_METAL  
+    checkerr(rp, ret, 1, "fetching tag");
+#endif
+    TMR_bytesToHex(trd.tag.epc, trd.tag.epcByteCount, idStr);
+    printf("Tag ID : %s \n", idStr);
+ }
+
+  //Initialization.
   response.list = responseData;
   response.max = sizeof(responseData) / sizeof(responseData[0]);
   response.len = 0;
@@ -118,12 +169,49 @@ int main(int argc, char *argv[])
   cmd.len = cmd.max = 0;
   cmd.list = cmdStr;
 
-  timeout = 20; //timeout in milliseconds
+  //Select Tag.
+  timeout = 500; //Timeout in Ms.
+  flags = 0x22;
+  configFlags = TMR_READER_CONFIG_FLAGS_ENABLE_TX_CRC | TMR_READER_CONFIG_FLAGS_ENABLE_RX_CRC |
+                TMR_READER_CONFIG_FLAGS_ENABLE_INVENTORY;
+
+  /* Frame payload data as per 15693 protocol(ICODE Slix-S) */
+  cmd.list[cmd.len++] = flags;
+  cmd.list[cmd.len++] = OPCODE_SELECT_TAG;
+
+  //Append UID(reverse).
+  appendReverseUID(&cmdStr[cmd.len], trd.tag.epc);
+  cmd.len += MAX_UID_LEN;
+
+  ret = TMR_TagOp_init_PassThrough(&passThroughOp, timeout, configFlags, &cmd);
+  checkerr(rp, ret, 1, "Creating passthrough tagop to select tag");
+
+  ret = TMR_executeTagOp(rp, &passThroughOp, NULL, &response);
+  checkerr(rp, ret, 1, "Executing passthrough tagop to select tag");
+
+  if (0 < response.len)
+  {
+    char dataStr[255];
+
+    TMR_bytesToHex(response.list, response.len, dataStr);
+    printf("Select Tag| Data(%d): %s\n", response.len, dataStr);
+  }
+
+  //Reset command buffer.
+  memset(cmdStr, 0x00, MAX_RESPONSE_LENGTH);
+  cmd.len = 0;
+
+  //Reset command buffer.
+  memset(responseData, 0x00, MAX_RESPONSE_LENGTH);
+  response.len = 0;
+
+  //Get random number.
+  timeout = 500; //Timeout in Ms.
   flags = 0x12;
   configFlags = TMR_READER_CONFIG_FLAGS_ENABLE_TX_CRC | TMR_READER_CONFIG_FLAGS_ENABLE_RX_CRC |
                 TMR_READER_CONFIG_FLAGS_ENABLE_INVENTORY;
 
-  /* Extract random number from response(ICODE Slix-S) */
+  /* Frame payload data as per 15693 protocol(ICODE Slix-S) */
   cmd.list[cmd.len++] = flags;
   cmd.list[cmd.len++] = OPCODE_GET_RANDOM_NUMBER;
   cmd.list[cmd.len++] = IC_MFG_CODE_NXP;
@@ -133,8 +221,27 @@ int main(int argc, char *argv[])
 
   ret = TMR_executeTagOp(rp, &passThroughOp, NULL, &response);
   checkerr(rp, ret, 1, "Executing passthrough tagop to get RN");
+
+  if (0 < response.len)
+  {
+    char dataStr[255];
+
+    TMR_bytesToHex(response.list, response.len, dataStr);
+    printf("RN number | Data(%d): %s\n", response.len, dataStr);
+  }
 #endif /* TMR_ENABLE_HF_LF */
 
   TMR_destroy(rp);
   return 0;
+}
+
+void appendReverseUID(uint8_t *cmdStr, uint8_t *uidISO15693)
+{
+  uint8_t i = 0;
+
+  while(i < MAX_UID_LEN)
+  {
+    cmdStr[i] = uidISO15693[(MAX_UID_LEN - 1) - i];
+    i++;
+  }
 }

@@ -28,7 +28,7 @@ public class ReaderCommException extends ReaderException {
 
     byte[] readerMessage;
 
-    ReaderCommException(String message)
+    public ReaderCommException(String message)
     {
         super(message);
     }

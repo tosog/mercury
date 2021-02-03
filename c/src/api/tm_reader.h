@@ -577,6 +577,7 @@ struct TMR_Reader
 #ifdef TMR_ENABLE_UHF
   TMR_SR_StatusType streamStats;
 #endif /* TMR_ENABLE_UHF */
+  TMR_TRD_MetadataFlag allValidMetadataFlags;
   TMR_TRD_MetadataFlag userMetadataFlag;
   TMR_Reader_FeaturesFlag featureFlags;
 
@@ -1363,6 +1364,14 @@ TMR_Status TMR_receiveAutonomousReading(struct TMR_Reader *reader, TMR_TagReadDa
 
 /**
  * @ingroup reader
+ * Check Stop reading status. This function will give sucess once
+ * the reader has stopped reading.
+ *
+ * @param reader The reader to operate on.
+ */
+bool TMR_isReadStopped(struct TMR_Reader *reader);
+
+/**
  * Stop reading tags in the background. This function will wait until
  * the reader has stopped.
  *

@@ -1,3 +1,15 @@
+//Uncomment this to executes sync read.
+#define ENABLE_SYNC_READ
+//Uncomment this to executes Async read.
+#define ENABLE_ASYNC_READ
+//Uncomment this to set simple read plan or Comment this to set multi read plan
+//#define ENABLE_SIMPLE_READPLAN
+#if !ENABLE_SYNC_READ
+//Uncomment this to performs dynamic switching, which is applicable for M3e.
+#define ENABLE_DYNAMIC_SWITCHING
+#endif
+
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -95,31 +107,59 @@ namespace ReadStopTrigger
                     }
                     // Set the number of tags to read
                     StopOnTagCount sotc = new StopOnTagCount();
-                    sotc.N = 1;
+                    sotc.N = 5;
                     StopTriggerReadPlan readplan;
+#if ENABLE_SIMPLE_READPLAN
                     if (model.Equals("M3e"))
                     {
                         readplan = new StopTriggerReadPlan(sotc, antennaList, TagProtocol.ISO14443A, null, null, 1000);
+                        // Set readplan
+                        r.ParamSet("/reader/read/plan", readplan);
                     }
                     else
                     {
-                        // Prepare multireadplan. Comment the below code if only single readplan is needed;
-                        //StopTriggerReadPlan str1 = new StopTriggerReadPlan(sotc, new int[] { 1 }, 
-                        //TagProtocol.GEN2, null, new Gen2.ReadData(Gen2.Bank.TID, 0, 0), 1000);
-                        //StopTriggerReadPlan str2 = new StopTriggerReadPlan(sotc, new int[] { 2 }, 
-                        //TagProtocol.GEN2, null, new Gen2.ReadData(Gen2.Bank.EPC, 0, 0), 1000);
-                        //List<ReadPlan> plan = new List<ReadPlan>();
-                        //plan.Add(str1);
-                        //plan.Add(str2);
-                        //MultiReadPlan readplan = new MultiReadPlan(plan);
-
-                        // Prepare single read plan. Comment the below code if multireadplan is needed
-                        readplan = new StopTriggerReadPlan(sotc, antennaList,
-                            TagProtocol.GEN2, null, new Gen2.ReadData(Gen2.Bank.RESERVED, 0, 0), 1000);
+                        // Prepare single read plan.
+                        readplan = new StopTriggerReadPlan(sotc, antennaList, TagProtocol.GEN2, null, null, 1000);
+                        // Set readplan
+                        r.ParamSet("/reader/read/plan", readplan);
                     }
+#else
 
-                    // Set readplan
-                    r.ParamSet("/reader/read/plan", readplan);
+
+                    TagProtocol[] protocolList = (TagProtocol[])r.ParamGet("/reader/version/supportedProtocols");
+                    if (model.Equals("M3e"))
+                    {
+#if ENABLE_DYNAMIC_SWITCHING
+                        //Set the multiple protocols using "/reader/protocolList" param for dynamic protocol switching
+                        r.ParamSet("/reader/protocolList", protocolList);
+                        // If param is set, API ignores the protocol mentioned in readplan.
+                        StopTriggerReadPlan plan = new StopTriggerReadPlan(sotc, antennaList, TagProtocol.ISO14443A, null, null, 1000);
+                        // Set readplan
+                        r.ParamSet("/reader/read/plan", plan);
+#else
+                        List<ReadPlan> planList = new List<ReadPlan>();
+                        foreach (TagProtocol protocol in protocolList)
+                        {
+                            planList.Add(new StopTriggerReadPlan(sotc,antennaList, protocol, null, null, 1000));
+                        }
+                        MultiReadPlan plan = new MultiReadPlan(planList);
+                        // Set read plan
+                        r.ParamSet("/reader/read/plan", plan);
+#endif
+                    }
+                    else
+                    {
+                        List<ReadPlan> planList = new List<ReadPlan>();
+                        foreach (TagProtocol protocol in protocolList)
+                        {
+                            planList.Add(new StopTriggerReadPlan(sotc, antennaList, protocol, null, null, 1000));
+                        }
+                        MultiReadPlan plan = new MultiReadPlan(planList);
+                        // Set readplan
+                        r.ParamSet("/reader/read/plan", plan);
+                    }
+#endif
+#if ENABLE_SYNC_READ
                     TagReadData[] tagReads;
                     // Read tags
                     tagReads = r.Read(1000);
@@ -127,8 +167,22 @@ namespace ReadStopTrigger
                     foreach (TagReadData tr in tagReads)
                     {
                         Console.WriteLine(tr.ToString() + ", Protocol: " + tr.Tag.Protocol.ToString());
-                        Console.WriteLine("Data: " + ByteFormat.ToHex(tr.Data));
                     }
+#endif
+#if ENABLE_ASYNC_READ
+                    // Create and add tag listener
+                    r.TagRead += delegate(Object sender, TagReadDataEventArgs e)
+                    {
+                        Console.WriteLine("Background read: " + e.TagReadData);
+                    };
+                    // Create and add read exception listener
+                    r.ReadException += new EventHandler<ReaderExceptionEventArgs>(r_ReadException);
+                    // Search for tags in the background
+                    r.StartReading();
+                    while (!r.isReadStopped())
+                    { }
+#endif
+
                 }
             }
             catch (ReaderException re)
@@ -168,6 +222,15 @@ namespace ReadStopTrigger
             return antennaList;
         }
 
+        #endregion
+
+        #region Exception Listener
+#if ENABLE_ASYNC_READ
+        private static void r_ReadException(object sender, ReaderExceptionEventArgs e)
+        {
+            Console.WriteLine("Error: " + e.ReaderException.Message);
+        }
+#endif
         #endregion
 
     }

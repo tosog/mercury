@@ -55,6 +55,11 @@ uint16_t DwellTime;
 bool regionConfigurationFlag = false;
 #endif /* TMR_ENABLE_UHF */
 extern int delta;
+
+/* This flag is used/enabled in "autonomousmode.c" codelet.
+ * Used in streaming option.
+ */
+bool isStreamEnabled = false;
 int LastDSPMicro = 0;
 
 void
@@ -836,6 +841,25 @@ TMR_SR_cmdSetUserProfile(TMR_Reader *reader,TMR_SR_UserConfigOperation op,TMR_SR
       }
       sr->currentProtocol = reader->tagOpParams.protocol;
     }
+
+    if (op == TMR_USERCONFIG_CLEAR)
+    {
+      if(TMR_SR_MODEL_M3E != sr->versionInfo.hardware[0])
+      {
+        TMR_RP_init_simple(&reader->readParams.defaultReadPlan, 0, NULL, TMR_TAG_PROTOCOL_GEN2, 1);
+      }
+      else
+      {
+        TMR_RP_init_simple(&reader->readParams.defaultReadPlan, 0, NULL, TMR_TAG_PROTOCOL_ISO14443A, 1);
+      }
+
+      /* Set read plan to default*/
+      ret = TMR_paramSet(reader, TMR_PARAM_READ_PLAN, &reader->readParams.defaultReadPlan);
+      if (TMR_SUCCESS != ret)
+      {
+        return ret;
+      }
+    }
   }
   return ret1;
 }
@@ -1197,7 +1221,7 @@ TMR_SR_cmdGetCurrentProgram(TMR_Reader *reader, uint8_t *program)
 
   return ret;
 }
-#if !(defined(TMR_ENABLE_HF_LF) || defined(BARE_METAL))
+#if !((!defined(TMR_ENABLE_UHF)) || defined(BARE_METAL))
 TMR_Status TMR_SR_msgSetupReadTagSingle(uint8_t *msg, uint8_t *i, TMR_TagProtocol protocol,TMR_TRD_MetadataFlag metadataFlags, const TMR_TagFilter *filter,uint16_t timeout)
 {
   uint8_t optbyte;
@@ -1369,7 +1393,7 @@ TMR_SR_msgSetupReadTagMultipleWithMetadata(TMR_Reader *reader, uint8_t *msg, uin
     searchFlag = (TMR_SR_SearchFlag)(searchFlag
 		|TMR_SR_SEARCH_FLAG_DUTY_CYCLE_CONTROL);
   }
-  if (reader->isStopNTags && !reader->continuousReading)
+  if (reader->isStopNTags)
   {
     /**
      * Currently stop N Trigger is only supported for
@@ -1425,10 +1449,9 @@ TMR_SR_msgSetupReadTagMultipleWithMetadata(TMR_Reader *reader, uint8_t *msg, uin
 
   /**
    * Add the no of tags to be read requested by user
-   * in stop N tag reads.Currently only supported for
-   * sync read.
+   * in stop N tag reads.
    **/
-  if (reader->isStopNTags && !reader->continuousReading)
+  if (reader->isStopNTags)
   {
     SETU32(msg ,*i, (uint32_t)reader->numberOfTagsToRead);
   }
@@ -1546,6 +1569,7 @@ TMR_SR_executeEmbeddedRead(TMR_Reader *reader, uint8_t *msg, uint16_t timeout,
   TMR_Status ret;
   uint8_t i, len, index;
   uint8_t newMsg[TMR_SR_MAX_PACKET_SIZE];
+  uint16_t searchFlags = 0;
     
   if (reader->continuousReading)
   {
@@ -1557,7 +1581,30 @@ TMR_SR_executeEmbeddedRead(TMR_Reader *reader, uint8_t *msg, uint16_t timeout,
     SETU16(newMsg, i, 0);
     SETU8(newMsg, i, (uint8_t)0x1); /* TM Option 1, for continuous reading */
     SETU8(newMsg, i, (uint8_t)TMR_SR_OPCODE_READ_TAG_ID_MULTIPLE); /* sub command opcode */
-    SETU16(newMsg, i, (uint16_t)0x0000); /* search flags, only 0x0001 is supported */
+
+#ifdef TMR_ENABLE_HF_LF
+    if (reader->isProtocolDynamicSwitching)
+    {
+      searchFlags |= (uint16_t)(TMR_SR_SEARCH_FLAG_DYNAMIC_PROTOCOL_SWITCHING);
+    }
+#endif /* TMR_ENABLE_HF_LF */
+
+    if (reader->isStopNTags)
+    {
+      /**
+      * True means atleast one sub read plan has the requested for stop N trigger.
+      */
+      searchFlags |= (uint16_t)(TMR_SR_SEARCH_FLAG_RETURN_ON_N_TAGS);
+    }
+
+    //Add search flags.
+    SETU16(newMsg, i, (uint16_t)searchFlags);
+
+    if(reader->isStopNTags)
+    {
+      //Add the total tag count for stop N trigger.
+      SETU32(newMsg, i, reader->numberOfTagsToRead);
+    }
 
     if (TMR_SR_MODEL_M3E != reader->u.serialReader.versionInfo.hardware[0])
 	{
@@ -2054,13 +2101,16 @@ TMR_SR_parseMetadataFromMessage(TMR_Reader *reader, TMR_TagReadData *read, uint1
     memcpy(read->tag.xepc, &(msg[(*i)-2]), 2);
   }
 
-  if (TMR_TAG_PROTOCOL_ATA != read->tag.protocol)
-  {  
-    read->tag.crc = GETU16(msg, *i);
-  }
-  else
+  if (TMR_SR_MODEL_M3E != reader->u.serialReader.versionInfo.hardware[0])
   {
-    read->tag.crc = 0xffff;
+    if (TMR_TAG_PROTOCOL_ATA != read->tag.protocol)
+    {
+      read->tag.crc = GETU16(msg, *i);
+    }
+    else
+    {
+      read->tag.crc = 0xffff;
+    }
   }
 #endif /* TMR_ENABLE_UHF */
 }
@@ -2196,8 +2246,19 @@ TMR_SR_parseMetadataOnly(TMR_Reader *reader, TMR_TagReadData *read, uint16_t fla
       reader->u.serialReader.tagopSuccessCount = 1;
     }
 
-    msgDataLen = tm_u8s_per_bits(GETU16(msg, *i));
+    msgDataLen = GETU16(msg, *i);
+
+    //Store data length in bits only.
     read->data.len = msgDataLen;
+
+    //Convert data bit length into data byte length.
+     msgDataLen = tm_u8s_per_bits(msgDataLen);
+
+    if(TMR_SR_MODEL_M3E != reader->u.serialReader.versionInfo.hardware[0])
+    {
+      //In UHF data length is stored in bytes.
+      read->data.len = msgDataLen;
+    }
 
     /**
      * msgDataLen will be 0x1000(8000 / 8), when embedded tagOp fails.
@@ -2385,7 +2446,8 @@ TMR_SR_postprocessReaderSpecificMetadata(TMR_TagReadData *read, TMR_SR_SerialRea
     read->timestampLow = (uint32_t)ft.dwLowDateTime;
  }
 #endif
-
+if(!isStreamEnabled)
+{
   {
     uint8_t tx;
     uint8_t rx;
@@ -2440,6 +2502,7 @@ TMR_SR_postprocessReaderSpecificMetadata(TMR_TagReadData *read, TMR_SR_SerialRea
       }
     }
   }
+}
 }
 
 #ifdef TMR_ENABLE_ISO180006B
@@ -2988,7 +3051,7 @@ TMR_SR_cmdSetProtocolList(TMR_Reader *reader, TMR_TagProtocolList *protocols)
   {
     if (0 == ((1 << (protocols->list[idx] - 1)) & reader->u.serialReader.versionInfo.protocols))
     {
-      return TMR_ERROR_INVALID_PROTOCOL_SPECIFIED;
+      return TMR_ERROR_UNSUPPORTED;
     }
     SETU16(msg, i, protocols->list[idx]);
   }
@@ -3277,9 +3340,10 @@ TMR_SR_cmdSetReaderConfiguration(TMR_Reader *reader, TMR_SR_Configuration key,
   {
 #ifdef TMR_ENABLE_HF_LF
   case TMR_SR_CONFIGURATION_KEEP_RF_ON:
-#else
+#endif /* TMR_ENABLE_HF_LF */
+#ifdef TMR_ENABLE_UHF
   case TMR_SR_CONFIGURATION_ANTENNA_CONTROL_GPIO:
-#endif /* TMR_ENABLE_HF_LF*/
+#endif /* TMR_ENABLE_UHF */
   case TMR_SR_CONFIGURATION_TRIGGER_READ_GPIO:
     SETU8(msg, i, *(uint8_t *)value);
     break;
@@ -4254,9 +4318,10 @@ TMR_SR_cmdGetReaderConfiguration(TMR_Reader *reader, TMR_SR_Configuration key,
   {
 #ifdef TMR_ENABLE_HF_LF
   case TMR_SR_CONFIGURATION_KEEP_RF_ON:
-#else
-  case TMR_SR_CONFIGURATION_ANTENNA_CONTROL_GPIO:
 #endif /* TMR_ENABLE_HF_LF */
+#ifdef TMR_ENABLE_UHF
+  case TMR_SR_CONFIGURATION_ANTENNA_CONTROL_GPIO:
+#endif /* TMR_ENABLE_UHF */
   case TMR_SR_CONFIGURATION_TRIGGER_READ_GPIO:
     *(uint8_t *)value = getValue;
     break;
@@ -4672,6 +4737,7 @@ TMR_SR_msgSetupMultipleProtocolSearch(TMR_Reader *reader, uint8_t *msg, TMR_SR_O
   uint8_t i = 0, j = 0;
   uint16_t subTimeout = 0;
   uint32_t asyncOffTime = 0;
+  uint16_t searchFlags = 0;
 
   ret = TMR_SUCCESS;
   i=2;
@@ -4713,31 +4779,31 @@ TMR_SR_msgSetupMultipleProtocolSearch(TMR_Reader *reader, uint8_t *msg, TMR_SR_O
   }
   else
   {
-    reader->numberOfTagsToRead += reader->readParams.readPlan->u.simple.stopOnCount.noOfTags;
+    reader->numberOfTagsToRead = reader->readParams.readPlan->u.simple.stopOnCount.noOfTags;
   }
-  if (reader->isStopNTags && !reader->continuousReading)
+
+#ifdef TMR_ENABLE_HF_LF
+  if (reader->isProtocolDynamicSwitching)
+  {
+    searchFlags |= (uint16_t)(TMR_SR_SEARCH_FLAG_DYNAMIC_PROTOCOL_SWITCHING);
+  }
+#endif /* TMR_ENABLE_HF_LF */
+
+  if (reader->isStopNTags)
   {
     /**
-    * True means atlest one sub read plan has the requested for stop N trigger.
-    * Enable the flag and add the total tag count. This is only supported for sync read
-    * case.
+    * True means atleast one sub read plan has the requested for stop N trigger.
     */
-    SETU16(msg, i, (uint16_t)TMR_SR_SEARCH_FLAG_RETURN_ON_N_TAGS);
-    SETU32(msg, i, reader->numberOfTagsToRead);
+    searchFlags |= (uint16_t)(TMR_SR_SEARCH_FLAG_RETURN_ON_N_TAGS);
   }
-  else
+
+  //Add search flags.
+  SETU16(msg, i, (uint16_t)searchFlags);
+
+  if (reader->isStopNTags)
   {
-#ifdef TMR_ENABLE_HF_LF
-    if (reader->isProtocolDynamicSwitching)
-    {
-      SETU16(msg, i, (uint16_t)TMR_SR_SEARCH_FLAG_DYNAMIC_PROTOCOL_SWITCHING);
-      reader->isProtocolDynamicSwitching = false;
-    }
-    else
-#endif /* TMR_ENABLE_HF_LF */
-    {
-      SETU16(msg, i, (uint16_t)0x0000);//search flags, only 0x0001 is supported
-    }
+    //Add the total tag count for stop N trigger.
+    SETU32(msg, i, reader->numberOfTagsToRead);
   }
 
   /**
@@ -4786,7 +4852,7 @@ TMR_SR_msgSetupMultipleProtocolSearch(TMR_Reader *reader, uint8_t *msg, TMR_SR_O
 
     switch(op)
     {
-#if !(defined(TMR_ENABLE_HF_LF) || defined(BARE_METAL))
+#if !((!defined(TMR_ENABLE_UHF)) || defined(BARE_METAL))
     case TMR_SR_OPCODE_READ_TAG_ID_SINGLE :
       {
         ret = TMR_SR_msgSetupReadTagSingle(msg, &i, subProtocol,metadataFlags, filter[j], subTimeout);
@@ -8864,6 +8930,8 @@ TMR_SR_receiveAutonomousReading(struct TMR_Reader *reader, TMR_TagReadData *trd,
       * If found  any 0-antenna rows, copy the
       * later rows down to compact out the empty space.
       */
+    if(!isStreamEnabled)
+    {
       for (i = 0; i < reader->u.serialReader.txRxMap->len; i++)
       {
         if (!stats->perAntenna.list[i].antenna)
@@ -8890,6 +8958,7 @@ TMR_SR_receiveAutonomousReading(struct TMR_Reader *reader, TMR_TagReadData *trd,
           stats->perAntenna.len++;
         }
       }
+    }
 #endif /* TMR_ENABLE_UHF */
       /* store the requested flags for future use */
       stats->valid = reader->statsFlag;
@@ -9798,6 +9867,144 @@ TMR_SR_cmdILIANTagSelect(TMR_Reader *reader, uint16_t timeout, TMR_GEN2_Password
   }
   return TMR_SUCCESS;
 }
+
+/**
+ *  Helper routine to form the EM4325 Get Sensor Data command
+ */
+TMR_Status 
+TMR_SR_msgAddEM4325GetSensorData(uint8_t *msg, uint8_t *i, uint16_t timeout, TMR_GEN2_Password accessPassword,
+                         uint16_t CommandCode, TMR_TagFilter* target,  uint8_t bitToSet)
+{
+  TMR_Status ret;
+  uint8_t option = 0, rec;
+
+  SETU8(msg, *i, (uint8_t)TMR_SR_OPCODE_WRITE_TAG_SPECIFIC);
+  SETU16(msg, *i, (uint16_t)timeout);
+  SETU8(msg, *i, (uint8_t)TMR_SR_GEN2_EMMICRO_EM4325_SILICON); /* chip type */
+  if((isMultiSelectEnabled) && (!isEmbeddedTagopEnabled))
+  {
+    SETU8(msg, *i, TMR_SR_TAGOP_MULTI_SELECT);
+  }
+  rec = *i;
+  SETU8(msg,*i,0x40); //option
+  SETU16(msg, *i, CommandCode);
+  ret = filterbytes(TMR_TAG_PROTOCOL_GEN2, target, &option, i, msg, accessPassword, true);
+  msg[rec]=msg[rec]|option;
+  SETU8(msg,*i, bitToSet);
+
+  return ret;
+}
+
+/**
+ * EM4325 Get Sensor Data.
+ * Chip type = 0x09, command = 0x00 01
+ *
+ * @param reader The reader
+ * @param timeout The timeout of the operation, in milliseconds. Valid range is 0-65535.
+ * @param accessPassword The access password to use to write on the tag
+ * @param commandcode To specify the operation
+ * @param target Filter to be applied.
+ * @param bitsToSet response cfg flags to be applied.
+ */
+TMR_Status
+TMR_SR_cmdEM4325GetSensorData(TMR_Reader *reader, uint16_t timeout, TMR_GEN2_Password accessPassword,
+                         uint16_t CommandCode,  TMR_TagFilter* target, uint8_t bitToSet, TMR_uint8List *data)
+{
+  TMR_Status ret;
+  uint8_t msg[TMR_SR_MAX_PACKET_SIZE];
+  uint8_t i;
+  i = 2;
+  ret = TMR_SR_msgAddEM4325GetSensorData(msg, &i, timeout, accessPassword, CommandCode, target, bitToSet);
+  if(TMR_SUCCESS != ret)
+  {
+    return ret;
+  }
+  msg[1] = i - 3; /* Install length */
+
+  ret = TMR_SR_sendTimeout(reader, msg, timeout);
+  if (TMR_SUCCESS != ret)
+  {
+    return ret;
+  }
+
+  /* Parse the Read REG data response back to the user */
+  i = isMultiSelectEnabled ? 10 : 9;
+  /* FF    08     2d    00 00      09     40     00 01          xx xx      xx xx
+   * SOH Length OpCode Status  ChipType  option  SubCommand    [data]       CRC
+   */
+  {
+    uint16_t copyLength;
+
+    copyLength = msg[1] + 5 - i;
+    if (NULL != data)
+    {
+      memcpy(data->list, &msg[i], copyLength);
+      data->len = copyLength;
+    }
+  }
+  return TMR_SUCCESS;
+}
+
+/**
+ *  Helper routine to form the EM4325 Reset Alarms.
+ */
+TMR_Status 
+TMR_SR_msgAddEM4325ResetAlarms(uint8_t *msg, uint8_t *i, uint16_t timeout, TMR_GEN2_Password accessPassword,
+                         uint16_t CommandCode, TMR_TagFilter* target, uint8_t fillValue)
+{
+  TMR_Status ret;
+  uint8_t option = 0, rec;
+
+  SETU8(msg, *i, (uint8_t)TMR_SR_OPCODE_WRITE_TAG_SPECIFIC);
+  SETU16(msg, *i, (uint16_t)timeout);
+  SETU8(msg, *i, (uint8_t)TMR_SR_GEN2_EMMICRO_EM4325_SILICON); /* chip type */
+  if((isMultiSelectEnabled) && (!isEmbeddedTagopEnabled))
+  {
+    SETU8(msg, *i, TMR_SR_TAGOP_MULTI_SELECT);
+  }
+  rec = *i;
+  SETU8(msg,*i,0x40); //option
+  SETU16(msg, *i, CommandCode);
+  ret = filterbytes(TMR_TAG_PROTOCOL_GEN2, target, &option, i, msg, accessPassword, true);
+  msg[rec]=msg[rec]|option;
+  SETU8(msg,*i, fillValue);
+
+  return ret;
+}
+
+/**
+ * EM4325 Reset Alarms.
+ * Chip type = 0x09, command = 0x00 04
+ *
+ * @param reader The reader
+ * @param timeout The timeout of the operation, in milliseconds. Valid range is 0-65535.
+ * @param accessPassword The access password to use to write on the tag
+ * @param commandcode To specify the operation
+ * @param target Filter to be applied.
+ * @param fillValue cfg to be applied.
+ */
+TMR_Status
+TMR_SR_cmdEM4325ResetAlarms(TMR_Reader *reader, uint16_t timeout, TMR_GEN2_Password accessPassword,
+                         uint16_t CommandCode,  TMR_TagFilter* target, uint8_t fillValue)
+{
+  TMR_Status ret;
+  uint8_t msg[TMR_SR_MAX_PACKET_SIZE];
+  uint8_t i;
+  i = 2;
+  ret = TMR_SR_msgAddEM4325ResetAlarms(msg, &i, timeout, accessPassword, CommandCode, target, fillValue);
+  if(TMR_SUCCESS != ret)
+  {
+    return ret;
+  }
+  msg[1] = i - 3; /* Install length */
+
+  ret = TMR_SR_sendTimeout(reader, msg, timeout);
+  if (TMR_SUCCESS != ret)
+  {
+    return ret;
+  }
+  return TMR_SUCCESS;
+}
 #endif /* TMR_ENABLE_UHF */
 
 #ifdef TMR_ENABLE_HF_LF
@@ -9940,7 +10147,32 @@ TMR_SR_cmdPassThrough(TMR_Reader *reader, uint32_t timeout, uint32_t configFlags
   memcpy(&msg[i], cmd, cmdLen);
   i += cmdLen;
 
-  return TMR_SR_sendCmd(reader, msg, i);
+  ret = TMR_SR_sendCmd(reader, msg, i);
+  if (TMR_SUCCESS != ret)
+  {
+    return ret;
+  }
+
+  if (NULL != data->list)
+  {
+    i = 5;
+
+    /* Read the passthrough command response. */
+    {
+      uint16_t dataLength;
+
+      dataLength = msg[1] + 5 - i;
+      if (dataLength > data->max)
+      {
+        dataLength = data->max;
+      }
+      data->len = dataLength;
+
+      memcpy(data->list, &msg[i], dataLength);
+      i += dataLength;
+    }
+  }
+  return TMR_SUCCESS;
 }
 #endif /* TMR_ENABLE_HF_LF */
 

@@ -20,6 +20,7 @@
  * THE SOFTWARE.
  */
 package com.thingmagic;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -1640,6 +1641,7 @@ public class Gen2
       GEN2_HITACHI_HIBIKI_SILICON(0x06),
       GEN2_NXP_G2IL_SILICON(0x07),
       GEN2_IMPINJ_MONZA4_SILICON(0x08),
+      GEN2_EMMICRO_EM4325_SILICON(0x09),
       GEN2_IAV_DENATRAN(0xB),
       GEN2_IMPINJ_MONZA6_SILICON(0x0D),
       GEN2_NXP_UCODE7_SILICON(0x0E);
@@ -5583,5 +5585,105 @@ public class Gen2
              }
          }
 
+    }
+
+    // EM4325 - custom tag operation
+    public static class EMMicro extends Gen2CustomTagOp
+    {
+        public static class EM4325 extends EMMicro
+        {
+            // Default constructor
+            public EM4325()
+            {
+                chipType = Gen2_SiliconType.GEN2_EMMICRO_EM4325_SILICON.chipType;
+            }
+            
+            // Enum to hold the command code of each tag operation type
+            public enum CommandCode
+            {
+                GET_SENSOR_DATA_COMMAND(0x0001),
+                RESET_ALARMS_COMMAND(0x0004);
+                int rep;
+
+                CommandCode(int rep)
+                {
+                    this.rep = rep;
+                }
+                private static final Map<Integer, CommandCode> lookup = new HashMap<Integer, CommandCode>();
+
+                static
+                {
+                    for (CommandCode value : EnumSet.allOf(CommandCode.class))
+                    {
+                        lookup.put(value.getCode(), value);
+                    }
+                }
+
+                public int getCode() 
+                {
+                    return rep;
+                }
+
+                public static CommandCode get(int rep)
+                {
+                    return lookup.get(rep);
+                }
+            }
+            
+            /** GetSensorData allows a reader to 
+             *  get the UID and sensor information from the tag with a single command.
+             */
+            public static class GetSensorData extends EM4325
+            {
+                /** sendUid - when set to
+                 *  true, sends UID in response.
+                 *  false, response do not include UID.
+                 */
+                public boolean sendUid;
+                /** sendNewSample - when set to
+                 *  true, gets the new sample
+                 *  false, gets the last sample
+                 */
+                public boolean sendNewSample;
+                /**
+                 * commandCode indicates the code associated with each operation - be it a
+                 * getting sensor data or resetting alarms.
+                 */
+                public int commandCode;
+                /**
+                 * bitsToSet holds the byte value when sendUid or sendNewSample or both is enabled
+                 */
+                public byte bitsToSet;
+                
+                // GetSensorData
+                public GetSensorData(boolean sendUid, boolean sendNewSample)
+                {
+                    this.sendUid = sendUid;
+                    this.sendNewSample = sendNewSample;
+                    // load enum value of GET_SENSOR_DATA_COMMAND into command code
+                    this.commandCode = CommandCode.GET_SENSOR_DATA_COMMAND.rep;
+                    // Set appropriate bits based on sendUid and sendNewSample flags
+                    bitsToSet = ((sendUid == true)? (byte)0x80 : (byte)0);
+                    bitsToSet |= ((sendNewSample == true)? (byte)0x40 : (byte)0);
+                }
+            }
+
+            //Class for reset alarms
+            public static class ResetAlarms extends EM4325
+            {
+                public byte fillValue;
+                /**
+                 * commandCode indicates the code associated with each operation - be it a
+                 * getting sensor data or resetting alarms.
+                 */
+                public int commandCode;
+                
+                public ResetAlarms()
+                {
+                    this.commandCode = CommandCode.RESET_ALARMS_COMMAND.rep;
+                    fillValue = (byte)0x50;
+                }
+            }
+        }
     }
 }

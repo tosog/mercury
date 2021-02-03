@@ -111,9 +111,6 @@ Here is a list of all documented file members with links to the documentation:
 <li>TMR_ENABLE_GEN2_CUSTOM_TAGOPS
 : <a class="el" href="tm__config_8h.html#a54a65ccab87304335937dbc091bd4f86">tm_config.h</a>
 </li>
-<li>TMR_ENABLE_HF_LF
-: <a class="el" href="tm__config_8h.html#a0d122a344dcf8213a3b57905593998d9">tm_config.h</a>
-</li>
 <li>TMR_ENABLE_ISO180006B
 : <a class="el" href="tm__config_8h.html#ab1b0e3d53772fdc675c8fd1d04e26b03">tm_config.h</a>
 </li>
@@ -131,9 +128,6 @@ Here is a list of all documented file members with links to the documentation:
 </li>
 <li>TMR_ENABLE_STDIO
 : <a class="el" href="tm__config_8h.html#ae1c7a064adf826de13c8ee8707f53b56">tm_config.h</a>
-</li>
-<li>TMR_ENABLE_UHF
-: <a class="el" href="tm__config_8h.html#a66a614387c52148d9dfb133f2c090e04">tm_config.h</a>
 </li>
 <li>TMR_ERASE_LICENSE_KEY
 : <a class="el" href="tm__reader_8h.html#a904c8689c2ac6f6b70d8c1d009860ac2ab250eeed0d3493aedd43c5462a2f2375">tm_reader.h</a>
@@ -385,8 +379,8 @@ Here is a list of all documented file members with links to the documentation:
 : <a class="el" href="tmr__gpio_8h.html#a3794ba69286edf582043e53c6ee45537">tmr_gpio.h</a>
 </li>
 <li>TMR_GPITR_init_enable()
-: <a class="el" href="group__readplan.html#ga533221a951b2887fa6d292e384d5d08a">tm_reader.c</a>
-, <a class="el" href="group__readplan.html#ga533221a951b2887fa6d292e384d5d08a">tmr_read_plan.h</a>
+: <a class="el" href="group__readplan.html#ga533221a951b2887fa6d292e384d5d08a">tmr_read_plan.h</a>
+, <a class="el" href="group__readplan.html#ga533221a951b2887fa6d292e384d5d08a">tm_reader.c</a>
 </li>
 <li>TMR_gpoSet()
 : <a class="el" href="group__reader.html#ga10588e2601ace37292564a877c598334">tm_reader.h</a>
@@ -458,6 +452,10 @@ Here is a list of all documented file members with links to the documentation:
 </li>
 <li>TMR_ISO180006B_SelectOp
 : <a class="el" href="tmr__iso180006b_8h.html#acfb53ac1c38fae6b8085ed03f6c9b705">tmr_iso180006b.h</a>
+</li>
+<li>TMR_isReadStopped()
+: <a class="el" href="group__reader.html#ga8331bcfcfa63aafad4f71b372f1cff45">tm_reader.h</a>
+, <a class="el" href="group__reader.html#ga8331bcfcfa63aafad4f71b372f1cff45">tm_reader_async.c</a>
 </li>
 <li>TMR_LicenseOperation
 : <a class="el" href="tm__reader_8h.html#ab9e506fe417ea4fa2e9904417713cb08">tm_reader.h</a>
@@ -780,6 +778,9 @@ Here is a list of all documented file members with links to the documentation:
 <li>TMR_REGION_IS
 : <a class="el" href="tmr__region_8h.html#af43f710859d6253c17c6caecb47616c2ac1dfd474213ce2319cfa84bd145d208b">tmr_region.h</a>
 </li>
+<li>TMR_REGION_IS2
+: <a class="el" href="tmr__region_8h.html#af43f710859d6253c17c6caecb47616c2ae950557164d1955d8f73e4eca24d316e">tmr_region.h</a>
+</li>
 <li>TMR_REGION_JP
 : <a class="el" href="tmr__region_8h.html#af43f710859d6253c17c6caecb47616c2a0650fc6e9342a0deafef9c03dd030076">tmr_region.h</a>
 </li>
@@ -809,6 +810,9 @@ Here is a list of all documented file members with links to the documentation:
 </li>
 <li>TMR_REGION_NA3
 : <a class="el" href="tmr__region_8h.html#af43f710859d6253c17c6caecb47616c2a8b083c997eb7271b741d2a2683931031">tmr_region.h</a>
+</li>
+<li>TMR_REGION_NA4
+: <a class="el" href="tmr__region_8h.html#af43f710859d6253c17c6caecb47616c2aea51fdc1b4ebb35cd64973fa756f752d">tmr_region.h</a>
 </li>
 <li>TMR_REGION_NONE
 : <a class="el" href="tmr__region_8h.html#af43f710859d6253c17c6caecb47616c2afdfc38786beef0f8ac7e27e099c85102">tmr_region.h</a>
@@ -862,16 +866,16 @@ Here is a list of all documented file members with links to the documentation:
 : <a class="el" href="group__reader.html#ga602f6b819b9c8912764a1e2b88494fc8">tm_reader.h</a>
 </li>
 <li>TMR_removeTransportListener()
-: <a class="el" href="group__reader.html#ga1a07c9bba16ee46f6cc47509bb6d10df">tm_reader.c</a>
-, <a class="el" href="group__reader.html#ga1a07c9bba16ee46f6cc47509bb6d10df">tm_reader.h</a>
+: <a class="el" href="group__reader.html#ga1a07c9bba16ee46f6cc47509bb6d10df">tm_reader.h</a>
+, <a class="el" href="group__reader.html#ga1a07c9bba16ee46f6cc47509bb6d10df">tm_reader.c</a>
 </li>
 <li>TMR_RP_init_multi()
 : <a class="el" href="group__readplan.html#gace3c98ef5a04cfcac4b14e0fff950988">tmr_read_plan.h</a>
 , <a class="el" href="group__readplan.html#gace3c98ef5a04cfcac4b14e0fff950988">tm_reader.c</a>
 </li>
 <li>TMR_RP_init_simple()
-: <a class="el" href="group__readplan.html#ga1af189d2675156c9a068367219fa3d98">tm_reader.c</a>
-, <a class="el" href="group__readplan.html#ga1af189d2675156c9a068367219fa3d98">tmr_read_plan.h</a>
+: <a class="el" href="group__readplan.html#ga1af189d2675156c9a068367219fa3d98">tmr_read_plan.h</a>
+, <a class="el" href="group__readplan.html#ga1af189d2675156c9a068367219fa3d98">tm_reader.c</a>
 </li>
 <li>TMR_RP_set_enableAutonomousRead()
 : <a class="el" href="group__readplan.html#ga6ea47573e27efeb77513d660273ac349">tmr_read_plan.h</a>
@@ -882,16 +886,16 @@ Here is a list of all documented file members with links to the documentation:
 , <a class="el" href="group__readplan.html#ga25934fd91527a20a61865565bd4af61b">tm_reader.c</a>
 </li>
 <li>TMR_RP_set_filter()
-: <a class="el" href="group__readplan.html#ga34719ef3c329be6b31af3bc2b4b3c234">tmr_read_plan.h</a>
-, <a class="el" href="group__readplan.html#ga34719ef3c329be6b31af3bc2b4b3c234">tm_reader.c</a>
+: <a class="el" href="group__readplan.html#ga34719ef3c329be6b31af3bc2b4b3c234">tm_reader.c</a>
+, <a class="el" href="group__readplan.html#ga34719ef3c329be6b31af3bc2b4b3c234">tmr_read_plan.h</a>
 </li>
 <li>TMR_RP_set_stopTrigger()
 : <a class="el" href="group__readplan.html#gad351b39554d9fa962e8849140c1c580e">tmr_read_plan.h</a>
 , <a class="el" href="group__readplan.html#gad351b39554d9fa962e8849140c1c580e">tm_reader.c</a>
 </li>
 <li>TMR_RP_set_tagop()
-: <a class="el" href="group__readplan.html#ga3ac766458d80e3f86e769b805b6ef762">tmr_read_plan.h</a>
-, <a class="el" href="group__readplan.html#ga3ac766458d80e3f86e769b805b6ef762">tm_reader.c</a>
+: <a class="el" href="group__readplan.html#ga3ac766458d80e3f86e769b805b6ef762">tm_reader.c</a>
+, <a class="el" href="group__readplan.html#ga3ac766458d80e3f86e769b805b6ef762">tmr_read_plan.h</a>
 </li>
 <li>TMR_saveConfig()
 : <a class="el" href="group__reader.html#ga325c10e52b44644e5fd770f1c912eb5d">tm_reader.h</a>
@@ -901,17 +905,17 @@ Here is a list of all documented file members with links to the documentation:
 : <a class="el" href="tm__reader_8h.html#a904c8689c2ac6f6b70d8c1d009860ac2ae006cc9ba83fc8e13e148a9aaa54995c">tm_reader.h</a>
 </li>
 <li>TMR_setSerialTransport()
-: <a class="el" href="group__reader.html#gada58b38b218a125e59e94dacf1e29ed2">tm_reader.c</a>
-, <a class="el" href="group__reader.html#gada58b38b218a125e59e94dacf1e29ed2">tm_reader.h</a>
+: <a class="el" href="group__reader.html#gada58b38b218a125e59e94dacf1e29ed2">tm_reader.h</a>
+, <a class="el" href="group__reader.html#gada58b38b218a125e59e94dacf1e29ed2">tm_reader.c</a>
 </li>
 <li>tmr_sleep()
-: <a class="el" href="osdep__dummy_8c.html#a875c3bfe0d6c1974f408c6d9e660b8d2">osdep_dummy.c</a>
+: <a class="el" href="osdep_8h.html#a875c3bfe0d6c1974f408c6d9e660b8d2">osdep.h</a>
+, <a class="el" href="osdep__dummy_8c.html#a875c3bfe0d6c1974f408c6d9e660b8d2">osdep_dummy.c</a>
 , <a class="el" href="osdep__sam_d21j18a_8c.html#a875c3bfe0d6c1974f408c6d9e660b8d2">osdep_samD21j18a.c</a>
-, <a class="el" href="osdep__win32_8c.html#a875c3bfe0d6c1974f408c6d9e660b8d2">osdep_win32.c</a>
 , <a class="el" href="osdep__stm32_f103_r_b_8c.html#a875c3bfe0d6c1974f408c6d9e660b8d2">osdep_stm32F103RB.c</a>
+, <a class="el" href="osdep__win32_8c.html#a875c3bfe0d6c1974f408c6d9e660b8d2">osdep_win32.c</a>
 , <a class="el" href="osdep__arduino_8c.html#a875c3bfe0d6c1974f408c6d9e660b8d2">osdep_arduino.c</a>
 , <a class="el" href="osdep__posix_8c.html#a875c3bfe0d6c1974f408c6d9e660b8d2">osdep_posix.c</a>
-, <a class="el" href="osdep_8h.html#a875c3bfe0d6c1974f408c6d9e660b8d2">osdep.h</a>
 </li>
 <li>TMR_SR_ALL
 : <a class="el" href="tmr__serial__reader_8h.html#a8a89c0790c2ec957bb4ff2bdf0126fcaafe6dc6b6b1e031a479f8793bbc6144d8">tmr_serial_reader.h</a>
@@ -920,7 +924,7 @@ Here is a list of all documented file members with links to the documentation:
 : <a class="el" href="serial__reader__imp_8h.html#a685eafdf41c1e7e64d7429af18bf3f70">serial_reader_imp.h</a>
 </li>
 <li>TMR_SR_Configuration
-: <a class="el" href="serial__reader__imp_8h.html#a5ea6f0b0c64b1a28b108aa69267a1d0d">serial_reader_imp.h</a>
+: <a class="el" href="serial__reader__imp_8h.html#a9e64414315658206914885162205cadd">serial_reader_imp.h</a>
 </li>
 <li>TMR_SR_CONFIGURATION_ENABLE_READ_FILTER
 : <a class="el" href="serial__reader__imp_8h.html#a5ea6f0b0c64b1a28b108aa69267a1d0da01cb1ffd121e20e3cd355fc24effeb03">serial_reader_imp.h</a>
@@ -935,12 +939,12 @@ Here is a list of all documented file members with links to the documentation:
 : <a class="el" href="serial__reader__imp_8h.html#a5ea6f0b0c64b1a28b108aa69267a1d0da8de66dd5c215905c62273dc1627282a2">serial_reader_imp.h</a>
 </li>
 <li>TMR_SR_convertFromEBV()
-: <a class="el" href="tm__reader_8c.html#a12426d770fb43a7d5d289f68113591ce">tm_reader.c</a>
-, <a class="el" href="tm__reader_8h.html#a12426d770fb43a7d5d289f68113591ce">tm_reader.h</a>
+: <a class="el" href="tm__reader_8h.html#a12426d770fb43a7d5d289f68113591ce">tm_reader.h</a>
+, <a class="el" href="tm__reader_8c.html#a12426d770fb43a7d5d289f68113591ce">tm_reader.c</a>
 </li>
 <li>TMR_SR_convertToEBV()
-: <a class="el" href="tm__reader_8h.html#a4f96b9b8fee3ba68587280c207f0cd7f">tm_reader.h</a>
-, <a class="el" href="tm__reader_8c.html#a4f96b9b8fee3ba68587280c207f0cd7f">tm_reader.c</a>
+: <a class="el" href="tm__reader_8c.html#a4f96b9b8fee3ba68587280c207f0cd7f">tm_reader.c</a>
+, <a class="el" href="tm__reader_8h.html#a4f96b9b8fee3ba68587280c207f0cd7f">tm_reader.h</a>
 </li>
 <li>TMR_SR_CUSTOM_CONFIGURATION
 : <a class="el" href="tmr__serial__reader_8h.html#a3baba3f13f4787fc7c0ba800a367409baed5b384331b2382fe52213433c8dbd6f">tmr_serial_reader.h</a>
@@ -964,7 +968,7 @@ Here is a list of all documented file members with links to the documentation:
 : <a class="el" href="serial__reader__imp_8h.html#a11abf46a932e4b1f414b734bcdf5ae9d">serial_reader_imp.h</a>
 </li>
 <li>TMR_SR_PowerMode
-: <a class="el" href="tmr__serial__reader_8h.html#a27bef2c06d3a0f0f8a4d0bc1c0ad105f">tmr_serial_reader.h</a>
+: <a class="el" href="tmr__serial__reader_8h.html#a029983ca94786cda75985b20019481ba">tmr_serial_reader.h</a>
 </li>
 <li>TMR_SR_PowerWithLimits
 : <a class="el" href="serial__reader__imp_8h.html#aa4d92c4a55b10c365ac806c781f8f7c8">serial_reader_imp.h</a>
@@ -985,10 +989,10 @@ Here is a list of all documented file members with links to the documentation:
 : <a class="el" href="tmr__serial__reader_8h.html#a9dd1d68fa5b7ad34bec0631f4c5a1007">tmr_serial_reader.h</a>
 </li>
 <li>TMR_SR_SerialTransportNativeInit()
-: <a class="el" href="serial__transport__stm32_f103_r_b_8c.html#acde7993a740581c3dd2611dc7ba1a7a1">serial_transport_stm32F103RB.c</a>
-, <a class="el" href="serial__transport__sam_d21j18a_8c.html#acde7993a740581c3dd2611dc7ba1a7a1">serial_transport_samD21j18a.c</a>
+: <a class="el" href="serial__transport__sam_d21j18a_8c.html#acde7993a740581c3dd2611dc7ba1a7a1">serial_transport_samD21j18a.c</a>
 , <a class="el" href="serial__transport__dummy_8c.html#acde7993a740581c3dd2611dc7ba1a7a1">serial_transport_dummy.c</a>
 , <a class="el" href="serial__transport__stm32_l476_v_g_8c.html#acde7993a740581c3dd2611dc7ba1a7a1">serial_transport_stm32L476VG.c</a>
+, <a class="el" href="serial__transport__stm32_f103_r_b_8c.html#acde7993a740581c3dd2611dc7ba1a7a1">serial_transport_stm32F103RB.c</a>
 </li>
 <li>TMR_SR_SET_LICENSE_KEY
 : <a class="el" href="tmr__serial__reader_8h.html#ae120308149e2f1c5372e1c1198343945a4398b2d7895e61d308f4ec0a54f5f52a">tmr_serial_reader.h</a>
@@ -1022,8 +1026,8 @@ Here is a list of all documented file members with links to the documentation:
 : <a class="el" href="tm__reader_8h.html#ad987ed967a71ae63f3a776b0cee2b0d5">tm_reader.h</a>
 </li>
 <li>TMR_stopReading()
-: <a class="el" href="group__reader.html#ga82c3f389ceda58871e9c35975390231d">tm_reader_async.c</a>
-, <a class="el" href="group__reader.html#ga82c3f389ceda58871e9c35975390231d">tm_reader.h</a>
+: <a class="el" href="tm__reader__async_8c.html#a82c3f389ceda58871e9c35975390231d">tm_reader_async.c</a>
+, <a class="el" href="tm__reader_8h.html#a82c3f389ceda58871e9c35975390231d">tm_reader.h</a>
 </li>
 <li>TMR_strerr()
 : <a class="el" href="group__reader.html#gaf82e78538b2afb1f21df881b46caf687">tm_reader.h</a>
@@ -1035,10 +1039,10 @@ Here is a list of all documented file members with links to the documentation:
 : <a class="el" href="group__filter.html#ga1a76f63af512400e7c0b9dd87399e8a1">tmr_tag_data.h</a>
 </li>
 <li>TMR_TagOpType
-: <a class="el" href="tmr__tagop_8h.html#aac1eed06e713668882830b9964114ca9">tmr_tagop.h</a>
+: <a class="el" href="tmr__tagop_8h.html#a891ed9cdc3e953d1d0bbb647a68ccb45">tmr_tagop.h</a>
 </li>
 <li>TMR_TagProtocol
-: <a class="el" href="tmr__tag__protocol_8h.html#a1e727f69e94ccc81da4d3b9440aba934">tmr_tag_protocol.h</a>
+: <a class="el" href="tmr__tag__protocol_8h.html#a08be144831197ac1e29102053f3069cd">tmr_tag_protocol.h</a>
 </li>
 <li>TMR_TagProtocolList
 : <a class="el" href="tmr__tag__protocol_8h.html#afde562fc8af913f54a86bfefdca3db78">tmr_tag_protocol.h</a>
@@ -1056,12 +1060,12 @@ Here is a list of all documented file members with links to the documentation:
 : <a class="el" href="tmr__serial__reader_8h.html#a434d3ff12187c85054917b310a55ec6a">tmr_serial_reader.h</a>
 </li>
 <li>TMR_TRD_init()
-: <a class="el" href="tm__reader_8c.html#a827f53ba037ad95525a3e7c82c183c29">tm_reader.c</a>
-, <a class="el" href="tmr__tag__data_8h.html#a827f53ba037ad95525a3e7c82c183c29">tmr_tag_data.h</a>
+: <a class="el" href="tmr__tag__data_8h.html#a827f53ba037ad95525a3e7c82c183c29">tmr_tag_data.h</a>
+, <a class="el" href="tm__reader_8c.html#a827f53ba037ad95525a3e7c82c183c29">tm_reader.c</a>
 </li>
 <li>TMR_TRD_init_data()
-: <a class="el" href="tmr__tag__data_8h.html#a56f83ea3a272aac9c11d7b2a5e650a82">tmr_tag_data.h</a>
-, <a class="el" href="tm__reader_8c.html#a56f83ea3a272aac9c11d7b2a5e650a82">tm_reader.c</a>
+: <a class="el" href="tm__reader_8c.html#a56f83ea3a272aac9c11d7b2a5e650a82">tm_reader.c</a>
+, <a class="el" href="tmr__tag__data_8h.html#a56f83ea3a272aac9c11d7b2a5e650a82">tmr_tag_data.h</a>
 </li>
 <li>TMR_TRD_MetadataFlag
 : <a class="el" href="tmr__tag__data_8h.html#a09311592b5e067eb84347c29171b17e9">tmr_tag_data.h</a>
@@ -1102,7 +1106,7 @@ Here is a list of all documented file members with links to the documentation:
 </li>
 </ul>
 </div>
-<hr class="footer"/><address style="text-align: right;"><small>Generated on Tue Aug 11 10:03:47 2020 for Mercury C API by&nbsp;
+<hr class="footer"/><address style="text-align: right;"><small>Generated on Tue Jan 12 16:50:28 2021 for Mercury C API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.3 </small></address>
 </body>

@@ -110,8 +110,6 @@ initTxRxMapFromPorts(TMR_Reader *reader)
   TMR_SR_PortDetect ports[TMR_SR_MAX_ANTENNA_PORTS];
   uint8_t i, numPorts;
   TMR_SR_SerialReader *sr;
-  TMR_AntennaMap *defMap = (TMR_AntennaMap *)malloc(TMR_SR_MAX_ANTENNA_PORTS * sizeof(TMR_AntennaMap));
-  TMR_AntennaMapList *defMapList = (TMR_AntennaMapList *)malloc(sizeof(TMR_AntennaMapList));
 
   numPorts = numberof(ports);
   sr = &reader->u.serialReader;
@@ -177,20 +175,20 @@ initTxRxMapFromPorts(TMR_Reader *reader)
   sr->txRxMap = &sr->staticTxRxMap;
 
   /* Store default TxRx map before loading custom TxRx map */
-  defMapList->list = defMap;
-  sr->defaultTxRxMap = defMapList;
+  sr->staticTxRxDefMap.list = sr->staticTxRxDefMapData;
    
   for (i = 0; i < numPorts; i++)
   {
-    defMapList->list[i] = sr->staticTxRxMap.list[i];
+    sr->staticTxRxDefMap.list[i] = sr->staticTxRxMap.list[i];
   }
-  defMapList->max = sr->staticTxRxMap.max;
-  defMapList->len = sr->staticTxRxMap.len;
-  
+  sr->staticTxRxDefMap.max = sr->staticTxRxMap.max;
+  sr->staticTxRxDefMap.len = sr->staticTxRxMap.len;
+  sr->defaultTxRxMap = &sr->staticTxRxMap;
+
   return TMR_SUCCESS;
 }
 
-static TMR_Status
+TMR_Status
 TMR_SR_boot(TMR_Reader *reader, uint32_t currentBaudRate)
 {
   TMR_Status ret;
@@ -253,6 +251,16 @@ TMR_SR_boot(TMR_Reader *reader, uint32_t currentBaudRate)
     {
       return ret;
     }
+#ifdef TMR_ENABLE_UHF
+    if (TMR_SR_MODEL_M6E_NANO == sr->versionInfo.hardware[0])
+    {
+      // If power mode is sleep, then send preambles other wise don't.
+      if (sr->powerMode == TMR_SR_POWER_MODE_SLEEP)
+      {
+        sr->supportsPreamble = (sr->baudRate == 921600) ? true : false;
+      }
+    }
+#endif /* TMR_ENABLE_UHF */
   }
 #ifdef TMR_ENABLE_UHF
   /**
@@ -575,6 +583,10 @@ TMR_SR_cmdProbeBaudRate(TMR_Reader *reader, uint32_t *currentBaudRate)
       return ret;
     }
 contact:
+#ifdef TMR_ENABLE_UHF
+    //here we don't have information about model of the reader, so if baudrate is 921600, send preambles
+    sr->supportsPreamble = (rate == 921600) ? true : false; //For Nano
+#endif /* TMR_ENABLE_UHF */
     ret = TMR_SR_cmdVersion(reader, &(reader->u.serialReader.versionInfo));
     if (TMR_SUCCESS == ret)
     {
@@ -643,6 +655,7 @@ TMR_SR_connect(TMR_Reader *reader)
   {
     return ret;
   }
+  sr->baudRate = rate;
   reader->connected = true;
 
   if(TMR_SR_MODEL_M3E != sr->versionInfo.hardware[0])
@@ -690,6 +703,8 @@ TMR_SR_connect(TMR_Reader *reader)
                              TMR_READER_STATS_FLAG_DC_VOLTAGE);
 #endif /* TMR_ENABLE_HF_LF */
   }
+
+  reader->allValidMetadataFlags = reader->userMetadataFlag;
 
 #ifdef TMR_ENABLE_UHF
   if (isM6eFamily(&reader->u.serialReader) || 
@@ -1386,12 +1401,10 @@ TMR_SR_read_internal(struct TMR_Reader *reader, uint32_t timeoutMs,
 #ifdef TMR_ENABLE_UHF
     reader->fastSearch = rp->u.simple.useFastSearch;
 #endif /* TMR_ENABLE_UHF */
-    if (!reader->continuousReading)
-    {
-      /* Currently only supported for sync read case */
-      reader->isStopNTags = rp->u.simple.stopOnCount.stopNTriggerStatus;
-      reader->numberOfTagsToRead = rp->u.simple.stopOnCount.noOfTags;
-    }
+
+    //Update stopNTrigger status and number of tag count to read.
+    reader->isStopNTags = rp->u.simple.stopOnCount.stopNTriggerStatus;
+    reader->numberOfTagsToRead = rp->u.simple.stopOnCount.noOfTags;
   }
   else if (TMR_READ_PLAN_TYPE_MULTI == rp->type)
   {
@@ -1639,11 +1652,15 @@ TMR_SR_read_internal(struct TMR_Reader *reader, uint32_t timeoutMs,
       sr->tagsRemaining = 1;
       break;
     }
-    else if (reader->isStopNTags && !reader->continuousReading)
+    else if (reader->isStopNTags)
     {
       /** 
        * No need to loop back for stop N tags
        **/
+#ifdef TMR_ENABLE_UHF
+      isMultiSelectEnabled = false;
+      isEmbeddedTagopEnabled = false;
+#endif /* TMR_ENABLE_UHF */
       break;
     }
     else
@@ -2088,6 +2105,35 @@ TMR_SR_hasMoreTags(struct TMR_Reader *reader)
        **/
       return TMR_ERROR_NO_TAGS;
     }
+    else if (0x22 == msg[2])
+    {
+      if((0x07 == msg[1]) &&                   //Length is 7 byte.
+         (0x00 == msg[3]) && (0x00 == msg[4])  //Success response.
+        )
+      {
+        uint8_t option      = GETU8AT(msg, 5);
+        uint16_t searchFlag = GETU16AT(msg, 6);
+
+        //Check if Stop N tag feature is enabled.
+        if((0x01 & option) &&  //TM Option 1, for continuous reading.
+          (reader->isStopNTags && (searchFlag & TMR_SR_SEARCH_FLAG_RETURN_ON_N_TAGS))
+          )
+        {
+          //Retreive total tag count read.
+          uint32_t tagCount = GETU32AT(msg, 8);
+
+          //Check if total requested tag count is matching with read tag count.
+          if(tagCount >= reader->numberOfTagsToRead)
+          {
+            //Total requested tags are read. Send stop read command to the module.
+            TMR_SR_cmdStopReading(reader);
+          }
+        }
+
+        //Signal that we are done with tag reading.
+        return TMR_ERROR_NO_TAGS;
+      }
+    }
     else if (msg[1] < 6)
     { /* Need at least enough bytes to get to Response Type field */
       return TMR_ERROR_PARSE;
@@ -2172,7 +2218,7 @@ TMR_SR_getNextTag(struct TMR_Reader *reader, TMR_TagReadData *read)
   uint8_t *msg;
   uint8_t i;
   uint16_t flags = 0;
-#if !(defined(TMR_ENABLE_HF_LF) || defined(BARE_METAL))
+#if !((!defined(TMR_ENABLE_UHF)) || defined(BARE_METAL))
   uint32_t timeoutMs;
   uint8_t subResponseLen = 0;
   uint8_t crclen = 2 ;
@@ -2180,7 +2226,7 @@ TMR_SR_getNextTag(struct TMR_Reader *reader, TMR_TagReadData *read)
 #endif /* TMR_ENABLE_HF_LF || BARE_METAL */
 
   sr = &reader->u.serialReader;
-#if !(defined(TMR_ENABLE_HF_LF) || defined(BARE_METAL))
+#if !((!defined(TMR_ENABLE_UHF)) || defined(BARE_METAL))
   timeoutMs = sr->searchTimeoutMs;
 #endif /* TMR_ENABLE_HF_LF || BARE_METAL */
 
@@ -2220,7 +2266,7 @@ TMR_SR_getNextTag(struct TMR_Reader *reader, TMR_TagReadData *read)
           sr->tagsRemainingInBuffer = msg[8];
           sr->bufPointer = 9;
         }
-#if !(defined(TMR_ENABLE_HF_LF) || defined(BARE_METAL))
+#if !((!defined(TMR_ENABLE_UHF)) || defined(BARE_METAL))
         else if (reader->u.serialReader.opCode == TMR_SR_OPCODE_READ_TAG_ID_SINGLE)
         {
           TMR_SR_receiveMessage(reader, msg, reader->u.serialReader.opCode, timeoutMs);
@@ -2257,7 +2303,7 @@ TMR_SR_getNextTag(struct TMR_Reader *reader, TMR_TagReadData *read)
       TMR_SR_parseMetadataFromMessage(reader, read, flags, &i, msg);
       
     }
-#if !(defined(TMR_ENABLE_HF_LF) || defined(BARE_METAL))
+#if !((!defined(TMR_ENABLE_UHF)) || defined(BARE_METAL))
     if (reader->u.serialReader.opCode == TMR_SR_OPCODE_READ_TAG_ID_SINGLE)
     {
       flags = GETU16AT(msg, i + 6);
@@ -2971,7 +3017,7 @@ getSerialNumber(struct TMR_Reader *reader, void *value)
   /* See http://trac/swtree/changeset/6498 for previous implementation */
   TMR_Status ret;
   uint8_t buf[127];
-  uint8_t count, tmplen;
+  uint8_t count, tmplen = 0;
   char tmp[127];
 
   count = 127;
@@ -3225,6 +3271,16 @@ TMR_SR_paramSet(struct TMR_Reader *reader, TMR_Param key, const void *value)
         }
         sr->baudRate = rate;
         transport->setBaudRate(transport, sr->baudRate);
+
+#ifdef TMR_ENABLE_UHF
+        if (TMR_SR_MODEL_M6E_NANO == sr->versionInfo.hardware[0])
+        {
+          /** Until we get information about model and power mode, 
+           *  flush bytes will be sent to the module for 921600.
+           */
+          sr->supportsPreamble = (sr->baudRate == 921600) ? true : false;
+        }
+#endif /* TMR_ENABLE_UHF */
       }
     }
     else
@@ -3587,6 +3643,9 @@ TMR_SR_paramSet(struct TMR_Reader *reader, TMR_Param key, const void *value)
 		if (TMR_SUCCESS == ret)
 		{
 		  reader->u.serialReader.currentProtocol = reader->tagOpParams.protocol;
+#ifdef TMR_ENABLE_HF_LF
+          reader->isProtocolDynamicSwitching = false;
+#endif /* TMR_ENABLE_HF_LF */
         }
 	  }
     }
@@ -3978,14 +4037,14 @@ TMR_SR_paramSet(struct TMR_Reader *reader, TMR_Param key, const void *value)
           {
             if (!(metadataFlag & TMR_TRD_METADATA_FLAG_TAGTYPE))
 			{
-			  return TMR_ERROR_METADATA_INVALID;
+              return TMR_ERROR_METADATA_TAGTYPEMISSING;
 			}
           }
 #endif /* TMR_ENABLE_HF_LF */
 
           if (metadataFlag != TMR_TRD_METADATA_FLAG_ALL)
 		  {
-            if ((metadataFlag & reader->userMetadataFlag) ==  metadataFlag)
+            if ((metadataFlag & reader->allValidMetadataFlags) ==  metadataFlag)
             {
               reader->userMetadataFlag = metadataFlag;
             }
@@ -3994,7 +4053,11 @@ TMR_SR_paramSet(struct TMR_Reader *reader, TMR_Param key, const void *value)
               ret = TMR_ERROR_METADATA_INVALID;
             }
           }
-		}
+          else
+          {
+            reader->userMetadataFlag = reader->allValidMetadataFlags;
+          }
+        }
         else
         {
           ret = TMR_ERROR_METADATA_PROTOCOLMISSING;
@@ -6546,6 +6609,22 @@ TMR_SR_executeTagOp(struct TMR_Reader *reader, TMR_TagOp *tagop, TMR_TagFilter *
       ret = TMR_SR_cmdILIANTagSelect(reader, (uint16_t)sr->commandTimeout, op.AccessPassword, op.CommandCode, filter);
     }
     break;
+    case (TMR_TagOP_GEN2_EM4325_GET_SENSOR_DATA):
+    {
+      TMR_TagOP_GEN2_EM4325_Get_Sensor_Data op;
+
+      op = tagop->u.gen2.u.custom.u.emmicro.u.em4325.u.getSensorData;
+      ret = TMR_SR_cmdEM4325GetSensorData(reader, (uint16_t)sr->commandTimeout, op.AccessPassword, op.CommandCode, filter, op.bitsToSet, data);
+    }
+    break;
+    case (TMR_TagOP_GEN2_EM4325_RESET_ALARMS):
+    {
+      TMR_TagOP_GEN2_EM4325_Reset_Alarms op;
+
+      op = tagop->u.gen2.u.custom.u.emmicro.u.em4325.u.resetAlarms;
+      ret = TMR_SR_cmdEM4325ResetAlarms(reader, (uint16_t)sr->commandTimeout, op.AccessPassword, op.CommandCode, filter, op.fillValue);
+    }
+    break;
 #endif /* TMR_ENABLE_GEN2_CUSTOM_TAGOPS */
 
 #ifdef TMR_ENABLE_ISO180006B
@@ -6821,7 +6900,7 @@ TMR_SR_addTagOp(struct TMR_Reader *reader, TMR_TagOp *tagop,TMR_ReadPlan *rp, ui
           TMR_TagOp_GEN2_Lock *args;
           args = &rp->u.simple.tagop->u.gen2.u.lock;
 
-          TMR_SR_msgAddGEN2LockTag(msg, &i, 0, args->mask, args->action, 0);
+          TMR_SR_msgAddGEN2LockTag(msg, &i, 0, args->mask, args->action, args->accessPassword);
           break;
         }
         case TMR_TAGOP_GEN2_KILL:
@@ -7612,6 +7691,30 @@ TMR_SR_addTagOp(struct TMR_Reader *reader, TMR_TagOp *tagop,TMR_ReadPlan *rp, ui
             | TMR_SR_SEARCH_FLAG_EMBEDDED_COMMAND|TMR_SR_SEARCH_FLAG_LARGE_TAG_POPULATION_SUPPORT),
             rp->u.simple.filter, rp->u.simple.protocol, args->AccessPassword, &lenbyte);
         TMR_SR_msgAddILIANTagSelect(msg, &i, 0, 0, args->CommandCode, NULL);
+
+        break;
+      }
+      case TMR_TagOP_GEN2_EM4325_GET_SENSOR_DATA:
+      {
+        TMR_TagOP_GEN2_EM4325_Get_Sensor_Data *args;
+        args = &rp->u.simple.tagop->u.gen2.u.custom.u.emmicro.u.em4325.u.getSensorData;
+
+        ret = prepEmbReadTagMultiple(reader, msg, &i, (uint16_t)readTimeMs, (TMR_SR_SearchFlag)(TMR_SR_SEARCH_FLAG_CONFIGURED_LIST
+            | TMR_SR_SEARCH_FLAG_EMBEDDED_COMMAND|TMR_SR_SEARCH_FLAG_LARGE_TAG_POPULATION_SUPPORT),
+            rp->u.simple.filter, rp->u.simple.protocol, args->AccessPassword, &lenbyte);
+        TMR_SR_msgAddEM4325GetSensorData(msg, &i, 0, 0, args->CommandCode, NULL, args->bitsToSet);
+
+        break;
+      }
+      case TMR_TagOP_GEN2_EM4325_RESET_ALARMS:
+      {
+        TMR_TagOP_GEN2_EM4325_Reset_Alarms *args;
+        args = &rp->u.simple.tagop->u.gen2.u.custom.u.emmicro.u.em4325.u.resetAlarms;
+
+        ret = prepEmbReadTagMultiple(reader, msg, &i, (uint16_t)readTimeMs, (TMR_SR_SearchFlag)(TMR_SR_SEARCH_FLAG_CONFIGURED_LIST
+            | TMR_SR_SEARCH_FLAG_EMBEDDED_COMMAND|TMR_SR_SEARCH_FLAG_LARGE_TAG_POPULATION_SUPPORT),
+            rp->u.simple.filter, rp->u.simple.protocol, args->AccessPassword, &lenbyte);
+        TMR_SR_msgAddEM4325ResetAlarms(msg, &i, 0, 0, args->CommandCode, NULL, args->fillValue);
 
         break;
       }

@@ -4865,6 +4865,10 @@ namespace ThingMagic
             /// </summary>
             GEN2_IMPINJ_MONZA4_SILICON = 0x08,
             /// <summary>
+            /// EM Micro EM4325 silicon
+            /// </summary>
+            GEN2_EMMICRO_EM4325_SILICON = 0x09,
+            /// <summary>
             /// IAV Denatran silicon
             /// </summary>
             GEN2_IAV_DENATRAN_SILICON = 0xB,
@@ -7363,6 +7367,117 @@ namespace ThingMagic
                     this.CommandCode = (UInt16)01;
                 }
                 #endregion
+            }
+        }
+        #endregion
+
+        #region EMMicro
+        /// <summary>
+        /// EMMicro class
+        /// </summary>
+        public class EMMicro : Gen2CustomTagOp
+        {
+            /// <summary>
+            /// EM4325
+            /// </summary>
+            public class EM4325 : EMMicro
+            {
+                /// <summary>
+                /// default constructor
+                /// </summary>
+                public EM4325()
+                {
+                    ChipType = (byte)Gen2_SiliconType.GEN2_EMMICRO_EM4325_SILICON;
+                }
+
+                /// <summary>
+                /// Enum to hold the command code of each tag operation type
+                /// </summary>
+                public enum CommandCode
+                {
+                    /// <summary>
+                    /// Gets the sensor data command
+                    /// </summary>
+                    GET_SENSOR_DATA_COMMAND = 0x0001,
+                    /// <summary>
+                    /// resets the alarm command
+                    /// </summary>
+                    RESET_ALARMS_COMMAND = 0x0004
+                }
+
+                #region GetSensorData
+                /// <summary>
+                /// GetSensorData
+                /// </summary>
+                public class GetSensorData : EM4325
+                {
+                    #region Fields
+                    /// <summary>
+                    /// sendUid - when set to 
+                    /// true, sends UID in response
+                    /// false, response do not include UID.
+                    /// </summary>
+                    public bool sendUid;
+                    /// <summary>
+                    /// sendNewSample - when set to 
+                    /// true, gets the new sample
+                    /// false, gets the last sample
+                    /// </summary>
+                    public bool sendNewSample;
+                    /// <summary>
+                    /// commandCode indicates the code associated with each operation - be it a getting sensor data or resetting alarms.
+                    /// </summary>
+                    public UInt16 commandCode;
+                    /// <summary>
+                    /// bitsToSet holds the byte value when sendUid or sendNewSample or both is enabled
+                    /// </summary>
+                    public byte bitsToSet;
+
+                    #endregion
+
+                    /// <summary>
+                    /// GetSensorData
+                    /// </summary>
+                    /// <param name="sendUid">sends/doesnot send Uid in the response</param>
+                    /// <param name="sendNewSample">sends last /new sample</param>
+                    public GetSensorData(bool sendUid, bool sendNewSample)
+                    {
+                        this.sendUid = sendUid;
+                        this.sendNewSample = sendNewSample;
+                        // load enum value of GET_SENSOR_DATA_COMMAND into command code
+                        this.commandCode = (ushort)CommandCode.GET_SENSOR_DATA_COMMAND;
+                        // Set appropriate bits based on sendUid and sendNewSample flags
+                        bitsToSet = ((sendUid == true)? (byte)0x80 : (byte)0);
+                        bitsToSet |= ((sendNewSample == true)? (byte)0x40 : (byte)0);
+                    }
+                }
+               #endregion
+
+               #region ResetAlarms
+               /// <summary>
+               /// Class for RESET ALARMS
+               /// </summary>
+               public class ResetAlarms: EM4325
+                {
+                    /// <summary>
+                    /// fillValue
+                    /// </summary>
+                    public byte fillValue;
+                    /// <summary>
+                    /// commandCode indicates the code associated with each operation - be it a getting sensor data or resetting alarms.
+                    /// </summary>
+                    public UInt16 commandCode;
+
+                    /// <summary>
+                    /// ResetAlarms default constructor
+                    /// </summary>
+                    public ResetAlarms()
+                    {
+                        this.commandCode = (ushort)CommandCode.RESET_ALARMS_COMMAND;
+                        fillValue = (byte)0x50;
+                    }
+                }
+               #endregion
             }
         }
         #endregion

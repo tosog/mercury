@@ -114,6 +114,20 @@ namespace ReadAsync
                     // Create and add read exception listener
                     r.ReadException += new EventHandler<ReaderExceptionEventArgs>(r_ReadException);
 
+                    bool controlFlag = true;
+
+                    r.ReadException += delegate(object sender, ReaderExceptionEventArgs e)
+                    {
+                        if (e.ReaderException.Message.Contains("The reader received a valid command with an unsupported or invalid parameter"))
+                        {
+                            if (controlFlag)
+                            {
+                                controlFlag = false;
+                                r.StopReading();
+                            }
+                        }
+                    };
+
                     // Search for tags in the background
                     r.StartReading();
 

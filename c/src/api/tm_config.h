@@ -38,7 +38,7 @@ extern "C" {
 /**
  * API version number
  */
-#define TMR_VERSION "1.35.0.82"
+#define TMR_VERSION "1.35.1.43"
 
 /**
  * Define this to enable support for devices that support the serial
@@ -106,7 +106,7 @@ Note:To run readsync_baremetal codelet you have to
      define it.
 	 Otherwise keep it undefined.
  */
-#undef SINGLE_THREAD_ASYNC_READ
+//#define SINGLE_THREAD_ASYNC_READ
 /**
  * Define this to enable for BARE_METAL API 
  */
@@ -233,11 +233,6 @@ Note:To run readsync_baremetal codelet you have to
 #endif    /*Bare_metal*/
 
 /**
- * Define the largest number serial reader antenna ports that will be supported
- */
-#define TMR_SR_MAX_ANTENNA_PORTS (64)
-
-/**
  * Define when compiling on a big-endian host platform to enable some
  * endian optimizations. Without this, no endianness will be assumed.
  */ 
@@ -260,23 +255,25 @@ Note:To run readsync_baremetal codelet you have to
  */
 #define TMR_MAX_TRANSPORT_SCHEME_NAME 50
 
-/** Comment out the TMR_ENABLE_HF_LF macro to build API for UHF modules,
-  * including serial and LLRP 
-  */
+#define TMR_ENABLE_ALL
+
+#if (defined(TMR_ENABLE_HF_LF) || (defined(TMR_ENABLE_UHF))) 
+/** Undefine the macro, because the API should get build either for UHF or HF/LF modules based 
+ *  on the macro defined in project settings
+ */
+#undef TMR_ENABLE_ALL
+#endif
+
+/** Build the API for both UHF and HF/LF modules only if 'TMR_ENABLE_ALL' is defined */
+#ifdef TMR_ENABLE_ALL
+/** Too build API for HF and LF modules */
 #define TMR_ENABLE_HF_LF
 
-/** Comment out the TMR_ENABLE_UHF macro to build API for HF and LF modules */
+/** To build API for UHF modules */
 #define TMR_ENABLE_UHF
-
-#ifdef TMR_ENABLE_HF_LF_ONLY
-  #undef TMR_ENABLE_UHF
 #endif
 
-#ifdef TMR_ENABLE_UHF_ONLY
-  #undef TMR_ENABLE_HF_LF
-#endif
-
-#if (defined(TMR_ENABLE_HF_LF) && (!defined(TMR_ENABLE_UHF))) 
+#if (defined(TMR_ENABLE_HF_LF) && (!defined(TMR_ENABLE_UHF)))
 
   /**
    * To compile for Serial Reader only
@@ -298,6 +295,16 @@ Note:To run readsync_baremetal codelet you have to
    * Maximum length of tag UID
    */
   #define TMR_MAX_UID_BYTE_COUNT 10
+
+/**
+ * Define the largest number serial reader antenna ports that will be supported
+ */
+#ifdef TMR_ENABLE_UHF
+#define TMR_SR_MAX_ANTENNA_PORTS (64)
+#else
+/* M3e does not support antenna multiplexing, so antenna count will always be 2. */
+#define TMR_SR_MAX_ANTENNA_PORTS (2)
+#endif
 
 #ifdef __cplusplus
 }

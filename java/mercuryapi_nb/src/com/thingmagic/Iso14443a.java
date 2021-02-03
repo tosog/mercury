@@ -51,8 +51,10 @@ public class Iso14443a
         MIFARE_DESFIRE(0x00000020),
         //Mifare Mini
         MIFARE_MINI(0x00000040),
+        //Ultralight Ntag
+        ULTRALIGHT_NTAG(0x00000080),
         //ALL
-        ALL(0x0000007F);
+        ALL(0x000000FF);
         int rep;
         TagType(int rep)
         {

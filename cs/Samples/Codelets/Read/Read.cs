@@ -136,7 +136,19 @@ namespace Read
                                             Console.WriteLine("Antenna ID: " + tr.Antenna.ToString());
                                             break;
                                         case SerialReader.TagMetadataFlag.DATA:
-                                            Console.WriteLine("Data: " + BitConverter.ToString(tr.Data).Replace("-", " "));
+                                            if (tr.isErrorData)
+                                            {
+                                                // In case of error, show the error to user. Extract error code.
+                                                byte[] errorCodeBytes = tr.Data;
+                                                int offset = 0;
+                                                //converts byte array to int value
+                                                int errorCode = (((errorCodeBytes[offset] & 0xFF) << 8) | ((errorCodeBytes[offset + 1] & 0xFF) << 0));
+                                                Console.WriteLine("Embedded Tag operation failed. Error: " + ReaderCodeException.faultCodeToMessage(errorCode));
+                                            }
+                                            else
+                                            {
+                                                Console.WriteLine("Data[" + tr.dataLength + "]: " + ByteFormat.ToHex(tr.Data, "", " "));
+                                            }
                                             break;
                                         case SerialReader.TagMetadataFlag.FREQUENCY:
                                             Console.WriteLine("Frequency: " + tr.Frequency.ToString());

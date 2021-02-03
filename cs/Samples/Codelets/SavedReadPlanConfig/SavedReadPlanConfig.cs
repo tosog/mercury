@@ -18,7 +18,8 @@ namespace SavedReadPlanConfig
                     " -v : (Verbose)Turn on transport listener",
                     " reader-uri : e.g., 'tmr:///com4' or 'tmr:///dev/ttyS0/' or 'tmr://readerIP'",
                     " [--ant n[,n...]] : e.g., '--ant 1,2,..,n",
-                    " Example: 'tmr:///com4' or 'tmr:///com4 --ant 1,2' or '-v tmr:///com4 --ant 1,2'"
+                    " Example for UHF: 'tmr:///com4' or 'tmr:///com4 --ant 1,2' or '-v tmr:///com4 --ant 1,2'",
+                    " Example for HF/LF: 'tmr:///com4'"
             }));
             Environment.Exit(1);
         }
@@ -82,6 +83,15 @@ namespace SavedReadPlanConfig
                                 Usage();
                             }
                         }
+                        else
+                        {
+                            if (antennaList != null)
+                            {
+                                Console.WriteLine("Module doesn't support antenna input");
+                                Usage();
+                            }
+                        }
+
                         //Uncomment the following line to revert the module settings to factory defaluts
                         //r.ParamSet("/reader/userConfig", new SerialReader.UserConfigOp(SerialReader.UserConfigOperation.CLEAR));
                         //Console.WriteLine("User profile set option:reset all configuration");
@@ -131,10 +141,19 @@ namespace SavedReadPlanConfig
                         r.TagRead += delegate(Object sender, TagReadDataEventArgs e)
                         {
                             Console.WriteLine("Background read: " + e.TagReadData);
-                            if (0 < e.TagReadData.Data.Length)
+                            if (e.TagReadData.isErrorData)
                             {
-                                Console.WriteLine("  Data:" + ByteFormat.ToHex(e.TagReadData.Data, "", " "));
-                            } 
+                                // In case of error, show the error to user. Extract error code.
+                                byte[] errorCodeBytes = e.TagReadData.Data;
+                                int offset = 0;
+                                //converts byte array to int value
+                                int errorCode = (((errorCodeBytes[offset] & 0xFF) << 8) | ((errorCodeBytes[offset + 1] & 0xFF) << 0));
+                                Console.WriteLine("Embedded Tag operation failed. Error: " + ReaderCodeException.faultCodeToMessage(errorCode));
+                            }
+                            else
+                            {
+                                Console.WriteLine("Data[" + e.TagReadData.dataLength + "]: " + ByteFormat.ToHex(e.TagReadData.Data, "", " "));
+                            }
                         };
 
                         // Add reader stats listener

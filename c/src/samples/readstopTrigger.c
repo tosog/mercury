@@ -15,6 +15,12 @@
 #include <unistd.h>
 #endif
 
+/* Enable this to use async read */
+#define ENABLE_SYNC_READ 0
+
+/* Enable this to use simple read-plan */
+#define ENABLE_SIMPLE_READ_PLAN 1
+
 /* Enable this to use transportListener */
 #ifndef USE_TRANSPORT_LISTENER
 #define USE_TRANSPORT_LISTENER 0
@@ -105,6 +111,10 @@ void parseAntennaList(uint8_t *antenna, uint8_t *antennaCount, char *args)
   *antennaCount = i;
 }
 
+#if !ENABLE_SYNC_READ
+void callback(TMR_Reader *reader, const TMR_TagReadData *t, void *cookie);
+void exceptionCallback(TMR_Reader *reader, TMR_Status error, void *cookie);
+#endif
 int main(int argc, char *argv[])
 {
   TMR_Reader r, *rp;
@@ -119,7 +129,10 @@ int main(int argc, char *argv[])
 #if USE_TRANSPORT_LISTENER
   TMR_TransportListenerBlock tb;
 #endif
-
+#if !ENABLE_SYNC_READ
+  TMR_ReadListenerBlock rlb;
+  TMR_ReadExceptionListenerBlock reb;
+#endif
   if (argc < 2)
   {
     usage();
@@ -227,17 +240,17 @@ int main(int argc, char *argv[])
   }
 
 {
-  TMR_ReadPlan simpleReadPlan;
-#ifdef TMR_ENABLE_UHF
-  TMR_ReadPlan multiReadPlan;
+  TMR_ReadPlan readPlan;
+#if !ENABLE_SIMPLE_READ_PLAN
   TMR_ReadPlan subplans[5];
   TMR_ReadPlan* subplanPtrs[5];
-  TMR_TagProtocolList value;
-  TMR_TagProtocol valueList[32];
+  TMR_TagProtocolList protocolList;
+  TMR_TagProtocol value[TMR_MAX_PROTOCOLS];
   int subplanCount = 0;
   int j;
-#endif /* TMR_ENABLE_UHF */
-  uint32_t tagCount = 1;
+  bool isDynamicSwEnable = true;
+#endif
+  uint32_t tagCount = 5;
 
 #ifdef TMR_ENABLE_UHF
   if (0 != strcmp("M3e", model.value))
@@ -254,58 +267,78 @@ int main(int argc, char *argv[])
   }
 #endif /* TMR_ENABLE_UHF */
 
+#if ENABLE_SIMPLE_READ_PLAN
   /* The simple read plan */
   if (0 != strcmp("M3e", model.value))
   {
-    ret = TMR_RP_init_simple(&simpleReadPlan, antennaCount, antennaList, TMR_TAG_PROTOCOL_GEN2, 1000);
+    ret = TMR_RP_init_simple(&readPlan, antennaCount, antennaList, TMR_TAG_PROTOCOL_GEN2, 1000);
   }
   else
   {
-    ret = TMR_RP_init_simple(&simpleReadPlan, antennaCount, antennaList, TMR_TAG_PROTOCOL_ISO14443A, 1000);
+    ret = TMR_RP_init_simple(&readPlan, antennaCount, antennaList, TMR_TAG_PROTOCOL_ISO14443A, 1000);
   }
   checkerr(rp, ret, 1, "initializing the  read plan");
 
   /* Stop N trigger */
-  TMR_RP_set_stopTrigger (&simpleReadPlan, tagCount);
-
+  TMR_RP_set_stopTrigger (&readPlan, tagCount);
+#else
   /* The multi read plan */
-#ifdef TMR_ENABLE_UHF
-  if (0 != strcmp("M3e", model.value))
   {
+    protocolList.max = TMR_MAX_PROTOCOLS;
+    protocolList.list = value;
+    protocolList.len = 0;
 
-    value.max = 32;
-    value.list = valueList;
-
-    /* Berfore setting the readplen, we must get list of supported protocols */
-    ret = TMR_paramGet(rp, TMR_PARAM_VERSION_SUPPORTEDPROTOCOLS, &value);
+    /* Before setting the readplen, we must get list of supported protocols */
+    ret = TMR_paramGet(rp, TMR_PARAM_VERSION_SUPPORTEDPROTOCOLS, &protocolList);
     checkerr(rp, ret, 1, "Getting the supported protocols");
 
+#if ENABLE_SYNC_READ
+    isDynamicSwEnable = false;
+#endif
+
+    if ((0 == strcmp("M3e", model.value)) && isDynamicSwEnable)
     {
-      ret = TMR_RP_init_simple(&subplans[subplanCount], antennaCount, antennaList,TMR_TAG_PROTOCOL_GEN2 , 1000);
-      TMR_RP_set_stopTrigger (&subplans[subplanCount], tagCount);
-      subplanCount++;
-      ret = TMR_RP_init_simple(&subplans[subplanCount], antennaCount, antennaList, TMR_TAG_PROTOCOL_ISO180006B, 1000);
-      TMR_RP_set_stopTrigger (&subplans[subplanCount], tagCount);
-      subplanCount++;
+#ifdef TMR_ENABLE_HF_LF
+      ret = TMR_paramSet(rp, TMR_PARAM_PROTOCOL_LIST, &protocolList);
+      checkerr(rp, ret, 1, "Setting protocol list");
 
+      /**
+       * If the protocol list is set through TMR_PARAM_PROTOCOL_LIST param,
+       * then read plan protocol has no significance
+       */
+      ret = TMR_RP_init_simple(&readPlan, antennaCount, antennaList, TMR_TAG_PROTOCOL_ISO14443A, 1000); 
+      checkerr(rp, ret, 1, "creating simple read plan");
+
+       /* Stop N trigger */
+       TMR_RP_set_stopTrigger (&readPlan, tagCount);
+#endif /* TMR_ENABLE_HF_LF */
     }
-
-    for (j = 0; j < subplanCount; j++)
+    else
     {
-      subplanPtrs[j] = &subplans[j];
-    }
+      for (i = 0; i < protocolList.len && i < protocolList.max; i++)
+      {
+        ret = TMR_RP_init_simple(&subplans[subplanCount], antennaCount, antennaList, protocolList.list[i], 0);
+        /* Stop N trigger */
+        TMR_RP_set_stopTrigger (&subplans[subplanCount++], tagCount);
+      }
 
-    TMR_RP_init_multi(&multiReadPlan, subplanPtrs, subplanCount, 0);
+      for (i = 0; i < subplanCount; i++)
+      {
+        subplanPtrs[i] = &subplans[i];
+      }
+
+      ret = TMR_RP_init_multi(&readPlan, subplanPtrs, subplanCount, 0);
+      checkerr(rp, ret, 1, "creating multi read plan");
+    }
   }
-#endif /* TMR_ENABLE_UHF */
+#endif
 
   /* Set the read plan */
-   ret = TMR_paramSet(rp, TMR_PARAM_READ_PLAN, &simpleReadPlan);
-  //enable this for multi read plan
-  //ret = TMR_paramSet(rp, TMR_PARAM_READ_PLAN, &multiReadPlan);
+   ret = TMR_paramSet(rp, TMR_PARAM_READ_PLAN, &readPlan);
   checkerr(rp, ret, 1, "setting read plan");
 
     /* The sync read */
+#if ENABLE_SYNC_READ
   {
     ret = TMR_read(rp, 1000, NULL);
     if (TMR_ERROR_TAG_ID_BUFFER_FULL == ret)
@@ -329,12 +362,49 @@ int main(int argc, char *argv[])
       checkerr(rp, ret, 1, "fetching tag");
 
       TMR_bytesToHex(trd.tag.epc, trd.tag.epcByteCount, epcStr);
-      printf("EPC:%s\n", epcStr);
+      printf("EPC:%s ant:%d count:%d\n", epcStr, trd.antenna, trd.readCount);
     }
   }
+#else
+  {
+    rlb.listener = callback;
+    rlb.cookie = NULL;
+
+    reb.listener = exceptionCallback;
+    reb.cookie = NULL;
+
+    ret = TMR_addReadListener(rp, &rlb);
+    checkerr(rp, ret, 1, "adding read listener");
+
+    ret = TMR_addReadExceptionListener(rp, &reb);
+    checkerr(rp, ret, 1, "adding exception listener");
+
+    ret = TMR_startReading(rp);
+    checkerr(rp, ret, 1, "starting reading");
+
+    //Wait till tag read completion.
+    while(!TMR_isReadStopped(rp));
+  }
+#endif
 }
 
 TMR_destroy(rp);
 return 0;
 }
 
+#if !ENABLE_SYNC_READ
+void
+callback(TMR_Reader *reader, const TMR_TagReadData *t, void *cookie)
+{
+  char epcStr[128];
+
+  TMR_bytesToHex(t->tag.epc, t->tag.epcByteCount, epcStr);
+  printf("Background read: %s\n", epcStr);
+}
+
+void 
+exceptionCallback(TMR_Reader *reader, TMR_Status error, void *cookie)
+{
+  fprintf(stdout, "Error:%s\n", TMR_strerr(reader, error));
+}
+#endif

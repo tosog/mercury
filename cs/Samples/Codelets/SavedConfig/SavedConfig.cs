@@ -71,12 +71,9 @@ namespace SavedConfig
 
                         r.ParamSet("/reader/userConfig", new SerialReader.UserConfigOp(SerialReader.UserConfigOperation.RESTORE));
                         Console.WriteLine("User profile set option:restore all configuration");
-                        //For M3e, Verify configuration is not supported.
-                        if (!model.Equals("M3e"))
-                        {
-                            r.ParamSet("/reader/userConfig", new SerialReader.UserConfigOp(SerialReader.UserConfigOperation.VERIFY));
-                            Console.WriteLine("User profile set option:verify all configuration");
-                        }
+
+                        r.ParamSet("/reader/userConfig", new SerialReader.UserConfigOp(SerialReader.UserConfigOperation.VERIFY));
+                        Console.WriteLine("User profile set option:verify all configuration");
 
                         /**********  Testing cmdGetUserProfile function ***********/
 

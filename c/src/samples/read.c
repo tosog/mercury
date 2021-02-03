@@ -11,6 +11,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <inttypes.h>
+#ifdef TMR_ENABLE_HF_LF
+#include <tmr_utils.h>
+#endif /* TMR_ENABLE_HF_LF */
 
 #ifndef BARE_METAL
 #if WIN32
@@ -212,6 +215,7 @@ int main(int argc, char *argv[])
 #endif
 
   model.value = string;
+  model.max   = sizeof(string);
   TMR_paramGet(rp, TMR_PARAM_VERSION_MODEL, &model);
 #ifndef BARE_METAL
   checkerr(rp, ret, 1, "Getting version model");
@@ -490,9 +494,27 @@ if (TMR_ERROR_TAG_ID_BUFFER_FULL == ret)
 					//TODO : Initialize Read Data
 					if (0 < trd.data.len)
 					{
-						char dataStr[255];
-						TMR_bytesToHex(trd.data.list, trd.data.len, dataStr);
-						printf("Data(%d): %s\n", trd.data.len, dataStr);
+#ifdef TMR_ENABLE_HF_LF
+						if (0x8000 == trd.data.len)
+						{
+							ret = TMR_translateErrorCode(GETU16AT(trd.data.list, 0));
+							checkerr(rp, ret, 0, "Embedded tagOp failed:");
+						}
+						else
+#endif /* TMR_ENABLE_HF_LF */
+						{
+							char dataStr[255];
+							uint32_t dataLen = trd.data.len;
+
+							//Convert data len from bits to byte(For M3e only).
+							if (0 == strcmp("M3e", model.value))
+							{
+								dataLen = tm_u8s_per_bits(trd.data.len);
+							}
+
+							TMR_bytesToHex(trd.data.list, dataLen, dataStr);
+							printf("Data(%d): %s\n", trd.data.len, dataStr);
+						}
 					}
 					break;
 #ifdef TMR_ENABLE_UHF

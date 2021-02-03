@@ -282,10 +282,10 @@ TMR_strerr(TMR_Reader *reader, TMR_Status status)
   case TMR_ERROR_METADATA_PROTOCOLMISSING:
     return "Invalid argument in /reader/metadata. TMR_TRD_METADATA_FLAG_PROTOCOL is a mandatory parameter.";
   case TMR_ERROR_METADATA_INVALID:
-    return "Invalid argument in /reader/metadata. TMR_TRD_METADATA_FLAG_TAGTYPE is mandatory for M3e.";
+    return "Selected metadata are invalid";
 #ifdef TMR_ENABLE_HF_LF
-  case TMR_ERROR_INVALID_TAGTYPE_SPECIFIED:
-    return "Invalid protocol specific tagtype. Tagtype is mandatory parameter to set readplan.";
+  case TMR_ERROR_METADATA_TAGTYPEMISSING:
+    return "Invalid argument in /reader/metadata. TMR_TRD_METADATA_FLAG_TAGTYPE is mandatory for M3e.";
   case TMR_ERROR_UNSUPPORTED_SECUREREAD_TAGTYPE:
     return "Unsupported tagtype for secure read operation.";
 #endif /* TMR_ENABLE_HF_LF */
@@ -313,4 +313,13 @@ TMR_strerr(TMR_Reader *reader, TMR_Status status)
   }
 }
 
+/**
+ * This function will convert error code(uint16_t) into status code(TMR_Status).
+ *
+ * @param errorCode : 2 bytes of error code received from reader. 
+ */
+TMR_Status TMR_translateErrorCode(uint16_t errCode)
+{
+  return TMR_ERROR_CODE(errCode);
+}
 #endif /* defined(TMR_ENABLE_ERROR_STRINGS) */

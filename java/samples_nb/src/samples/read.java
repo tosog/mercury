@@ -116,14 +116,11 @@ public class read
                 usage();
             }
         }
-        printTagMetaData = false;
         SimpleReadPlan plan;
         // Metadata is not supported for M6 reader. Hence conditionalize here.
         if (!model.equalsIgnoreCase("Mercury6"))
         {
-           
             Set<TagReadData.TagMetadataFlag>   setMetaDataFlags = EnumSet.of(TagReadData.TagMetadataFlag.ALL);
-            
             r.paramSet(TMConstants.TMR_PARAM_READER_METADATA, setMetaDataFlags);
         }
         // Create a simplereadplan which uses the antenna list created above
@@ -159,11 +156,23 @@ public class read
                                 break;
                             case DATA:
                                 // User should initialize Read Data
-                                System.out.print("Data: ");
-                                for (byte b : tr.getData()) {
-                                    System.out.printf("%02x ", b);
+                                if (tr.getData().length > 0)
+                                {
+                                    if (tr.isErrorData)
+                                    {
+                                        // In case of error, show the error to user. Extract error code.
+                                        byte[] errorCodeBytes = tr.getData();
+                                        int offset = 0;
+                                        //converts byte array to int value
+                                        int errorCode = ((errorCodeBytes[offset] & 0xff) <<  8)| ((errorCodeBytes[offset + 1] & 0xff) <<  0);
+                                        System.out.println("Embedded Tag operation failed. Error: " + new ReaderCodeException(errorCode));
+                                    }
+                                    else
+                                    {
+                                        System.out.println( String.format("Data[%d]: %s", 
+                                                tr.dataLength, ReaderUtil.byteArrayToHexString(tr.getData())));
+                                    }
                                 }
-                                System.out.printf("\n");
                                 break;
                             case FREQUENCY:
                                 System.out.println("Frequency: " + tr.getFrequency());

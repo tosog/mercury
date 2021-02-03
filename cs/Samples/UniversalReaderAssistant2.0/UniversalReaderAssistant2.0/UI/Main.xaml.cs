@@ -192,6 +192,7 @@ namespace ThingMagic.URA2
         public ObservableCollection<string> Positions { get; set; }
 
         public ObservableCollection<ColumnSelectionForTagResult> selectedColumnList { get; set; }
+        public ObservableCollection<TagFamily> Families { get; set; }
 
         // Optimal tag reads settings
         Dictionary<string, string> OptimalReaderSettings = null;
@@ -281,13 +282,13 @@ namespace ThingMagic.URA2
         bool allFamilyTag = false;
         bool TagAddControl = false;
         bool TagRemoveControl = false;
-        ObservableCollection<ColumnSelectionForTagtype> hidTagFamily = new ObservableCollection<ColumnSelectionForTagtype>();
-        ObservableCollection<ColumnSelectionForTagtype> mifareTagFamily = new ObservableCollection<ColumnSelectionForTagtype>();
-        ObservableCollection<ColumnSelectionForTagtype> icodeTagFamily = new ObservableCollection<ColumnSelectionForTagtype>();
-        ObservableCollection<ColumnSelectionForTagtype> legicTagFamily = new ObservableCollection<ColumnSelectionForTagtype>();
-        ObservableCollection<ColumnSelectionForTagtype> emTagFamily = new ObservableCollection<ColumnSelectionForTagtype>();
-        ObservableCollection<ColumnSelectionForTagtype> hiTagFamily = new ObservableCollection<ColumnSelectionForTagtype>();
-        ObservableCollection<ColumnSelectionForTagtype> otherTagFamily = new ObservableCollection<ColumnSelectionForTagtype>();
+        ObservableCollection<Tag> hidTagFamily = new ObservableCollection<Tag>();
+        ObservableCollection<Tag> mifareTagFamily = new ObservableCollection<Tag>();
+        ObservableCollection<Tag> icodeTagFamily = new ObservableCollection<Tag>();
+        ObservableCollection<Tag> legicTagFamily = new ObservableCollection<Tag>();
+        ObservableCollection<Tag> emTagFamily = new ObservableCollection<Tag>();
+        ObservableCollection<Tag> hiTagFamily = new ObservableCollection<Tag>();
+        ObservableCollection<Tag> otherTagFamily = new ObservableCollection<Tag>();
         #endregion
 
         // Selected tags list 
@@ -301,6 +302,9 @@ namespace ThingMagic.URA2
 
 
         List<int> selectedAtenna = new List<int>();
+
+        //Load/Save config boolean variable for HTTP settings
+        bool httpenabled = false;
         /// <summary>
         /// Stores Detected comport
         /// </summary>
@@ -1620,10 +1624,7 @@ namespace ThingMagic.URA2
             {
                 if (model.Contains("M3e"))
                 {
-                    sldrHFLFPwr.Maximum = (Convert.ToDouble(objReader.ParamGet("/reader/radio/powerMax").ToString()) / 100);
-                    sldrHFLFPwr.Minimum = (Convert.ToDouble(objReader.ParamGet("/reader/radio/powerMin").ToString()) / 100);
-
-                    sldrHFLFPwr.Value = sldrHFLFPwr.Maximum;
+                    // Getting Read and write power in M3e is not supported.
                 }
                 else
                 {
@@ -2343,6 +2344,19 @@ namespace ThingMagic.URA2
                             }
                     }
                 }
+                else if (btnFrequencyOn.Content.Equals("Stop"))
+                {
+                    string msg = "Regulatory Test is in progress , Do you want to disconnect the reader?";
+                    switch (MessageBox.Show(msg, "Universal Reader Assistant Message", MessageBoxButton.OKCancel, MessageBoxImage.Question))
+                    {
+                        case MessageBoxResult.Cancel:
+                            break;
+                        case MessageBoxResult.OK:
+                            btnFrequencyOn_Click(sender, e);
+                            btnConnect_Click(sender, e);
+                            break;
+                    }
+                }
                 else
                 {
                     btnConnect_Click(sender, e);
@@ -2470,6 +2484,20 @@ namespace ThingMagic.URA2
                                     break;
                                 }
                             }
+                    }
+                }
+                else if (btnFrequencyOn.Content.Equals("Stop") && !(btnConnect.Content.ToString().Equals("Connect")))
+                {
+                    string msg = "Regulatory Test is in progress , Do you want to close the application?";
+                    switch (MessageBox.Show(msg, "Universal Reader Assistant Message", MessageBoxButton.OKCancel, MessageBoxImage.Question))
+                    {
+                        case MessageBoxResult.Cancel:
+                            e.Cancel = true;
+                            break;
+                        case MessageBoxResult.OK:
+                            btnFrequencyOn_Click(sender, new RoutedEventArgs());
+                            btnConnect_Click(sender, new RoutedEventArgs());
+                            break;
                     }
                 }
                 else if (!btnUpdate.IsEnabled)
@@ -2659,18 +2687,34 @@ namespace ThingMagic.URA2
             switch (cbxDisplayEPCAs.Text)
             {
                 case "Select":
-                case "Hex": break;
+                case "Hex": sb.Append(", " + ", "); break;
                 case "ASCII": sb.Append(rda.EPCInASCII + ", "); break;
-                case "ReverseBase36": sb.Append(rda.EPCInReverseBase36 + ", "); break;
+                case "ReverseBase36": sb.Append(", " + rda.EPCInReverseBase36 + ", "); break;
             }
-            sb.Append(rda.Data + ", ");
+            if (TagResults.dataSecureColumn.Visibility == Visibility.Collapsed)
+            {
+                sb.Append(rda.Data + ", ");
+            }
+            else
+            {
+                sb.Append(", ");
+            }
 
             switch (cbxDisplayEmbRdDataAs.Text)
             {
                 case "Select":
-                case "Hex": break;
+                case "Hex": sb.Append(", "); break;
                 case "ASCII": sb.Append(rda.DataInASCII + ", "); break;
                 //case "ReverseBase36": sb.Append(rda.DataInReverseBase36 + ","); break;
+            }
+
+            if (TagResults.dataSecureColumn.Visibility == Visibility.Visible)
+            {
+                sb.Append(rda.Data + ", ");
+            }
+            else
+            {
+                sb.Append(", ");
             }
 
             sb.Append(rda.TimeStamp.ToString("MM-dd-yyyy HH:mm:ss:fff") + ", ");
@@ -2679,13 +2723,27 @@ namespace ThingMagic.URA2
 
             sb.Append(rda.ReadCount + ", ");
 
+            if (TagResults.tagTypeColumn.Visibility == Visibility.Visible)
+            {
+                sb.Append(rda.TagType + ", ");
+            }
+            else
+            {
+                sb.Append(", ");
+            }
+
             sb.Append(rda.Antenna + ", ");
 
             sb.Append(rda.Protocol + ", ");
 
             sb.Append(rda.Frequency + ", ");
 
-            sb.Append(rda.Phase);
+            sb.Append(rda.Phase + ", ");
+
+            if (TagResults.GPIOColumn.Visibility == Visibility.Visible)
+            {
+                sb.Append(rda.GPIO);
+            }
 
             tw.Write(sb.ToString());
             tw.WriteLine();
@@ -2872,8 +2930,8 @@ namespace ThingMagic.URA2
                         txtreadlength.Text = "0";
                         #endregion
                         #region This will reset the tag combo box and Tag list .
-                        lvTagType.ItemsSource = null;
-                        lvTagType.Items.Clear();
+                        treeView.ItemsSource = null;
+                        treeView.Items.Clear();
                         lvTagType1.ItemsSource = null;
                         lvTagType1.Items.Clear();
                         lbTagType.ItemsSource = null;
@@ -3223,7 +3281,7 @@ namespace ThingMagic.URA2
                 rdbtnglobal.IsChecked = true;
 
                 //check for selecting readstop trigger enabled by defualt if readonce is selected by default
-                if (objReader is SerialReader && (bool)rdBtnReadOnce.IsChecked)
+                if ((bool)rdBtnReadOnce.IsChecked)
                     chkEnableReadStopTrigger.Visibility = Visibility.Visible;
                 else
                     chkEnableReadStopTrigger.Visibility = Visibility.Collapsed;
@@ -3245,6 +3303,18 @@ namespace ThingMagic.URA2
                             {
                                 objReader.ParamSet("/reader/stats/enable", (Reader.Stat.StatsFlag.TEMPERATURE | Reader.Stat.StatsFlag.DCVOLTAGE));
                                 objReader.StatsListener += PrintTemperatureDCVoltage;
+                                //Get serial number
+                                {
+                                    try
+                                    {
+                                        SerialReader sr = objReader as SerialReader;
+                                        string serialNumber = sr.CmdGetSerialNumber();
+                                        cmbReaderAddr.Text = reader.model + "-" + serialNumber + " (" + uri + ")";
+                                    }
+                                    catch (Exception)
+                                    {
+                                    }
+                                }
                             }
                             else
                             {
@@ -3252,6 +3322,11 @@ namespace ThingMagic.URA2
                                 objReader.StatsListener += PrintTemperature;
                             }
                         }
+                    }
+                    else if (objReader is LlrpReader)
+                    {
+                        objReader.ParamSet("/reader/stats/enable", Reader.Stat.StatsFlag.ALL);
+                        objReader.StatsListener += PrintTemperature;
                     }
                 }
                 catch (FeatureNotSupportedException)
@@ -3261,16 +3336,23 @@ namespace ThingMagic.URA2
 
                 try
                 {
-                    SerialReader reader = objReader as SerialReader;
-                    if (reader.model.Equals("M3e"))
+                    if (objReader is LlrpReader)
                     {
-                        Reader.Stat.Values objRdrStats = (Reader.Stat.Values)objReader.ParamGet("/reader/stats");
-                        lblReaderTemperature.Content = objRdrStats.TEMPERATURE.ToString() + "°C";
-                        lblDCValue.Content = ((double)(objRdrStats.DCVOLTAGE) / 1000).ToString("0.0") + "V";
+                        lblReaderTemperature.Content = objReader.ParamGet("/reader/radio/temperature").ToString() + "°C";
                     }
                     else
                     {
-                        lblReaderTemperature.Content = objReader.ParamGet("/reader/radio/temperature").ToString() + "°C";
+                        SerialReader reader = objReader as SerialReader;
+                        if (reader.model.Equals("M3e"))
+                        {
+                            Reader.Stat.Values objRdrStats = (Reader.Stat.Values)objReader.ParamGet("/reader/stats");
+                            lblReaderTemperature.Content = objRdrStats.TEMPERATURE.ToString() + "°C";
+                            lblDCValue.Content = ((double)(objRdrStats.DCVOLTAGE) / 1000).ToString("0.0") + "V";
+                        }
+                        else
+                        {
+                            lblReaderTemperature.Content = objReader.ParamGet("/reader/radio/temperature").ToString() + "°C";
+                        }
                     }
                 }
                 catch (Exception)
@@ -3698,6 +3780,10 @@ namespace ThingMagic.URA2
                             MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
+                objReader.Destroy();
+                ConfigureAntennaBoxes(null);
+                ConfigureLogicalAntennaBoxes(null);
+                ConfigureProtocols(null);
             }
         }
 
@@ -3728,7 +3814,14 @@ namespace ThingMagic.URA2
             List<string> portNames = new List<string>();
             List<string> portValues = new List<string>();
             //converting comport number from small letter to capital letter.Eg:com18 to COM18.
-            portNumber = Regex.Replace(portNumber, @"[^a-zA-Z0-9_\\]", "").ToUpperInvariant();
+            MatchCollection mc1 = Regex.Matches(portNumber, @"(?<=\().+?(?=\))");
+            foreach (Match m1 in mc1)
+            {
+                if (m1.ToString().ToUpperInvariant().Contains("COM"))
+                {
+                    portNumber = m1.ToString();
+                }
+            }
             // getting the list of comports value and name which device manager shows
             portNames = masterPortList;
             for (int i = 0; i < portNames.Count; i++)
@@ -4057,8 +4150,9 @@ namespace ThingMagic.URA2
                                         txtQuantizationStep.Text = objReader.ParamGet("/reader/region/quantizationStep").ToString();
                                         txtMinFreq.Text = objReader.ParamGet("/reader/region/minimumFrequency").ToString();
                                     }
-                                    else if (regioncombo.SelectedItem.ToString() == "OPEN") //(regioncombo.SelectedItem.ToString()).Equals((object)getRegion) && 
+                                    else if (regioncombo.SelectedItem.ToString() == "OPEN")
                                     {
+                                        objReader.ParamSet("/reader/region/id", Reader.Region.OPEN);
                                         objReader.ParamSet("/reader/region/lbt/enable", false);
                                         objReader.ParamSet("/reader/region/dwellTime/enable", false);
                                     }
@@ -4697,91 +4791,85 @@ namespace ThingMagic.URA2
 
                 simpleReadPlans.Clear();
 
-                if (!(bool)chkEnableReadStopTrigger.IsChecked)
-                {
-                    if (model.Equals("M3e"))//For M3e only
-                    {
-                        if (!((bool)rdBtnAutoProtocolSwitching.IsChecked))//Equal protocol switching
-                        {
-                            if ((bool)iso14443aCheckBox.IsChecked)
-                            {
-                                CreateReadPlan(TagProtocol.ISO14443A, null, embTagOp, false);
-                            }
-                            if ((bool)iso15693CheckBox.IsChecked)
-                            {
-                                CreateReadPlan(TagProtocol.ISO15693, null, embTagOp, false);
-                            }
-                            if ((bool)lf125KHZCheckBox.IsChecked)
-                            {
-                                CreateReadPlan(TagProtocol.LF125KHZ, null, embTagOp, false);
-                            }
-                        }
-                        else//Dynamic protocol switching
-                        {
-                            List<TagProtocol> protocolList = new List<TagProtocol>();
-                            if ((bool)iso14443aCheckBox.IsChecked)
-                            {
-                                protocolList.Add(TagProtocol.ISO14443A);
-                            }
-                            if ((bool)iso15693CheckBox.IsChecked)
-                            {
-                                protocolList.Add(TagProtocol.ISO15693);
-                            }
-                            if ((bool)lf125KHZCheckBox.IsChecked)
-                            {
-                                protocolList.Add(TagProtocol.LF125KHZ);
-                            }
-
-                            if (protocolList.Count > 0)
-                            {
-                                objReader.ParamSet("/reader/protocolList", protocolList.ToArray());
-                                CreateReadPlan(protocolList[0], null, embTagOp, false);
-                            }
-                        }
-                    }
-                    else//For UHF readers only
-                    {
-                        if ((bool)gen2CheckBox.IsChecked && !(bool)chkApplyFilter1.IsChecked)
-                        {//no filter selected
-                            CreateReadPlan(TagProtocol.GEN2, searchSelect, embTagOp, isFastSearchEnabled);
-                        }
-                        else if ((bool)gen2CheckBox.IsChecked && (bool)chkApplyFilter1.IsChecked && !(bool)chkApplyFilter2.IsChecked)
-                        {//Single filter selected
-                            CreateReadPlan(TagProtocol.GEN2, searchSelect, embTagOp, isFastSearchEnabled);
-                        }
-                        else if ((bool)gen2CheckBox.IsChecked && (bool)chkApplyFilter1.IsChecked && (bool)chkApplyFilter2.IsChecked)
-                        {//multi select plan has to be set
-                            CreateReadPlan(TagProtocol.GEN2, multifilter, embTagOp, isFastSearchEnabled);
-                        }
-                        if ((bool)iso6bCheckBox.IsChecked)
-                        {
-                            CreateReadPlan(TagProtocol.ISO180006B, null, null, isFastSearchEnabled);
-                        }
-                        if ((bool)ipx64CheckBox.IsChecked)
-                        {
-                            CreateReadPlan(TagProtocol.IPX64, null, null, isFastSearchEnabled);
-                        }
-                        if ((bool)ipx256CheckBox.IsChecked)
-                        {
-                            CreateReadPlan(TagProtocol.IPX256, null, null, isFastSearchEnabled);
-                        }
-                        if ((bool)ataCheckBox.IsChecked)
-                        {
-                            CreateReadPlan(TagProtocol.ATA, null, null, isFastSearchEnabled);
-                        }
-                        if ((bool)isoUcodeCheckbox.IsChecked)
-                        {
-                            CreateReadPlan(TagProtocol.ISO180006B_UCODE, null, null, isFastSearchEnabled);
-                        }
-                    }
-                }
-                else
+                if ((bool)chkEnableReadStopTrigger.IsChecked)
                 {
                     ClearReads(); Thread.Sleep(50);
-
-                    CreateReadPlan(TagProtocol.GEN2, searchSelect, null, isFastSearchEnabled);
                 }
+                if (model.Equals("M3e"))//For M3e only
+                {
+                    if (!((bool)rdBtnAutoProtocolSwitching.IsChecked))//Equal protocol switching
+                    {
+                        if ((bool)iso14443aCheckBox.IsChecked)
+                        {
+                            CreateReadPlan(TagProtocol.ISO14443A, null, embTagOp, false);
+                        }
+                        if ((bool)iso15693CheckBox.IsChecked)
+                        {
+                            CreateReadPlan(TagProtocol.ISO15693, null, embTagOp, false);
+                        }
+                        if ((bool)lf125KHZCheckBox.IsChecked)
+                        {
+                            CreateReadPlan(TagProtocol.LF125KHZ, null, embTagOp, false);
+                        }
+                    }
+                    else//Dynamic protocol switching
+                    {
+                        List<TagProtocol> protocolList = new List<TagProtocol>();
+                        if ((bool)iso14443aCheckBox.IsChecked)
+                        {
+                            protocolList.Add(TagProtocol.ISO14443A);
+                        }
+                        if ((bool)iso15693CheckBox.IsChecked)
+                        {
+                            protocolList.Add(TagProtocol.ISO15693);
+                        }
+                        if ((bool)lf125KHZCheckBox.IsChecked)
+                        {
+                            protocolList.Add(TagProtocol.LF125KHZ);
+                        }
 
+                        if (protocolList.Count > 0)
+                        {
+                            objReader.ParamSet("/reader/protocolList", protocolList.ToArray());
+                            CreateReadPlan(protocolList[0], null, embTagOp, false);
+                        }
+                    }
+                }
+                else//For UHF readers only
+                {
+                    if ((bool)gen2CheckBox.IsChecked && !(bool)chkApplyFilter1.IsChecked)
+                    {//no filter selected
+                        CreateReadPlan(TagProtocol.GEN2, searchSelect, embTagOp, isFastSearchEnabled);
+                    }
+                    else if ((bool)gen2CheckBox.IsChecked && (bool)chkApplyFilter1.IsChecked && !(bool)chkApplyFilter2.IsChecked)
+                    {//Single filter selected
+                        CreateReadPlan(TagProtocol.GEN2, searchSelect, embTagOp, isFastSearchEnabled);
+                    }
+                    else if ((bool)gen2CheckBox.IsChecked && (bool)chkApplyFilter1.IsChecked && (bool)chkApplyFilter2.IsChecked)
+                    {//multi select plan has to be set
+                        CreateReadPlan(TagProtocol.GEN2, multifilter, embTagOp, isFastSearchEnabled);
+                    }
+                    if ((bool)iso6bCheckBox.IsChecked)
+                    {
+                        CreateReadPlan(TagProtocol.ISO180006B, null, null, isFastSearchEnabled);
+                    }
+                    if ((bool)ipx64CheckBox.IsChecked)
+                    {
+                        CreateReadPlan(TagProtocol.IPX64, null, null, isFastSearchEnabled);
+                    }
+                    if ((bool)ipx256CheckBox.IsChecked)
+                    {
+                        CreateReadPlan(TagProtocol.IPX256, null, null, isFastSearchEnabled);
+                    }
+                    if ((bool)ataCheckBox.IsChecked)
+                    {
+                        CreateReadPlan(TagProtocol.ATA, null, null, isFastSearchEnabled);
+                    }
+                    if ((bool)isoUcodeCheckbox.IsChecked)
+                    {
+                        CreateReadPlan(TagProtocol.ISO180006B_UCODE, null, null, isFastSearchEnabled);
+                    }
+                }
 
                 if (simpleReadPlans.ToArray().Length == 0)
                 {
@@ -4827,6 +4915,7 @@ namespace ThingMagic.URA2
             ICollection<byte> uid;
             List<TagFilter> filterList = new List<TagFilter>();
             #endregion
+            #region HF-LF filters
             if (model.Equals("M3e"))
             {
                 if (true)
@@ -4914,6 +5003,12 @@ namespace ThingMagic.URA2
                                         break;
                                     case "HITAG 2":
                                         lf125Tag |= Lf125khz.TagType.HITAG_2;
+                                        break;
+                                    case "KERI":
+                                        lf125Tag |= Lf125khz.TagType.KERI;
+                                        break;
+                                    case "INDALA":
+                                        lf125Tag |= Lf125khz.TagType.INDALA;
                                         break;
                                     default:
                                         break;
@@ -5084,6 +5179,12 @@ namespace ThingMagic.URA2
                                                     case "HITAG 2":
                                                         lf125Tag |= Lf125khz.TagType.HITAG_2;
                                                         break;
+                                                    case "KERI":
+                                                        lf125Tag |= Lf125khz.TagType.KERI;
+                                                        break;
+                                                    case "INDALA":
+                                                        lf125Tag |= Lf125khz.TagType.INDALA;
+                                                        break;
                                                     default:
                                                         break;
                                                 }
@@ -5128,6 +5229,7 @@ namespace ThingMagic.URA2
                     }
                 }
             }
+            #endregion
             if (model.Equals("M3e"))
             {
                 if ((bool)chkBlockRead.IsChecked || (bool)chkSecureRead.IsChecked)
@@ -5181,24 +5283,30 @@ namespace ThingMagic.URA2
             //if (objReader is SerialReader)
             {
                 //SerialReader.TagMetadataFlag flagSet = SerialReader.TagMetadataFlag.ALL | SerialReader.TagMetadataFlag.BRAND_IDENTIFIER;
-                objReader.ParamSet("/reader/metadata", tg);
-
+                if (!(model.Equals("Mercury6")))
+                {
+                    objReader.ParamSet("/reader/metadata", tg);
+                }
             }
             List<int> ant = GetSelectedAntennaList();
 
-            //rda = (ColumnSelectionForTagResult)cbxcolumnSelection.Items.GetItemAt(4);
-
-
             if (model.Equals("M3e"))
             {
-                if ((bool)chkEnableSecureRead.IsChecked)
+                //Disabling Dynamic protocol switching when equal protocol switching is enabled.
+                if ((bool)rdBtnEqualprotocolSwitching.IsChecked)
                 {
-                    SimpleReadPlan srp = null;
+                    SerialReader sr = objReader as SerialReader;
+                    sr.IsProtocolDynamicSwitching = false;
+                }
 
-                    srp = new SimpleReadPlan(ant, protocol, searchSelect, embTagOp, 1000);
+                if ((bool)chkEnableReadStopTrigger.IsChecked)
+                {
+                    StopTriggerReadPlan srp = null;
+
+                    srp = new StopTriggerReadPlan(sotc, null, protocol, searchSelect, embTagOp, 1000);
                     simpleReadPlans.Add(srp);
                 }
-                if (true)
+                else
                 {
                     SimpleReadPlan srp = null;
 
@@ -6543,7 +6651,6 @@ namespace ThingMagic.URA2
             //For example if Gen2, then change select screen to word address. on
             //the other hand if it is ISO18-6b, then change it to byte address.
             OnProtocolSelect();
-            chkEnableReadStopTrigger.IsChecked = false;
         }
 
         /// <summary>
@@ -6557,7 +6664,6 @@ namespace ThingMagic.URA2
             //For example if Gen2, then change select screen to word address. on
             //the other hand if it is ISO18-6b, then change it to byte address.
             OnProtocolSelect();
-            chkEnableReadStopTrigger.IsChecked = false;
         }
 
         /// <summary>
@@ -6571,7 +6677,6 @@ namespace ThingMagic.URA2
             //For example if Gen2, then change select screen to word address. on
             //the other hand if it is ISO18-6b, then change it to byte address.
             OnProtocolSelect();
-            chkEnableReadStopTrigger.IsChecked = false;
         }
 
         /// <summary>
@@ -6585,7 +6690,6 @@ namespace ThingMagic.URA2
             //For example if Gen2, then change select screen to word address. on
             //the other hand if it is ISO18-6b, then change it to byte address.
             OnProtocolSelect();
-            chkEnableReadStopTrigger.IsChecked = false;
         }
 
         /// <summary>
@@ -6599,7 +6703,6 @@ namespace ThingMagic.URA2
             //For example if Gen2, then change select screen to word address. on
             //the other hand if it is ISO18-6b, then change it to byte address.
             OnProtocolSelect();
-            chkEnableReadStopTrigger.IsChecked = false;
         }
 
         /// <summary>
@@ -6733,8 +6836,7 @@ namespace ThingMagic.URA2
                             rdBtnEqualprotocolSwitching.IsChecked = true;
                         }
                         //un-comment the following code to make readstop trigger visible and enable.
-                        if (objReader is SerialReader)
-                            chkEnableReadStopTrigger.Visibility = Visibility.Visible;
+                        chkEnableReadStopTrigger.Visibility = Visibility.Visible;
                         chkEnableReadStopTrigger.IsChecked = false;
                         tiTagResults.Focus();
                     }
@@ -6952,29 +7054,18 @@ namespace ThingMagic.URA2
         {
             try
             {
-                //if (null != chkEnableReadStopTrigger)
-                //{
                 if ((bool)chkEnableReadStopTrigger.IsChecked)
                 {
-                    if ((bool)gen2CheckBox.IsChecked && !(bool)(iso6bCheckBox.IsChecked) && !(bool)isoUcodeCheckbox.IsChecked && !(bool)ipx64CheckBox.IsChecked && !(bool)ipx256CheckBox.IsChecked && !(bool)ataCheckBox.IsChecked)
-                    {
-                        lblStopTriggerCount.Visibility = Visibility.Visible;
-                        txtbxStopTrigger.Visibility = Visibility.Visible;
-                        txtbxStopTrigger.Text = "1";
-                    }
-                    else
-                    {
-                        chkEnableReadStopTrigger.IsChecked = false;
-                        MessageBox.Show("Stop Read Trigger is supported by only GEN2 Protocol", "Universal Reader Assistant", MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
+                    lblStopTriggerCount.Visibility = Visibility.Visible;
+                    txtbxStopTrigger.Visibility = Visibility.Visible;
+                    txtbxStopTrigger.Text = "1";
+                    sotc.N = 1;
                 }
                 else
                 {
                     lblStopTriggerCount.Visibility = Visibility.Collapsed;
                     txtbxStopTrigger.Visibility = Visibility.Collapsed;
                 }
-                //}
             }
             catch (Exception ex)
             {
@@ -10585,14 +10676,7 @@ namespace ThingMagic.URA2
                 {
                     if (model.Equals("M3e"))
                     {
-                        if ((Convert.ToDouble(txt.Text) < sldrHFLFPwr.Minimum) || (Convert.ToDouble(txt.Text) > sldrHFLFPwr.Maximum))
-                        {
-                            MessageBox.Show("Please enter power within " + sldrHFLFPwr.Minimum + " and " + sldrHFLFPwr.Maximum + " dBm", "Universal Reader Assistant Message", MessageBoxButton.OK, MessageBoxImage.Error);
-                            if (((TextBox)sender).Name.Contains("txtbxHFLFValuedBm"))
-                            {
-                                txtbxHFLFValuedBm.Text = sldrHFLFPwr.Maximum.ToString();
-                            }
-                        }
+                        // Power slider is not supported for M3e.
                     }
                     else if ((Convert.ToDouble(txt.Text) < sldrReadPwr.Minimum) || (Convert.ToDouble(txt.Text) > sldrReadPwr.Maximum))
                     {
@@ -11285,306 +11369,316 @@ namespace ThingMagic.URA2
             }
 
             // input list
-            if (loadSaveConfig.Properties.ContainsKey("/application/readwriteOption/inputList"))
+            if (!(objReader is LlrpReader))
             {
-                string[] inputListToSet = loadSaveConfig.Properties["/application/readwriteOption/inputList"].Split(new char[] { ',', ' ' });
-                inputListToSet = inputListToSet.Distinct().ToArray();
-                List<string> availableinputList = new List<string>();
-                List<int> updatedInputList = new List<int>();
-                if ((bool)cbxAntennamux.IsChecked)
+                if (loadSaveConfig.Properties.ContainsKey("/application/readwriteOption/inputList"))
                 {
-                    if (!(bool)chbxOne.IsChecked)
+                    string[] inputListToSet = loadSaveConfig.Properties["/application/readwriteOption/inputList"].Split(new char[] { ',', ' ' });
+                    inputListToSet = inputListToSet.Distinct().ToArray();
+                    List<string> availableinputList = new List<string>();
+                    List<int> updatedInputList = new List<int>();
+                    if ((bool)cbxAntennamux.IsChecked)
                     {
-                        availableinputList.Add("1");
-                    }
-                    if (!(bool)chbxTwo.IsChecked)
-                    {
-                        availableinputList.Add("2");
-                    }
-                    if (!(bool)chbxThree.IsChecked)
-                    {
-                        availableinputList.Add("3");
-                    }
-                    if (!(bool)chbxFour.IsChecked)
-                    {
-                        availableinputList.Add("4");
-                    }
-                }
-                else
-                {
-                    if (model.Equals("M6e Nano") || model.Equals("M6e"))
-                    {
-                        string[] iList = new string[] { "1", "2", "3", "4" };
-                        availableinputList = iList.ToList();
-                    }
-                    else if (model.Equals("M6e Micro") || model.Equals("M6e Micro USBPro"))
-                    {
-                        string[] iList = new string[] { "1", "2" };
-                        availableinputList = iList.ToList();
+                        if (!(bool)chbxOne.IsChecked)
+                        {
+                            availableinputList.Add("1");
+                        }
+                        if (!(bool)chbxTwo.IsChecked)
+                        {
+                            availableinputList.Add("2");
+                        }
+                        if (!(bool)chbxThree.IsChecked)
+                        {
+                            availableinputList.Add("3");
+                        }
+                        if (!(bool)chbxFour.IsChecked)
+                        {
+                            availableinputList.Add("4");
+                        }
                     }
                     else
                     {
-                        availableinputList = null;
-                    }
-                }
-                int[] triggerGPI = (int[])objReader.ParamGet("/reader/read/trigger/gpi");
-                foreach (int i in triggerGPI)
-                {
-                    if (i == 1)
-                    {
-                        if (availableinputList.Contains("1"))
+                        if (model.Equals("M6e Nano") || model.Equals("M6e"))
                         {
-                            availableinputList.Remove("1");
+                            string[] iList = new string[] { "1", "2", "3", "4" };
+                            availableinputList = iList.ToList();
                         }
-                    }
-                    if (i == 2)
-                    {
-                        if (availableinputList.Contains("2"))
+                        else if (model.Equals("M6e Micro") || model.Equals("M6e Micro USBPro"))
                         {
-                            availableinputList.Remove("2");
-                        }
-                    }
-                    if (i == 3)
-                    {
-                        if (availableinputList.Contains("3"))
-                        {
-                            availableinputList.Remove("3");
-                        }
-                    }
-                    if (i == 4)
-                    {
-                        if (availableinputList.Contains("4"))
-                        {
-                            availableinputList.Remove("4");
-                        }
-                    }
-                }
-                if (!string.IsNullOrWhiteSpace(inputListToSet[0]))//.Contains(""))
-                {
-                    foreach (string str in inputListToSet)
-                    {
-                        if (availableinputList.Contains(str))
-                        {
-                            if (str.Equals("1"))
-                            {
-                                if (!updatedInputList.Contains(1))
-                                {
-                                    updatedInputList.Add(1);
-                                }
-                                chbxGpo1.Checked -= chbxGpo1_Checked;
-                                chbxGpo1.IsChecked = true;
-                                chbxGpo1.Checked += chbxGpo1_Checked;
-                                stkpnlOneDirection.Visibility = Visibility.Visible;
-                                stkpnlOneValue.Visibility = Visibility.Visible;
-                                chbxGpo1.Visibility = Visibility.Visible;
-                            }
-                            if (str.Equals("2"))
-                            {
-                                if (!updatedInputList.Contains(2))
-                                {
-                                    updatedInputList.Add(2);
-                                }
-                                chbxGpo2.Checked -= chbxGpo2_Checked;
-                                chbxGpo2.IsChecked = true;
-                                chbxGpo2.Checked += chbxGpo2_Checked;
-                                stkpnlTwoDirection.Visibility = Visibility.Visible;
-                                stkpnlTwoValue.Visibility = Visibility.Visible;
-                                chbxGpo2.Visibility = Visibility.Visible;
-                            }
-                            if (str.Equals("3"))
-                            {
-                                if (!updatedInputList.Contains(3))
-                                {
-                                    updatedInputList.Add(3);
-                                }
-                                chbxGpo3.Checked -= chbxGpo3_Checked;
-                                chbxGpo3.IsChecked = true;
-                                chbxGpo3.Checked += chbxGpo3_Checked;
-                                stkpnlThreeDirection.Visibility = Visibility.Visible;
-                                stkpnlThreeValue.Visibility = Visibility.Visible;
-                                chbxGpo3.Visibility = Visibility.Visible;
-                            }
-                            if (str.Equals("4"))
-                            {
-                                if (!updatedInputList.Contains(4))
-                                {
-                                    updatedInputList.Add(4);
-                                }
-                                chbxGpo4.Checked -= chbxGpo4_Checked;
-                                chbxGpo4.IsChecked = true;
-                                chbxGpo4.Checked += chbxGpo4_Checked;
-                                stkpnlFourDirection.Visibility = Visibility.Visible;
-                                stkpnlFourValue.Visibility = Visibility.Visible;
-                                chbxGpo4.Visibility = Visibility.Visible;
-                            }
+                            string[] iList = new string[] { "1", "2" };
+                            availableinputList = iList.ToList();
                         }
                         else
                         {
-                            if (availableinputList.Count > 0)
+                            availableinputList = null;
+                        }
+                    }
+                    int[] triggerGPI = (int[])objReader.ParamGet("/reader/read/trigger/gpi");
+
+
+                    foreach (int i in triggerGPI)
+                    {
+                        if (i == 1)
+                        {
+                            if (availableinputList.Contains("1"))
                             {
-                                // Not a valid input option
-                                NotifyLoadSaveConfigErrorMessage("Saved [/application/readwriteOption/inputList] inputList ["
-                                    + str + "] "
-                                    + "is not valid input option. URA skips this input Option");
+                                availableinputList.Remove("1");
+                            }
+                        }
+                        if (i == 2)
+                        {
+                            if (availableinputList.Contains("2"))
+                            {
+                                availableinputList.Remove("2");
+                            }
+                        }
+                        if (i == 3)
+                        {
+                            if (availableinputList.Contains("3"))
+                            {
+                                availableinputList.Remove("3");
+                            }
+                        }
+                        if (i == 4)
+                        {
+                            if (availableinputList.Contains("4"))
+                            {
+                                availableinputList.Remove("4");
                             }
                         }
                     }
+
+                    if (!string.IsNullOrWhiteSpace(inputListToSet[0]))//.Contains(""))
+                    {
+                        foreach (string str in inputListToSet)
+                        {
+                            if (availableinputList.Contains(str))
+                            {
+                                if (str.Equals("1"))
+                                {
+                                    if (!updatedInputList.Contains(1))
+                                    {
+                                        updatedInputList.Add(1);
+                                    }
+                                    chbxGpo1.Checked -= chbxGpo1_Checked;
+                                    chbxGpo1.IsChecked = true;
+                                    chbxGpo1.Checked += chbxGpo1_Checked;
+                                    stkpnlOneDirection.Visibility = Visibility.Visible;
+                                    stkpnlOneValue.Visibility = Visibility.Visible;
+                                    chbxGpo1.Visibility = Visibility.Visible;
+                                }
+                                if (str.Equals("2"))
+                                {
+                                    if (!updatedInputList.Contains(2))
+                                    {
+                                        updatedInputList.Add(2);
+                                    }
+                                    chbxGpo2.Checked -= chbxGpo2_Checked;
+                                    chbxGpo2.IsChecked = true;
+                                    chbxGpo2.Checked += chbxGpo2_Checked;
+                                    stkpnlTwoDirection.Visibility = Visibility.Visible;
+                                    stkpnlTwoValue.Visibility = Visibility.Visible;
+                                    chbxGpo2.Visibility = Visibility.Visible;
+                                }
+                                if (str.Equals("3"))
+                                {
+                                    if (!updatedInputList.Contains(3))
+                                    {
+                                        updatedInputList.Add(3);
+                                    }
+                                    chbxGpo3.Checked -= chbxGpo3_Checked;
+                                    chbxGpo3.IsChecked = true;
+                                    chbxGpo3.Checked += chbxGpo3_Checked;
+                                    stkpnlThreeDirection.Visibility = Visibility.Visible;
+                                    stkpnlThreeValue.Visibility = Visibility.Visible;
+                                    chbxGpo3.Visibility = Visibility.Visible;
+                                }
+                                if (str.Equals("4"))
+                                {
+                                    if (!updatedInputList.Contains(4))
+                                    {
+                                        updatedInputList.Add(4);
+                                    }
+                                    chbxGpo4.Checked -= chbxGpo4_Checked;
+                                    chbxGpo4.IsChecked = true;
+                                    chbxGpo4.Checked += chbxGpo4_Checked;
+                                    stkpnlFourDirection.Visibility = Visibility.Visible;
+                                    stkpnlFourValue.Visibility = Visibility.Visible;
+                                    chbxGpo4.Visibility = Visibility.Visible;
+                                }
+                            }
+                            else
+                            {
+                                if (availableinputList.Count > 0)
+                                {
+                                    // Not a valid input option
+                                    NotifyLoadSaveConfigErrorMessage("Saved [/application/readwriteOption/inputList] inputList ["
+                                        + str + "] "
+                                        + "is not valid input option. URA skips this input Option");
+                                }
+                            }
+                        }
+                    }
+                    objReader.ParamSet("/reader/gpio/inputList", updatedInputList.ToArray());
+                    validateUIcontrols();
+                    configureInputDirection(updatedInputList.ToArray());
                 }
-                objReader.ParamSet("/reader/gpio/inputList", updatedInputList.ToArray());
-                validateUIcontrols();
-                configureInputDirection(updatedInputList.ToArray());
+
+                // output list
+                if (loadSaveConfig.Properties.ContainsKey("/application/readwriteOption/outputList"))
+                {
+                    string[] outputListToSet = loadSaveConfig.Properties["/application/readwriteOption/outputList"].Split(new char[] { ',', ' ' });
+                    outputListToSet = outputListToSet.Distinct().ToArray();
+                    List<string> availableOutputList = new List<string>();
+                    List<int> updatedOutputList = new List<int>();
+                    if ((bool)cbxAntennamux.IsChecked)
+                    {
+                        if (!(bool)chbxOne.IsChecked)
+                        {
+                            availableOutputList.Add("1");
+                        }
+                        if (!(bool)chbxTwo.IsChecked)
+                        {
+                            availableOutputList.Add("2");
+                        }
+                        if (!(bool)chbxThree.IsChecked)
+                        {
+                            availableOutputList.Add("3");
+                        }
+                        if (!(bool)chbxFour.IsChecked)
+                        {
+                            availableOutputList.Add("4");
+                        }
+                    }
+                    else
+                    {
+                        if (model.Equals("M6e Nano") || model.Equals("M6e"))
+                        {
+                            string[] iList = new string[] { "1", "2", "3", "4" };
+                            availableOutputList = iList.ToList();
+                        }
+                        else if (model.Equals("M6e Micro") || model.Equals("M6e Micro USBPro"))
+                        {
+                            string[] iList = new string[] { "1", "2" };
+                            availableOutputList = iList.ToList();
+                        }
+                        else
+                        {
+                            availableOutputList = null;
+                        }
+                    }
+                    int[] triggerGPI = (int[])objReader.ParamGet("/reader/read/trigger/gpi");
+                    foreach (int i in triggerGPI)
+                    {
+                        if (i == 1)
+                        {
+                            if (availableOutputList.Contains("1"))
+                            {
+                                availableOutputList.Remove("1");
+                            }
+                        }
+                        if (i == 2)
+                        {
+                            if (availableOutputList.Contains("2"))
+                            {
+                                availableOutputList.Remove("2");
+                            }
+                        }
+                        if (i == 3)
+                        {
+                            if (availableOutputList.Contains("3"))
+                            {
+                                availableOutputList.Remove("3");
+                            }
+                        }
+                        if (i == 4)
+                        {
+                            if (availableOutputList.Contains("4"))
+                            {
+                                availableOutputList.Remove("4");
+                            }
+                        }
+                    }
+                    if (!string.IsNullOrWhiteSpace(outputListToSet[0]))//.Contains(""))
+                    {
+                        foreach (string str in outputListToSet)
+                        {
+                            if (availableOutputList.Contains(str))
+                            {
+                                if (str.Equals("1"))
+                                {
+                                    if (!updatedOutputList.Contains(1))
+                                    {
+                                        updatedOutputList.Add(1);
+                                    }
+                                    chbxGpo1.Checked -= chbxGpo1_Checked;
+                                    chbxGpo1.IsChecked = true;
+                                    chbxGpo1.Checked += chbxGpo1_Checked;
+                                    stkpnlOneDirection.Visibility = Visibility.Visible;
+                                    stkpnlOneValue.Visibility = Visibility.Visible;
+                                    chbxGpo1.Visibility = Visibility.Visible;
+                                }
+                                if (str.Equals("2"))
+                                {
+                                    if (!updatedOutputList.Contains(2))
+                                    {
+                                        updatedOutputList.Add(2);
+                                    }
+                                    chbxGpo2.Checked -= chbxGpo2_Checked;
+                                    chbxGpo2.IsChecked = true;
+                                    chbxGpo2.Checked += chbxGpo2_Checked;
+                                    stkpnlTwoDirection.Visibility = Visibility.Visible;
+                                    stkpnlTwoValue.Visibility = Visibility.Visible;
+                                    chbxGpo2.Visibility = Visibility.Visible;
+                                }
+                                if (str.Equals("3"))
+                                {
+                                    if (!updatedOutputList.Contains(3))
+                                    {
+                                        updatedOutputList.Add(3);
+                                    }
+                                    chbxGpo3.Checked -= chbxGpo3_Checked;
+                                    chbxGpo3.IsChecked = true;
+                                    chbxGpo3.Checked += chbxGpo3_Checked;
+                                    stkpnlThreeDirection.Visibility = Visibility.Visible;
+                                    stkpnlThreeValue.Visibility = Visibility.Visible;
+                                    chbxGpo3.Visibility = Visibility.Visible;
+                                }
+                                if (str.Equals("4"))
+                                {
+                                    if (!updatedOutputList.Contains(4))
+                                    {
+                                        updatedOutputList.Add(4);
+                                    }
+                                    chbxGpo4.Checked -= chbxGpo4_Checked;
+                                    chbxGpo4.IsChecked = true;
+                                    chbxGpo4.Checked += chbxGpo4_Checked;
+                                    stkpnlFourDirection.Visibility = Visibility.Visible;
+                                    stkpnlFourValue.Visibility = Visibility.Visible;
+                                    chbxGpo4.Visibility = Visibility.Visible;
+                                }
+                            }
+                            else
+                            {
+                                if (availableOutputList.Count > 0)
+                                {
+                                    // Not a valid output option
+                                    NotifyLoadSaveConfigErrorMessage("Saved [/application/readwriteOption/outputList] outputList ["
+                                        + str + "] "
+                                        + "is not valid output option. URA skips this output Option");
+                                }
+                            }
+                        }
+                    }
+                    objReader.ParamSet("/reader/gpio/outputList", updatedOutputList.ToArray());
+                    validateUIcontrols();
+                    configureOutputDirection(updatedOutputList.ToArray());
+
+                }
             }
-
-            // output list
-            if (loadSaveConfig.Properties.ContainsKey("/application/readwriteOption/outputList"))
+            else
             {
-                string[] outputListToSet = loadSaveConfig.Properties["/application/readwriteOption/outputList"].Split(new char[] { ',', ' ' });
-                outputListToSet = outputListToSet.Distinct().ToArray();
-                List<string> availableOutputList = new List<string>();
-                List<int> updatedOutputList = new List<int>();
-                if ((bool)cbxAntennamux.IsChecked)
-                {
-                    if (!(bool)chbxOne.IsChecked)
-                    {
-                        availableOutputList.Add("1");
-                    }
-                    if (!(bool)chbxTwo.IsChecked)
-                    {
-                        availableOutputList.Add("2");
-                    }
-                    if (!(bool)chbxThree.IsChecked)
-                    {
-                        availableOutputList.Add("3");
-                    }
-                    if (!(bool)chbxFour.IsChecked)
-                    {
-                        availableOutputList.Add("4");
-                    }
-                }
-                else
-                {
-                    if (model.Equals("M6e Nano") || model.Equals("M6e"))
-                    {
-                        string[] iList = new string[] { "1", "2", "3", "4" };
-                        availableOutputList = iList.ToList();
-                    }
-                    else if (model.Equals("M6e Micro") || model.Equals("M6e Micro USBPro"))
-                    {
-                        string[] iList = new string[] { "1", "2" };
-                        availableOutputList = iList.ToList();
-                    }
-                    else
-                    {
-                        availableOutputList = null;
-                    }
-                }
-                int[] triggerGPI = (int[])objReader.ParamGet("/reader/read/trigger/gpi");
-                foreach (int i in triggerGPI)
-                {
-                    if (i == 1)
-                    {
-                        if (availableOutputList.Contains("1"))
-                        {
-                            availableOutputList.Remove("1");
-                        }
-                    }
-                    if (i == 2)
-                    {
-                        if (availableOutputList.Contains("2"))
-                        {
-                            availableOutputList.Remove("2");
-                        }
-                    }
-                    if (i == 3)
-                    {
-                        if (availableOutputList.Contains("3"))
-                        {
-                            availableOutputList.Remove("3");
-                        }
-                    }
-                    if (i == 4)
-                    {
-                        if (availableOutputList.Contains("4"))
-                        {
-                            availableOutputList.Remove("4");
-                        }
-                    }
-                }
-                if (!string.IsNullOrWhiteSpace(outputListToSet[0]))//.Contains(""))
-                {
-                    foreach (string str in outputListToSet)
-                    {
-                        if (availableOutputList.Contains(str))
-                        {
-                            if (str.Equals("1"))
-                            {
-                                if (!updatedOutputList.Contains(1))
-                                {
-                                    updatedOutputList.Add(1);
-                                }
-                                chbxGpo1.Checked -= chbxGpo1_Checked;
-                                chbxGpo1.IsChecked = true;
-                                chbxGpo1.Checked += chbxGpo1_Checked;
-                                stkpnlOneDirection.Visibility = Visibility.Visible;
-                                stkpnlOneValue.Visibility = Visibility.Visible;
-                                chbxGpo1.Visibility = Visibility.Visible;
-                            }
-                            if (str.Equals("2"))
-                            {
-                                if (!updatedOutputList.Contains(2))
-                                {
-                                    updatedOutputList.Add(2);
-                                }
-                                chbxGpo2.Checked -= chbxGpo2_Checked;
-                                chbxGpo2.IsChecked = true;
-                                chbxGpo2.Checked += chbxGpo2_Checked;
-                                stkpnlTwoDirection.Visibility = Visibility.Visible;
-                                stkpnlTwoValue.Visibility = Visibility.Visible;
-                                chbxGpo2.Visibility = Visibility.Visible;
-                            }
-                            if (str.Equals("3"))
-                            {
-                                if (!updatedOutputList.Contains(3))
-                                {
-                                    updatedOutputList.Add(3);
-                                }
-                                chbxGpo3.Checked -= chbxGpo3_Checked;
-                                chbxGpo3.IsChecked = true;
-                                chbxGpo3.Checked += chbxGpo3_Checked;
-                                stkpnlThreeDirection.Visibility = Visibility.Visible;
-                                stkpnlThreeValue.Visibility = Visibility.Visible;
-                                chbxGpo3.Visibility = Visibility.Visible;
-                            }
-                            if (str.Equals("4"))
-                            {
-                                if (!updatedOutputList.Contains(4))
-                                {
-                                    updatedOutputList.Add(4);
-                                }
-                                chbxGpo4.Checked -= chbxGpo4_Checked;
-                                chbxGpo4.IsChecked = true;
-                                chbxGpo4.Checked += chbxGpo4_Checked;
-                                stkpnlFourDirection.Visibility = Visibility.Visible;
-                                stkpnlFourValue.Visibility = Visibility.Visible;
-                                chbxGpo4.Visibility = Visibility.Visible;
-                            }
-                        }
-                        else
-                        {
-                            if (availableOutputList.Count > 0)
-                            {
-                                // Not a valid output option
-                                NotifyLoadSaveConfigErrorMessage("Saved [/application/readwriteOption/outputList] outputList ["
-                                    + str + "] "
-                                    + "is not valid output option. URA skips this output Option");
-                            }
-                        }
-                    }
-                }
-                objReader.ParamSet("/reader/gpio/outputList", updatedOutputList.ToArray());
-                validateUIcontrols();
-                configureOutputDirection(updatedOutputList.ToArray());
-
+                configureGPIOS();
             }
             // Embedded read data
             if (loadSaveConfig.Properties["/application/readwriteOption/enableEmbeddedReadData"].ToLower().Equals("true"))
@@ -12374,6 +12468,25 @@ namespace ThingMagic.URA2
                             loadSaveConfig.Properties["/application/displayOption/tagResultColumn/displayEmbeddedReadDataAs"],
                             "Displays embedded read data in selected format");
                     }
+                }
+            }
+
+            // Display HTTP URL & update interval
+            if (loadSaveConfig.Properties.ContainsKey("/application/displayOption/saveHttpURL"))
+            {
+                if (loadSaveConfig.Properties["/application/displayOption/saveHttpURL"].Equals(""))
+                {
+                    chkDataExtensions.IsChecked = false;
+                    txtbxWebUrl.Text = "";
+                    txtbxHttpPostIntrvl.Text = "1";
+                }
+                else
+                {
+                    httpenabled = true;
+                    chkDataExtensions.IsChecked = true;
+                    rdBtnHttpPost.IsChecked = true;
+                    txtbxWebUrl.Text = loadSaveConfig.Properties["/application/displayOption/saveHttpURL"];
+                    txtbxHttpPostIntrvl.Text = loadSaveConfig.Properties["/application/displayOption/saveHttpUpdateInterval"];
                 }
             }
         }
@@ -13933,6 +14046,21 @@ namespace ThingMagic.URA2
                     cbxDisplayEmbRdDataAs.Text);
             }
 
+            //Save HTTP post URL & update interval
+            if (chkDataExtensions.IsEnabled)
+            {
+                if ((bool)rdBtnHttpPost.IsChecked)
+                {
+                    saveConfigurationList.Add("/application/displayOption/saveHttpURL", txtbxWebUrl.Text);
+                    saveConfigurationList.Add("/application/displayOption/saveHttpUpdateInterval", txtbxHttpPostIntrvl.Text);
+                }
+                else
+                {
+                    saveConfigurationList.Add("/application/displayOption/saveHttpURL", "");
+                    saveConfigurationList.Add("/application/displayOption/saveHttpUpdateInterval", "");
+                }
+            }
+
             return saveConfigurationList;
         }
 
@@ -14123,9 +14251,19 @@ namespace ThingMagic.URA2
         /// <param name="e"></param>
         private void chkDataExtensions_Checked(object sender, RoutedEventArgs e)
         {
-            rdBtnStreamToTcpPort.IsEnabled = true;
-            rdBtnHttpPost.IsEnabled = true;
-            rdBtnStreamToTcpPort.IsChecked = true;
+            if (httpenabled)
+            {
+                rdBtnStreamToTcpPort.IsEnabled = true;
+                rdBtnHttpPost.IsEnabled = true;
+                rdBtnHttpPost.IsChecked = true;
+                httpenabled = false;
+            }
+            else
+            {
+                rdBtnStreamToTcpPort.IsEnabled = true;
+                rdBtnHttpPost.IsEnabled = true;
+                rdBtnStreamToTcpPort.IsChecked = true;
+            }
         }
 
         /// <summary>
@@ -17116,8 +17254,6 @@ namespace ThingMagic.URA2
                 TagResults.phaseColumn.Visibility = Visibility.Collapsed;
                 TagResults.GPIOColumn.Visibility = Visibility.Collapsed;
                 TagResults.tagTypeColumn.Visibility = Visibility.Visible;
-                chkEnableReadStopTrigger.IsEnabled = false;
-                txtbxStopTrigger.IsEnabled = false;
                 TagResults.epcColumn.Header = "UID";
                 TagResults.rssiColumn.Visibility = Visibility.Collapsed;
                 Ant1CheckBox.Content = "HF";
@@ -17157,6 +17293,12 @@ namespace ThingMagic.URA2
                 else
                 {
                     rdbLF134Frequency.IsEnabled = false;
+                }
+                if ((bool)rdBtnReadOnce.IsChecked)
+                {
+                    rdBtnAutoProtocolSwitching.IsChecked = false;
+                    rdBtnAutoProtocolSwitching.IsEnabled = false;
+                    rdBtnEqualprotocolSwitching.IsChecked = true;
                 }
             }
             else
@@ -17540,7 +17682,6 @@ namespace ThingMagic.URA2
             InitializeTagSelectionCbx(selectedTagColumnList);
             xctkTagUIBusyIndicator.IsBusy = false;
             M3eFilterGroupBox.Visibility = Visibility.Visible;
-            chkEnableReadStopTrigger.IsChecked = false;
             TagFeature();
         }
 
@@ -17549,7 +17690,6 @@ namespace ThingMagic.URA2
             //Based on the protocol being picked, change the label on select screen accordingly.
             OnProtocolSelect();
             M3eFilterGroupBox.Visibility = Visibility.Visible;
-            chkEnableReadStopTrigger.IsChecked = false;
         }
 
         private void iso15693CheckBox_CheckedChanged(object sender, RoutedEventArgs e)
@@ -17661,7 +17801,6 @@ namespace ThingMagic.URA2
             InitializeTagSelectionCbx(selectedTagColumnList);
             xctkTagUIBusyIndicator.IsBusy = false;
             M3eFilterGroupBox.Visibility = Visibility.Visible;
-            chkEnableReadStopTrigger.IsChecked = false;
             TagFeature();
         }
 
@@ -17670,7 +17809,6 @@ namespace ThingMagic.URA2
             //Based on the protocol being picked, change the label on select screen accordingly.
             OnProtocolSelect();
             M3eFilterGroupBox.Visibility = Visibility.Visible;
-            chkEnableReadStopTrigger.IsChecked = false;
         }
 
         private void felicaCheckBox_CheckedChanged(object sender, RoutedEventArgs e)
@@ -17678,7 +17816,6 @@ namespace ThingMagic.URA2
             //Based on the protocol being picked, change the label on select screen accordingly.
             OnProtocolSelect();
             M3eFilterGroupBox.Visibility = Visibility.Visible;
-            chkEnableReadStopTrigger.IsChecked = false;
         }
 
         private void iso180003mode3CheckBox_CheckedChanged(object sender, RoutedEventArgs e)
@@ -17686,7 +17823,6 @@ namespace ThingMagic.URA2
             //Based on the protocol being picked, change the label on select screen accordingly.
             OnProtocolSelect();
             M3eFilterGroupBox.Visibility = Visibility.Visible;
-            chkEnableReadStopTrigger.IsChecked = false;
         }
 
         private void lf125KHZCheckBox_CheckedChanged(object sender, RoutedEventArgs e)
@@ -17751,6 +17887,16 @@ namespace ThingMagic.URA2
                     keyValueTag = new KeyValuePair<TagProtocol, ColumnSelectionForTagtype>(protocol, new ColumnSelectionForTagtype("HITAG 2", false));
                     selectedTagColumnList.Add(keyValueTag);
                 }
+                if (0 != (suppTagType & Lf125khz.TagType.KERI))
+                {
+                    keyValueTag = new KeyValuePair<TagProtocol, ColumnSelectionForTagtype>(protocol, new ColumnSelectionForTagtype("KERI", false));
+                    selectedTagColumnList.Add(keyValueTag);
+                }
+                if (0 != (suppTagType & Lf125khz.TagType.INDALA))
+                {
+                    keyValueTag = new KeyValuePair<TagProtocol, ColumnSelectionForTagtype>(protocol, new ColumnSelectionForTagtype("INDALA", false));
+                    selectedTagColumnList.Add(keyValueTag);
+                }
             }
             else
             {
@@ -17771,7 +17917,6 @@ namespace ThingMagic.URA2
             }
             InitializeTagSelectionCbx(selectedTagColumnList);
             M3eFilterGroupBox.Visibility = Visibility.Visible;
-            chkEnableReadStopTrigger.IsChecked = false;
             TagFeature();
         }
 
@@ -17830,7 +17975,6 @@ namespace ThingMagic.URA2
             }
             InitializeTagSelectionCbx(selectedTagColumnList);
             M3eFilterGroupBox.Visibility = Visibility.Visible;
-            chkEnableReadStopTrigger.IsChecked = false;
         }
 
         private void InitializeTagSelectionCbx(List<KeyValuePair<TagProtocol, ColumnSelectionForTagtype>> tagList)
@@ -17860,11 +18004,11 @@ namespace ThingMagic.URA2
         /// <param name="list">Tag Family list</param>
         /// <param name="tagName">Tag to Find</param>
         /// <returns>Boolean</returns>
-        private bool FindItemInList(ObservableCollection<ColumnSelectionForTagtype> list, string tagName)
+        private bool FindItemInList(ObservableCollection<Tag> list, string tagName)
         {
-            foreach (ColumnSelectionForTagtype item in list)
+            foreach (Tag item in list)
             {
-                if (item.TagName == tagName)
+                if (item.Name.TagName == tagName)
                 {
                     return true;
                 }
@@ -17881,27 +18025,27 @@ namespace ThingMagic.URA2
             switch (TagFamilyDatabase.GetTagFamilyName(tagName))
             {
                 case "HID Tag Family":
-                    ColumnSelectionForTagtype item = hidTagFamily.Where(x => x.TagName == tagName).FirstOrDefault();
+                    Tag item = hidTagFamily.Where(x => x.Name.TagName == tagName).FirstOrDefault();
                     hidTagFamily.Remove(item);
                     break;
                 case "MIFARE Tag Family":
-                    ColumnSelectionForTagtype item1 = mifareTagFamily.Where(x => x.TagName == tagName).FirstOrDefault();
+                    Tag item1 = mifareTagFamily.Where(x => x.Name.TagName == tagName).FirstOrDefault();
                     mifareTagFamily.Remove(item1);
                     break;
                 case "EM Tag Family":
-                    ColumnSelectionForTagtype item2 = emTagFamily.Where(x => x.TagName == tagName).FirstOrDefault();
+                    Tag item2 = emTagFamily.Where(x => x.Name.TagName == tagName).FirstOrDefault();
                     emTagFamily.Remove(item2);
                     break;
                 case "ICODE Tag Family":
-                    ColumnSelectionForTagtype item3 = icodeTagFamily.Where(x => x.TagName == tagName).FirstOrDefault();
+                    Tag item3 = icodeTagFamily.Where(x => x.Name.TagName == tagName).FirstOrDefault();
                     icodeTagFamily.Remove(item3);
                     break;
                 case "Other Tags":
-                    ColumnSelectionForTagtype item4 = otherTagFamily.Where(x => x.TagName == tagName).FirstOrDefault();
+                    Tag item4 = otherTagFamily.Where(x => x.Name.TagName == tagName).FirstOrDefault();
                     otherTagFamily.Remove(item4);
                     break;
                 case "HITAG Tag Family":
-                    ColumnSelectionForTagtype item5 = hiTagFamily.Where(x => x.TagName == tagName).FirstOrDefault();
+                    Tag item5 = hiTagFamily.Where(x => x.Name.TagName == tagName).FirstOrDefault();
                     hiTagFamily.Remove(item5);
                     break;
                 default:
@@ -17916,33 +18060,7 @@ namespace ThingMagic.URA2
         private void InitializeFilterTagList(ObservableCollection<ColumnSelectionForTagtype> columnSelectionForTagtype)
         {
             ObservableCollection<TagTypeComboBox> TagFamilyList = new ObservableCollection<TagTypeComboBox>();
-
-            #region Add Select all for the Family
-            if (!(FindItemInList(hidTagFamily, "iCLASS Tags")))
-            {
-                hidTagFamily.Add(new ColumnSelectionForTagtype("iCLASS Tags", false));
-            }
-            if (!(FindItemInList(mifareTagFamily, "MIFARE Tags")))
-            {
-                mifareTagFamily.Add(new ColumnSelectionForTagtype("MIFARE Tags", false));
-            }
-            if (!(FindItemInList(emTagFamily, "EM Tags")))
-            {
-                emTagFamily.Add(new ColumnSelectionForTagtype("EM Tags", false));
-            }
-            if (!(FindItemInList(icodeTagFamily, "ICODE Tags")))
-            {
-                icodeTagFamily.Add(new ColumnSelectionForTagtype("ICODE Tags", false));
-            }
-            if (!(FindItemInList(otherTagFamily, "Other Tags")))
-            {
-                otherTagFamily.Add(new ColumnSelectionForTagtype("Other Tags", false));
-            }
-            if (!(FindItemInList(hiTagFamily, "HITAG Tags")))
-            {
-                hiTagFamily.Add(new ColumnSelectionForTagtype("HITAG Tags", false));
-            }
-            #endregion
+            ObservableCollection<TagFamily> tagFamily = new ObservableCollection<TagFamily>();
 
             foreach (ColumnSelectionForTagtype item in columnSelectionForTagtype)
             {
@@ -17952,37 +18070,37 @@ namespace ThingMagic.URA2
                     case "HID Tag Family":
                         if (!(FindItemInList(hidTagFamily, item.TagName)))
                         {
-                            hidTagFamily.Add(item);
+                            hidTagFamily.Add(new Tag() { Name = item });
                         }
                         break;
                     case "MIFARE Tag Family":
                         if (!(FindItemInList(mifareTagFamily, item.TagName)))
                         {
-                            mifareTagFamily.Add(item);
+                            mifareTagFamily.Add(new Tag() { Name = item });
                         }
                         break;
                     case "EM Tag Family":
                         if (!(FindItemInList(emTagFamily, item.TagName)))
                         {
-                            emTagFamily.Add(item);
+                            emTagFamily.Add(new Tag() { Name = item });
                         }
                         break;
                     case "ICODE Tag Family":
                         if (!(FindItemInList(icodeTagFamily, item.TagName)))
                         {
-                            icodeTagFamily.Add(item);
+                            icodeTagFamily.Add(new Tag() { Name = item });
                         }
                         break;
                     case "Other Tags":
                         if (!(FindItemInList(otherTagFamily, item.TagName)))
                         {
-                            otherTagFamily.Add(item);
+                            otherTagFamily.Add(new Tag() { Name = item });
                         }
                         break;
                     case "HITAG Tag Family":
                         if (!(FindItemInList(hiTagFamily, item.TagName)))
                         {
-                            hiTagFamily.Add(item);
+                            hiTagFamily.Add(new Tag() { Name = item });
                         }
                         break;
                     default:
@@ -17992,57 +18110,56 @@ namespace ThingMagic.URA2
             }
 
             #region Adding Tag Family Combobox to the ListView
-            if (hidTagFamily.Count > 1)
+            if (hidTagFamily.Count > 0)
             {
-                TagFamilyList.Add(new TagTypeComboBox(hidTagFamily));
+                tagFamily.Add(new TagFamily() { Name = "iCLASS Tags", Members = hidTagFamily });
             }
-            else
+            if (mifareTagFamily.Count > 0)
             {
-                hidTagFamily[0].IsTagChecked = false;
+                tagFamily.Add(new TagFamily() { Name = "MIFARE Tags", Members = mifareTagFamily });
             }
-            if (mifareTagFamily.Count > 1)
+            if (emTagFamily.Count > 0)
             {
-                TagFamilyList.Add(new TagTypeComboBox(mifareTagFamily));
+                tagFamily.Add(new TagFamily() { Name = "EM Tags", Members = emTagFamily });
             }
-            else
+            if (icodeTagFamily.Count > 0)
             {
-                mifareTagFamily[0].IsTagChecked = false;
+                tagFamily.Add(new TagFamily() { Name = "ICODE Tags", Members = icodeTagFamily });
             }
-            if (emTagFamily.Count > 1)
+            if (hiTagFamily.Count > 0)
             {
-                TagFamilyList.Add(new TagTypeComboBox(emTagFamily));
+                tagFamily.Add(new TagFamily() { Name = "HITAG Tags", Members = hiTagFamily });
             }
-            else
+            if (otherTagFamily.Count > 0)
             {
-                emTagFamily[0].IsTagChecked = false;
-            }
-            if (icodeTagFamily.Count > 1)
-            {
-                TagFamilyList.Add(new TagTypeComboBox(icodeTagFamily));
-            }
-            else
-            {
-                icodeTagFamily[0].IsTagChecked = false;
-            }
-            if (hiTagFamily.Count > 1)
-            {
-                TagFamilyList.Add(new TagTypeComboBox(hiTagFamily));
-            }
-            else
-            {
-                hiTagFamily[0].IsTagChecked = false;
-            }
-            if (otherTagFamily.Count > 1)
-            {
-                TagFamilyList.Add(new TagTypeComboBox(otherTagFamily));
-            }
-            else
-            {
-                otherTagFamily[0].IsTagChecked = false;
+                tagFamily.Add(new TagFamily() { Name = "Other Tags", Members = otherTagFamily });
             }
 
             #endregion
-            lvTagType.ItemsSource = TagFamilyList;
+
+            this.Families = new ObservableCollection<TagFamily>();
+
+            treeView.ItemsSource = tagFamily;
+            foreach (TagFamily item in tagFamily)
+            {
+                foreach (Tag tag in item.Members)
+                {
+                    tag.SetValue(ItemHelper.ParentProperty, item);
+                }
+            }
+
+            foreach (TagFamily family in tagFamily)
+            {
+                foreach (Tag tag in family.Members)
+                {
+                    ItemHelper.SetIsChecked(tag, tag.Name.IsTagChecked);
+                    int count = family.Members.Count;
+                    if (tag.Name.TagName == family.Members[count - 1].Name.TagName)
+                    {
+                        ItemHelper.CheckParent(tag);
+                    }
+                }
+            }
         }
 
         private void AddTagToGrid(object sender, RoutedEventArgs e)
@@ -18079,7 +18196,7 @@ namespace ThingMagic.URA2
                         case "HID Tag Family":
                             for (int i = 1; i < hidTagFamily.Count; i++)
                             {
-                                if (hidTagFamily[i].IsTagChecked)
+                                if (hidTagFamily[i].Name.IsTagChecked)
                                 {
                                     allTagsSelectedinFamily = true;
                                 }
@@ -18088,16 +18205,12 @@ namespace ThingMagic.URA2
                                     allTagsSelectedinFamily = false;
                                     break;
                                 }
-                            }
-                            if (!(allFamilyTag))
-                            {
-                                hidTagFamily[0].IsTagChecked = allTagsSelectedinFamily;
                             }
                             break;
                         case "MIFARE Tag Family":
                             for (int i = 1; i < mifareTagFamily.Count; i++)
                             {
-                                if (mifareTagFamily[i].IsTagChecked)
+                                if (mifareTagFamily[i].Name.IsTagChecked)
                                 {
                                     allTagsSelectedinFamily = true;
                                 }
@@ -18106,16 +18219,12 @@ namespace ThingMagic.URA2
                                     allTagsSelectedinFamily = false;
                                     break;
                                 }
-                            }
-                            if (!(allFamilyTag))
-                            {
-                                mifareTagFamily[0].IsTagChecked = allTagsSelectedinFamily;
                             }
                             break;
                         case "EM Tag Family":
                             for (int i = 1; i < emTagFamily.Count; i++)
                             {
-                                if (emTagFamily[i].IsTagChecked)
+                                if (emTagFamily[i].Name.IsTagChecked)
                                 {
                                     allTagsSelectedinFamily = true;
                                 }
@@ -18124,16 +18233,12 @@ namespace ThingMagic.URA2
                                     allTagsSelectedinFamily = false;
                                     break;
                                 }
-                            }
-                            if (!(allFamilyTag))
-                            {
-                                emTagFamily[0].IsTagChecked = allTagsSelectedinFamily;
                             }
                             break;
                         case "ICODE Tag Family":
                             for (int i = 1; i < icodeTagFamily.Count; i++)
                             {
-                                if (icodeTagFamily[i].IsTagChecked)
+                                if (icodeTagFamily[i].Name.IsTagChecked)
                                 {
                                     allTagsSelectedinFamily = true;
                                 }
@@ -18142,16 +18247,12 @@ namespace ThingMagic.URA2
                                     allTagsSelectedinFamily = false;
                                     break;
                                 }
-                            }
-                            if (!(allFamilyTag))
-                            {
-                                icodeTagFamily[0].IsTagChecked = allTagsSelectedinFamily;
                             }
                             break;
                         case "Other Tags":
                             for (int i = 1; i < otherTagFamily.Count; i++)
                             {
-                                if (otherTagFamily[i].IsTagChecked)
+                                if (otherTagFamily[i].Name.IsTagChecked)
                                 {
                                     allTagsSelectedinFamily = true;
                                 }
@@ -18160,16 +18261,12 @@ namespace ThingMagic.URA2
                                     allTagsSelectedinFamily = false;
                                     break;
                                 }
-                            }
-                            if (!(allFamilyTag))
-                            {
-                                otherTagFamily[0].IsTagChecked = allTagsSelectedinFamily;
                             }
                             break;
                         case "HITAG Tag Family":
                             for (int i = 1; i < hiTagFamily.Count; i++)
                             {
-                                if (hiTagFamily[i].IsTagChecked)
+                                if (hiTagFamily[i].Name.IsTagChecked)
                                 {
                                     allTagsSelectedinFamily = true;
                                 }
@@ -18178,10 +18275,6 @@ namespace ThingMagic.URA2
                                     allTagsSelectedinFamily = false;
                                     break;
                                 }
-                            }
-                            if (!(allFamilyTag))
-                            {
-                                hiTagFamily[0].IsTagChecked = allTagsSelectedinFamily;
                             }
                             break;
                         default:
@@ -18202,22 +18295,22 @@ namespace ThingMagic.URA2
                     switch (TagFamilyDatabase.GetTagFamilyName(tagName))
                     {
                         case "HID Tag Family":
-                            hidTagFamily[0].IsTagChecked = false;
+                            hidTagFamily[0].Name.IsTagChecked = false;
                             break;
                         case "MIFARE Tag Family":
-                            mifareTagFamily[0].IsTagChecked = false;
+                            mifareTagFamily[0].Name.IsTagChecked = false;
                             break;
                         case "EM Tag Family":
-                            emTagFamily[0].IsTagChecked = false;
+                            emTagFamily[0].Name.IsTagChecked = false;
                             break;
                         case "ICODE Tag Family":
-                            icodeTagFamily[0].IsTagChecked = false;
+                            icodeTagFamily[0].Name.IsTagChecked = false;
                             break;
                         case "Other Tags":
-                            otherTagFamily[0].IsTagChecked = false;
+                            otherTagFamily[0].Name.IsTagChecked = false;
                             break;
                         case "HITAG Tag Family":
-                            hiTagFamily[0].IsTagChecked = false;
+                            hiTagFamily[0].Name.IsTagChecked = false;
                             break;
                         default:
                             break;
@@ -18237,44 +18330,98 @@ namespace ThingMagic.URA2
         {
             if (tagName.Equals("iCLASS Tags"))
             {
-                foreach (ColumnSelectionForTagtype item in hidTagFamily)
+                foreach (Tag item in hidTagFamily)
                 {
-                    item.IsTagChecked = check;
+                    CheckBox chk = new CheckBox();
+                    chk.Content = item.Name.TagName;
+                    if (check == (bool)chk.IsChecked)
+                    {
+                        chk.IsChecked = !(check);
+                    }
+                    chk.Checked += AddTagToGrid;
+                    chk.Unchecked += AddTagToGrid;
+                    chk.IsChecked = check;
+                    item.Name.IsTagChecked = check;
                 }
             }
             if (tagName.Equals("MIFARE Tags"))
             {
-                foreach (ColumnSelectionForTagtype item in mifareTagFamily)
+                foreach (Tag item in mifareTagFamily)
                 {
-                    item.IsTagChecked = check;
+                    CheckBox chk = new CheckBox();
+                    chk.Content = item.Name.TagName;
+                    if (check == (bool)chk.IsChecked)
+                    {
+                        chk.IsChecked = !(check);
+                    }
+                    chk.Checked += AddTagToGrid;
+                    chk.Unchecked += AddTagToGrid;
+                    chk.IsChecked = check;
+                    item.Name.IsTagChecked = check;
                 }
             }
             if (tagName.Equals("EM Tags"))
             {
-                foreach (ColumnSelectionForTagtype item in emTagFamily)
+                foreach (Tag item in emTagFamily)
                 {
-                    item.IsTagChecked = check;
+                    CheckBox chk = new CheckBox();
+                    chk.Content = item.Name.TagName;
+                    if (check == (bool)chk.IsChecked)
+                    {
+                        chk.IsChecked = !(check);
+                    }
+                    chk.Checked += AddTagToGrid;
+                    chk.Unchecked += AddTagToGrid;
+                    chk.IsChecked = check;
+                    item.Name.IsTagChecked = check;
                 }
             }
             if (tagName.Equals("ICODE Tags"))
             {
-                foreach (ColumnSelectionForTagtype item in icodeTagFamily)
+                foreach (Tag item in icodeTagFamily)
                 {
-                    item.IsTagChecked = check;
+                    CheckBox chk = new CheckBox();
+                    chk.Content = item.Name.TagName;
+                    if (check == (bool)chk.IsChecked)
+                    {
+                        chk.IsChecked = !(check);
+                    }
+                    chk.Checked += AddTagToGrid;
+                    chk.Unchecked += AddTagToGrid;
+                    chk.IsChecked = check;
+                    item.Name.IsTagChecked = check;
                 }
             }
             if (tagName.Equals("Other Tags"))
             {
-                foreach (ColumnSelectionForTagtype item in otherTagFamily)
+                foreach (Tag item in otherTagFamily)
                 {
-                    item.IsTagChecked = check;
+                    CheckBox chk = new CheckBox();
+                    chk.Content = item.Name.TagName;
+                    if (check == (bool)chk.IsChecked)
+                    {
+                        chk.IsChecked = !(check);
+                    }
+                    chk.Checked += AddTagToGrid;
+                    chk.Unchecked += AddTagToGrid;
+                    chk.IsChecked = check;
+                    item.Name.IsTagChecked = check;
                 }
             }
             if (tagName.Equals("HITAG Tags"))
             {
-                foreach (ColumnSelectionForTagtype item in hiTagFamily)
+                foreach (Tag item in hiTagFamily)
                 {
-                    item.IsTagChecked = check;
+                    CheckBox chk = new CheckBox();
+                    chk.Content = item.Name.TagName;
+                    if (check == (bool)chk.IsChecked)
+                    {
+                        chk.IsChecked = !(check);
+                    }
+                    chk.Checked += AddTagToGrid;
+                    chk.Unchecked += AddTagToGrid;
+                    chk.IsChecked = check;
+                    item.Name.IsTagChecked = check;
                 }
             }
         }
@@ -18297,7 +18444,15 @@ namespace ThingMagic.URA2
                 return;
             }
             ColumnSelectionForTagButton tagButton = new ColumnSelectionForTagButton(tag);
-            if (!(selectedTagForList.Contains(tagButton)))
+            bool flag = false;
+            for (int i = 0; i < selectedTagForList.Count; i++)
+            {
+                if (selectedTagForList[i].ButtonNameTag == tagButton.ButtonNameTag)
+                {
+                    flag = true;
+                }
+            }
+            if (!(flag))
             {
                 selectedTagForList.Add(tagButton);
             }
@@ -18491,12 +18646,12 @@ namespace ThingMagic.URA2
         {
             if (txtM3eTagFind.Text == "" || txtM3eTagFind.Text == " ")
             {
-                lvTagType.Visibility = Visibility.Visible;
+                treeView.Visibility = Visibility.Visible;
                 lvTagType1.Visibility = Visibility.Collapsed;
             }
             else
             {
-                lvTagType.Visibility = Visibility.Collapsed;
+                treeView.Visibility = Visibility.Collapsed;
                 lvTagType1.Visibility = Visibility.Visible;
                 CollectionViewSource.GetDefaultView(lvTagType1.ItemsSource).Refresh();
             }

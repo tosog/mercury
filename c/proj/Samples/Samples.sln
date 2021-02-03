@@ -97,6 +97,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deviceDetection", "DeviceDe
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PassThrough", "PassThrough.vcproj", "{79F99056-DB29-4CFA-9703-3B10FA0B8613}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EM4325CustomTagOps", "EM4325CustomTagOps.vcproj", "{BB652FDC-3F36-4A69-96FC-0DB384884092}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -295,6 +297,10 @@ Global
 		{79F99056-DB29-4CFA-9703-3B10FA0B8613}.Debug|Win32.Build.0 = Debug|Win32
 		{79F99056-DB29-4CFA-9703-3B10FA0B8613}.Release|Win32.ActiveCfg = Release|Win32
 		{79F99056-DB29-4CFA-9703-3B10FA0B8613}.Release|Win32.Build.0 = Release|Win32
+		{BB652FDC-3F36-4A69-96FC-0DB384884092}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BB652FDC-3F36-4A69-96FC-0DB384884092}.Debug|Win32.Build.0 = Debug|Win32
+		{BB652FDC-3F36-4A69-96FC-0DB384884092}.Release|Win32.ActiveCfg = Release|Win32
+		{BB652FDC-3F36-4A69-96FC-0DB384884092}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

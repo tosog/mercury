@@ -31,8 +31,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.35.0.82")]
-[assembly: AssemblyFileVersion("1.35.0.82")]
+[assembly: AssemblyVersion("1.35.1.43")]
+[assembly: AssemblyFileVersion("1.35.1.43")]
 
 // TODO: CLS Compliance.  Uncomment the following line to get CLS warnings.
 //[assembly: CLSCompliantAttribute(true)]

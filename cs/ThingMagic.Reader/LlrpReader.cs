@@ -1039,7 +1039,10 @@ namespace ThingMagic
             }
             if (false == RFReportQueueEmptyEvent.WaitOne(timeout, false) && (statFlag != 0))
             {
-                throw new TimeoutException("Timeout waiting for RF Survy queue to empty at end of search");
+                if (continuousReading)
+                {
+                    throw new TimeoutException("Timeout waiting for RF Survy queue to empty at end of search");
+                }
             }
         }
         bool isRoAccessReportReceived = false;
@@ -1267,7 +1270,7 @@ namespace ThingMagic
                 {
                     stat.PROTOCOL = (TagProtocol)value.ProtocolParam.Protocol;
                 }
-                stat.TEMPERATURE = (uint)value.TemperatureParam.Temperature;
+                stat.TEMPERATURE = (SByte)value.TemperatureParam.Temperature;
 
                 if (value.perAntennaStatsList != null)
                 {
@@ -1325,18 +1328,30 @@ namespace ThingMagic
                             }
                             TagData td = new TagData(ByteFormat.FromHex(epc));
                             TagProtocol tagProtocol = 0;
-                            
+
                             if (perAntOnTimeSupport == true)
                             {
                                 // Currently protocol ID is coming as 2nd custom parameter
                                 PARAM_ThingMagicCustomProtocolID protocol = new PARAM_ThingMagicCustomProtocolID();
                                 if (customMetaDataSupport && metadataflag.Equals(ENUM_ThingMagicCustomMetadataFlag.MetadataAll))
                                 {
-                                    protocol = (PARAM_ThingMagicCustomProtocolID)(msg.TagReportData[i].Custom[3]);
+                                    for (int j = 0; j < msg.TagReportData[i].Custom.Count; j++)
+                                    {
+                                        if (msg.TagReportData[i].Custom[j] is PARAM_ThingMagicCustomProtocolID)
+                                        {
+                                            protocol = (PARAM_ThingMagicCustomProtocolID)(msg.TagReportData[i].Custom[j]);
+                                        }
+                                    }
                                 }
                                 else
                                 {
-                                    protocol = (PARAM_ThingMagicCustomProtocolID)(msg.TagReportData[i].Custom[1]);
+                                    for (int j = 0; j < msg.TagReportData[i].Custom.Count; j++)
+                                    {
+                                        if (msg.TagReportData[i].Custom[j] is PARAM_ThingMagicCustomProtocolID)
+                                        {
+                                            protocol = (PARAM_ThingMagicCustomProtocolID)(msg.TagReportData[i].Custom[j]);
+                                        }
+                                    }
                                 }
                                 ENUM_ThingMagicCustomProtocol protocolID = protocol.ProtocolId;
                                 tagProtocol = parseThingmagicCustomProtocol(Convert.ToInt32(protocolID));
@@ -1396,10 +1411,16 @@ namespace ThingMagic
                             {
                                 if (((metadataflag & ENUM_ThingMagicCustomMetadataFlag.MetadataPhase) == ENUM_ThingMagicCustomMetadataFlag.MetadataPhase) || metadataflag.Equals(ENUM_ThingMagicCustomMetadataFlag.MetadataAll))
                                 {
-                                    tag._phase = Convert.ToInt32(((PARAM_ThingMagicRFPhase)msg.TagReportData[i].Custom[0]).Phase);
+                                    for (int j = 0; j < msg.TagReportData[i].Custom.Count; j++)
+                                    {
+                                        if (msg.TagReportData[i].Custom[j] is PARAM_ThingMagicRFPhase)
+                                        {
+                                            Convert.ToInt32(((PARAM_ThingMagicRFPhase)msg.TagReportData[i].Custom[j]).Phase);
+                                        }
+                                    }
                                 }
 
-                                
+
                                 if (tagProtocol == TagProtocol.GEN2)
                                 {
                                     Gen2.TagReadData gen2 = new Gen2.TagReadData();
@@ -1411,7 +1432,14 @@ namespace ThingMagic
                                         if ((metadataflag & ENUM_ThingMagicCustomMetadataFlag.MetadataGPIOStatus) == (ENUM_ThingMagicCustomMetadataFlag.MetadataGPIOStatus) || metadataflag.Equals(ENUM_ThingMagicCustomMetadataFlag.MetadataAll))
                                         {
 
-                                            PARAM_ThingMagicMetadataGPIO gpi = ((PARAM_ThingMagicMetadataGPIO)msg.TagReportData[i].Custom[1]);
+                                            PARAM_ThingMagicMetadataGPIO gpi = new PARAM_ThingMagicMetadataGPIO();
+                                            for (int j = 0; j < msg.TagReportData[i].Custom.Count; j++)
+                                            {
+                                                if (msg.TagReportData[i].Custom[j] is PARAM_ThingMagicMetadataGPIO)
+                                                {
+                                                    gpi = ((PARAM_ThingMagicMetadataGPIO)msg.TagReportData[i].Custom[j]);
+                                                }
+                                            }
                                             PARAM_GPIOStatus[] gpio = gpi.GPIOStatus;
                                             List<GpioPin> gpioPins = new List<GpioPin>();
                                             if (gpio != null)
@@ -1433,19 +1461,40 @@ namespace ThingMagic
                                         {
                                             if (((metadataflag & ENUM_ThingMagicCustomMetadataFlag.MetadataGen2Q) == ENUM_ThingMagicCustomMetadataFlag.MetadataGen2Q) || metadataflag.Equals(ENUM_ThingMagicCustomMetadataFlag.MetadataAll))
                                             {
-                                                PARAM_ThingMagicMetadataGen2 ge2Q = ((PARAM_ThingMagicMetadataGen2)msg.TagReportData[i].Custom[2]);
+                                                PARAM_ThingMagicMetadataGen2 ge2Q = new PARAM_ThingMagicMetadataGen2();
+                                                for (int j = 0; j < msg.TagReportData[i].Custom.Count; j++)
+                                                {
+                                                    if (msg.TagReportData[i].Custom[j] is PARAM_ThingMagicMetadataGen2)
+                                                    {
+                                                        ge2Q = ((PARAM_ThingMagicMetadataGen2)msg.TagReportData[i].Custom[j]);
+                                                    }
+                                                }
                                                 gen2.Q.InitialQ = ge2Q.Gen2QResponse.QValue;
                                             }
 
                                             if (((metadataflag & ENUM_ThingMagicCustomMetadataFlag.MetadataGen2LF) == ENUM_ThingMagicCustomMetadataFlag.MetadataGen2LF) || metadataflag.Equals(ENUM_ThingMagicCustomMetadataFlag.MetadataAll))
                                             {
-                                                PARAM_ThingMagicMetadataGen2 gen2LF = ((PARAM_ThingMagicMetadataGen2)msg.TagReportData[i].Custom[2]);
+                                                PARAM_ThingMagicMetadataGen2 gen2LF = new PARAM_ThingMagicMetadataGen2();
+                                                for (int j = 0; j < msg.TagReportData[i].Custom.Count; j++)
+                                                {
+                                                    if (msg.TagReportData[i].Custom[j] is PARAM_ThingMagicMetadataGen2)
+                                                    {
+                                                        gen2LF = ((PARAM_ThingMagicMetadataGen2)msg.TagReportData[i].Custom[j]);
+                                                    }
+                                                }
                                                 gen2._lf = (Gen2.LinkFrequency)gen2LF.Gen2LFResponse.LFValue;
                                             }
 
                                             if (((metadataflag & ENUM_ThingMagicCustomMetadataFlag.MetadataGen2Target) == ENUM_ThingMagicCustomMetadataFlag.MetadataGen2Target) || metadataflag.Equals(ENUM_ThingMagicCustomMetadataFlag.MetadataAll))
                                             {
-                                                PARAM_ThingMagicMetadataGen2 gen2targ = ((PARAM_ThingMagicMetadataGen2)msg.TagReportData[i].Custom[2]);
+                                                PARAM_ThingMagicMetadataGen2 gen2targ = new PARAM_ThingMagicMetadataGen2();
+                                                for (int j = 0; j < msg.TagReportData[i].Custom.Count; j++)
+                                                {
+                                                    if (msg.TagReportData[i].Custom[j] is PARAM_ThingMagicMetadataGen2)
+                                                    {
+                                                        gen2targ = ((PARAM_ThingMagicMetadataGen2)msg.TagReportData[i].Custom[j]);
+                                                    }
+                                                }
                                                 gen2TargetResponse = Convert.ToByte(gen2targ.Gen2TargetResponse.TargetValue);
                                                 switch (gen2TargetResponse)
                                                 {
@@ -1464,7 +1513,14 @@ namespace ThingMagic
                                         {
                                             if (msg.TagReportData[i].Custom.Length >= 5)
                                             {
-                                                PARAM_ThingMagicCustomTagopResponse custtagop = ((PARAM_ThingMagicCustomTagopResponse)msg.TagReportData[i].Custom[4]);
+                                                PARAM_ThingMagicCustomTagopResponse custtagop = new PARAM_ThingMagicCustomTagopResponse();
+                                                for (int j = 0; j < msg.TagReportData[i].Custom.Count; j++)
+                                                {
+                                                    if (msg.TagReportData[i].Custom[j] is PARAM_ThingMagicCustomTagopResponse)
+                                                    {
+                                                        custtagop = ((PARAM_ThingMagicCustomTagopResponse)msg.TagReportData[i].Custom[j]);
+                                                    }
+                                                }
                                                 PARAM_TagopByteStreamParam tagOpByteStream = (PARAM_TagopByteStreamParam)custtagop.TagopByteStreamParam;
                                                 tag._data = tagOpByteStream.ByteStream.ToArray();
                                             }
@@ -1500,7 +1556,7 @@ namespace ThingMagic
                                 tag.ReadCount = msg.TagReportData[i].TagSeenCount.TagCount;
                             }
 
-                            
+
                             if (((metadataflag & ENUM_ThingMagicCustomMetadataFlag.MetadataFrequency) == ENUM_ThingMagicCustomMetadataFlag.MetadataFrequency) || metadataflag.Equals(ENUM_ThingMagicCustomMetadataFlag.MetadataAll))
                             {
                                 int chIndex = Convert.ToInt32(msg.TagReportData[i].ChannelIndex.ChannelIndex);
@@ -2874,6 +2930,7 @@ namespace ThingMagic
         {
             string response = string.Empty;
             int aiSpecIterations = 1;
+            List<ushort> antennaGlobal = new List<ushort>();
 
             // Build RO Spec based on the read plan
             if (rp is MultiReadPlan)
@@ -3151,12 +3208,16 @@ namespace ThingMagic
 
                 if (null == antennaList)
                 {
-                    aiSpec.AntennaIDs.Add(0);               //0 :  applys to all antennae, 
+                    aiSpec.AntennaIDs.Add(0);               //0 :  applies to all antenna, 
+                    antennaGlobal.Add(0);
                 }
                 else
                 {
                     foreach (int antenna in antennaList)
+                    {
                         aiSpec.AntennaIDs.Add((ushort)antenna);
+                        antennaGlobal.Add((ushort)antenna);
+                    }
                 }
 
                 // Reading Gen2 Tags, specify in InventorySpec
@@ -3736,7 +3797,7 @@ namespace ThingMagic
                 if (customAntConfig != null)
                 {
                     PARAM_ThingMagicCustomAntennaSwitching customAntennaSwitching = new PARAM_ThingMagicCustomAntennaSwitching();
-                    if(customAntConfig.antSwitchingType == 1)
+                    if (customAntConfig.antSwitchingType == 1)
                         customAntennaSwitching.AntSwitchingType = ENUM_ThingMagicCustomAntennaSwitchingType.Dynamic;
                     else
                         customAntennaSwitching.AntSwitchingType = ENUM_ThingMagicCustomAntennaSwitchingType.Equal;
@@ -3766,11 +3827,10 @@ namespace ThingMagic
                 roSpec.SpecParameter.Add(aiSpec);
             }
 
-            if (continuousReading && (rp is SimpleReadPlan) && (statFlag != 0))
+            if (continuousReading && (statFlag != 0))
             {
                 PARAM_RFSurveySpec rfSurveySpec = new PARAM_RFSurveySpec();
-                SimpleReadPlan plan = (SimpleReadPlan)rp;
-                rfSurveySpec.AntennaID = (ushort)plan.Antennas[0];
+                rfSurveySpec.AntennaID = antennaGlobal[0];
                 //rfSurveySpec.StartFrequency=
                 //Reader.Stat.Values value=(Reader.Stat.Values)GetTMStatsValue(1);
                 //rfSurveySpec.AntennaID=value.ANTENNA;
@@ -3874,11 +3934,11 @@ namespace ThingMagic
             PARAM_C1G2EPCMemorySelector gen2MemSelector = new PARAM_C1G2EPCMemorySelector();
             gen2MemSelector.EnableCRC = true;
             gen2MemSelector.EnablePCBits = true;
-            
+
             roSpec.ROReportSpec.TagReportContentSelector.AirProtocolEPCMemorySelector.Add(gen2MemSelector);
             PARAM_ThingMagicTagReportContentSelector tagReportContentSelector = new PARAM_ThingMagicTagReportContentSelector();
             string[] ver = softwareVersion.Split('.');
-            if((Convert.ToInt32(ver[0]) == 4) && (Convert.ToInt32(ver[1]) >= 17) || (Convert.ToInt32(ver[0]) > 4))
+            if ((Convert.ToInt32(ver[0]) == 4) && (Convert.ToInt32(ver[1]) >= 17) || (Convert.ToInt32(ver[0]) > 4))
             {
                 tagReportContentSelector.PhaseMode = ENUM_ThingMagicPhaseMode.Enabled;
                 roSpec.ROReportSpec.AddCustomParameter(tagReportContentSelector);
@@ -3895,7 +3955,7 @@ namespace ThingMagic
                     tagReportContentSelector.MetadataGPIOMode = gpio;
                     roSpec.ROReportSpec.AddCustomParameter(tagReportContentSelector);
                 }
-               
+
                 if (((metadataflag & ENUM_ThingMagicCustomMetadataFlag.MetadataGen2LF) == (ENUM_ThingMagicCustomMetadataFlag.MetadataGen2LF)) || metadataflag.Equals(ENUM_ThingMagicCustomMetadataFlag.MetadataAll))
                 {
                     PARAM_MetadataGen2LFMode gen2LF = new PARAM_MetadataGen2LFMode();
@@ -3903,7 +3963,7 @@ namespace ThingMagic
                     tagReportContentSelector.MetadataGen2LFMode = gen2LF;
                     roSpec.ROReportSpec.AddCustomParameter(tagReportContentSelector);
                 }
-              
+
                 if (((metadataflag & ENUM_ThingMagicCustomMetadataFlag.MetadataGen2Q) == (ENUM_ThingMagicCustomMetadataFlag.MetadataGen2Q)) || metadataflag.Equals(ENUM_ThingMagicCustomMetadataFlag.MetadataAll))
                 {
                     PARAM_MetadataGen2QMode gen2Q = new PARAM_MetadataGen2QMode();
@@ -4657,6 +4717,11 @@ namespace ThingMagic
             msgSetConfig.ResetToFactoryDefault = false;
             PARAM_ThingMagicMetadata readerMetadata = new PARAM_ThingMagicMetadata();
             readerMetadata.Metadata = metadataflag = (ENUM_ThingMagicCustomMetadataFlag)val;
+            String metadataStr = val.ToString();
+            if (metadataStr.IndexOf("TAGTYPE") != -1)
+            {
+                throw new Exception("Invalid Argument in \"/reader/metadata\" : " + metadataStr);
+            }
             msgSetConfig.AddCustomParameter(readerMetadata);
             try
             {
@@ -4781,7 +4846,7 @@ namespace ThingMagic
                 }
                 if ((statFlag | ENUM_ThingMagicCustomStatsEnableFlag.StatsEnableTemperature) == statFlag)
                 {
-                    valss.TEMPERATURE = (uint)par.CustomStatsValue.TemperatureParam.Temperature;
+                    valss.TEMPERATURE = (SByte)par.CustomStatsValue.TemperatureParam.Temperature;
                 }
                 valss.VALID = (Stat.StatsFlag)statFlag;
                 //valss.RESETREADERSTATS = par.CustomStatsValue.StatsEnable;

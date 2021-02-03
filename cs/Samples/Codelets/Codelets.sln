@@ -93,6 +93,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Devicedetection", "Devicede
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PassThroughDemo", "PassThroughDemo\PassThroughDemo.csproj", "{01F338BA-3D8E-41A3-84C1-ACC611404BF8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EM4325CustomTagOps", "EM4325CustomTagOps\EM4325CustomTagOps.csproj", "{DFB11EA3-3528-4FB7-89FD-D548F289A2EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -283,6 +285,10 @@ Global
 		{01F338BA-3D8E-41A3-84C1-ACC611404BF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{01F338BA-3D8E-41A3-84C1-ACC611404BF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{01F338BA-3D8E-41A3-84C1-ACC611404BF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFB11EA3-3528-4FB7-89FD-D548F289A2EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFB11EA3-3528-4FB7-89FD-D548F289A2EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFB11EA3-3528-4FB7-89FD-D548F289A2EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFB11EA3-3528-4FB7-89FD-D548F289A2EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

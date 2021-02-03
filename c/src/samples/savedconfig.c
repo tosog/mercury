@@ -194,16 +194,11 @@ int main(int argc, char *argv[])
 		checkerr(rp, ret, 1, "setting configuration: restore all saved configuration params");
 		printf("User config set option:restore all saved configuration params\n");
 
-#ifdef TMR_ENABLE_UHF
-      if (0 != strcmp("M3e", model.value))
-	  {
 		//Init UserConfigOp structure to verify all saved configuration parameters
         TMR_init_UserConfigOp(&config, TMR_USERCONFIG_VERIFY);
 		ret = TMR_paramSet(rp, TMR_PARAM_USER_CONFIG, &config);
 		checkerr(rp, ret, 1, "setting configuration: verify all saved configuration params");
 		printf("User config set option:verify all configuration\n");
-	  }
-#endif /* TMR_ENABLE_UHF */
 
   // Get User Profile
   {

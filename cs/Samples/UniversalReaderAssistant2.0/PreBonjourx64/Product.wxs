@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?define ApplicationName="UniversalReaderAssistant 5.0" ?>
+<?define ApplicationName="UniversalReaderAssistant 5.1" ?>
 <?define ProductVersion="!(bind.FileVersion.URA2)" ?>
 <?define UpgradeCode="6569307f-e5f4-4acd-adfe-268926597e02" ?>
 <?define PackageCode="*"?>

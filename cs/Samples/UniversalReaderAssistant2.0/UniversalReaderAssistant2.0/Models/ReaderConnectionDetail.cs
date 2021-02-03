@@ -543,6 +543,81 @@ namespace ThingMagic.URA2.Models
         }
     }
 
+    public class TagFamily : DependencyObject
+    {
+        public string Name { get; set; }
+        public ObservableCollection<Tag> Members { get; set; }
+    }
+
+    public class Tag : DependencyObject
+    {
+        public ColumnSelectionForTagtype Name { get; set; }
+    }
+
+    public class ItemHelper : DependencyObject
+    {
+        public static readonly DependencyProperty IsCheckedProperty = DependencyProperty.RegisterAttached("IsChecked", typeof(bool?), typeof(ItemHelper), new PropertyMetadata(false, new PropertyChangedCallback(OnIsCheckedPropertyChanged)));
+        private static void OnIsCheckedPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if ((d is TagFamily) && (((bool?)e.NewValue).HasValue))
+            {
+                foreach (Tag tag in (d as TagFamily).Members)
+                {
+                    //tag.IsTagChecked = true;
+                    ItemHelper.SetIsChecked(tag, (bool?)e.NewValue);
+                }
+            }
+
+            if (d is Tag)
+            {
+                ItemHelper.CheckParent((d as Tag));
+            }
+        }
+
+        public static void CheckParent(Tag d)
+        {
+            int check = ((d as Tag).GetValue(ItemHelper.ParentProperty) as TagFamily).Members.Where(x => ItemHelper.GetIsChecked(x) == true).Count();
+            int uncheck = ((d as Tag).GetValue(ItemHelper.ParentProperty) as TagFamily).Members.Where(x => ItemHelper.GetIsChecked(x) == false).Count();
+            if (check > 0 && uncheck > 0)
+            {
+                ItemHelper.SetIsChecked((d as Tag).GetValue(ItemHelper.ParentProperty) as DependencyObject, null);
+                return;
+            }
+            if (check > 0)
+            {
+                ItemHelper.SetIsChecked((d as Tag).GetValue(ItemHelper.ParentProperty) as DependencyObject, true);
+                return;
+            }
+            ItemHelper.SetIsChecked((d as Tag).GetValue(ItemHelper.ParentProperty) as DependencyObject, false);
+        }
+
+        public static void SetIsChecked(DependencyObject element, bool? IsChecked)
+        {
+            Tag p = element as Tag;
+            if (p != null)
+            {
+                p.Name.IsTagChecked = (bool)IsChecked;
+            }
+            element.SetValue(ItemHelper.IsCheckedProperty, IsChecked);
+        }
+
+        public static bool? GetIsChecked(DependencyObject element)
+        {
+            return (bool?)element.GetValue(ItemHelper.IsCheckedProperty);
+        }
+
+        public static readonly DependencyProperty ParentProperty = DependencyProperty.RegisterAttached("Parent", typeof(object), typeof(ItemHelper));
+
+        public static void SetParent(DependencyObject element, object Parent)
+        {
+            element.SetValue(ItemHelper.ParentProperty, Parent);
+        }
+
+        public static object GetParent(DependencyObject element)
+        {
+            return (object)element.GetValue(ItemHelper.ParentProperty);
+        }
+    }
 
     public class TagTypeComboBox
     {
@@ -572,14 +647,6 @@ namespace ThingMagic.URA2.Models
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
         }
-
-        //private string _buttonName;
-
-        //public string ButtonName
-        //{
-        //    get { return _buttonName; }
-        //    set { _buttonName = value; }
-        //}
 
         private string _buttonNameTag;
 

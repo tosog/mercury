@@ -511,22 +511,22 @@
                 <ControlTemplate TargetType="{x:Type Button}">
                     <Border CornerRadius="4" Background="{TemplateBinding Background}">
                         <Grid>
-                            <ContentPresenter x:Name="MyContentPresenter" Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="30,0,0,0" />
-                            <Path x:Name="PathIcon" Width="10" Height="10" Stretch="Fill" Fill="Black" HorizontalAlignment="Left" Margin="10,0,0,0" Data="F1 M 32.222,33.4875L 39.1886,40.0582L 51.3802,26.1251L 54.7052,29.0542L 39.5845,47.5L 28.897,36.8125L 32.222,33.4875 Z M 24,27L 48.5,27L 45.5,30L 27,30L 27,49L 46,49L 46,42.5L 49,38.75L 49,52L 24,52L 24,27 Z "/>
+                            <ContentPresenter x:Name="MyContentPresenter" Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="20,0,0,0" />
+                            <!--<Path x:Name="PathIcon" Width="10" Height="10" Stretch="Fill" Fill="Black" HorizontalAlignment="Left" Margin="10,0,0,0" Data="F1 M 32.222,33.4875L 39.1886,40.0582L 51.3802,26.1251L 54.7052,29.0542L 39.5845,47.5L 28.897,36.8125L 32.222,33.4875 Z M 24,27L 48.5,27L 45.5,30L 27,30L 27,49L 46,49L 46,42.5L 49,38.75L 49,52L 24,52L 24,27 Z "/>-->
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="#c2e8ff" />
                             <Setter Property="Foreground" Value="Black" />
-                            <Setter TargetName="PathIcon" Property="Fill" Value="Black" />
+                            <!--<Setter TargetName="PathIcon" Property="Fill" Value="Black" />-->
                             <!--<Setter Property="ToolTip" Value=""-->
                         </Trigger>
 
                         <Trigger Property="IsPressed" Value="True">
                             <Setter Property="Background" Value="#c2e8ff" />
                             <Setter Property="Foreground" Value="Black" />
-                            <Setter TargetName="PathIcon" Property="Fill" Value="Black" />
+                            <!--<Setter TargetName="PathIcon" Property="Fill" Value="Black" />-->
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

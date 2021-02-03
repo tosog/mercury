@@ -391,6 +391,10 @@ public class LoadSaveConfiguration extends Properties
                 {
                     tagDataFlag.add(Iso14443a.TagType.MIFARE_MINI);
                 }
+                else if (meta.equals("ULTRALIGHT_NTAG"))
+                {
+                    tagDataFlag.add(Iso14443a.TagType.ULTRALIGHT_NTAG);
+                }
                 else
                 {
                     throw new IllegalArgumentException(meta + " is not a valid option.");
@@ -553,6 +557,14 @@ public class LoadSaveConfiguration extends Properties
                 {
                     tagDataFlag.add(Lf125khz.TagType.EM_4100);
                 }
+                else if (meta.equals("KERI"))
+                {
+                    tagDataFlag.add(Lf125khz.TagType.KERI);
+                }
+                else if (meta.equals("INDALA"))
+                {
+                    tagDataFlag.add(Lf125khz.TagType.INDALA);
+                }
                 else
                 {
                     throw new IllegalArgumentException(meta + " is not a valid option.");
@@ -611,6 +623,42 @@ public class LoadSaveConfiguration extends Properties
                     }
                 }
                 parsedValue = q;
+            }
+        }
+        else if(param.equalsIgnoreCase("/reader/protocollist"))
+        {
+            Set<TagProtocol> protocolList = EnumSet.noneOf(TagProtocol.class);
+            if (value.startsWith("[") && value.endsWith("]"))
+            {
+               value = value.substring(1, value.length() - 1);
+               String[] list = value.split(",");
+                for (String proto : list) 
+                {
+                    proto = proto.trim();
+                    if(proto.equals("ISO14443A"))
+                    {
+                        protocolList.add(TagProtocol.ISO14443A);
+                    }
+                    else if(proto.equals("ISO15693"))
+                    {
+                        protocolList.add(TagProtocol.ISO15693);
+                    }
+                    else if(proto.equals("LF125KHZ"))
+                    {
+                        protocolList.add(TagProtocol.LF125KHZ);
+                    }
+                    else if(proto.equals("LF134KHZ"))
+                    {
+                        protocolList.add(TagProtocol.LF134KHZ);
+                    }
+                    else
+                    {
+                        throw new IllegalArgumentException(proto + " is not a valid option.");
+                    }
+                }
+                TagProtocol []protocols = new TagProtocol[protocolList.size()];
+                protocols = protocolList.toArray(protocols);
+                parsedValue = protocols;
             }
         }
         else
@@ -699,6 +747,10 @@ public class LoadSaveConfiguration extends Properties
             else if (meta.equals("MIFARE_MINI"))
             {
                 tagTypeFlag = Iso14443a.TagType.MIFARE_MINI;
+            }
+            else if (meta.equals("ULTRALIGHT_NTAG"))
+            {
+                tagTypeFlag = Iso14443a.TagType.ULTRALIGHT_NTAG;
             }
             else
             {
@@ -846,6 +898,14 @@ public class LoadSaveConfiguration extends Properties
             else if (meta.equals("EM_4100"))
             {
                 tagTypeFlag = Lf125khz.TagType.EM_4100;
+            }
+            else if (meta.equals("KERI"))
+            {
+                tagTypeFlag = Lf125khz.TagType.KERI;
+            }
+            else if (meta.equals("INDALA"))
+            {
+                tagTypeFlag = Lf125khz.TagType.INDALA;
             }
             else
             {
@@ -1187,6 +1247,13 @@ public class LoadSaveConfiguration extends Properties
                 readOnlyParameters.add("/reader/radio/writePower");
                 readOnlyParameters.add("/reader/region/id");
                 readOnlyParameters.add("/reader/radio/readPower");
+                readOnlyParameters.add("/reader/iso14443a/supportedTagTypes");
+                readOnlyParameters.add("/reader/iso14443a/supportedTagFeatures");
+                readOnlyParameters.add("/reader/iso15693/supportedTagTypes");
+                readOnlyParameters.add("/reader/iso15693/supportedTagFeatures");
+                readOnlyParameters.add("/reader/lf125khz/supportedTagTypes");
+                readOnlyParameters.add("/reader/lf125khz/supportedTagFeatures");
+                readOnlyParameters.add("/reader/lf134khz/supportedTagTypes");
             }
             for (String param : params)
             {

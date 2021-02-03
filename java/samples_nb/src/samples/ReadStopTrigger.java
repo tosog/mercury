@@ -5,6 +5,8 @@
 package samples;
 
 import com.thingmagic.*;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 /**
  *
@@ -43,6 +45,18 @@ public class ReadStopTrigger {
     int nextarg = 0;
     boolean trace = false;
     int[] antennaList = null;
+    /**Flag when set to true, executes sync read.
+     * set to false, executes async read.
+     */
+    boolean enableSyncRead = false;
+    /**Flag when set to true, sets simple read plan
+     * set to false, sets multi read plan
+     */
+    boolean enableSimpleReadplan = true;
+    /**Flag when set to true, performs dynamic protocol
+     * switching on M3e.
+     */
+    boolean isDynamicSwEnable = true;
 
     if (argv.length < 1)
       usage();
@@ -124,26 +138,81 @@ public class ReadStopTrigger {
             }
         }
         StopOnTagCount sotc = new StopOnTagCount();
-        sotc.N = 1; // number of tags to read
+        sotc.N = 5; // number of tags to read
         StopTriggerReadPlan strp;
-        if(model.equalsIgnoreCase("M3e"))
+        if(enableSimpleReadplan)
         {
-            strp = new StopTriggerReadPlan(sotc, antennaList, TagProtocol.ISO14443A);
+            if(model.equalsIgnoreCase("M3e"))
+            {
+                strp = new StopTriggerReadPlan(sotc, antennaList, TagProtocol.ISO14443A);
+            }
+            else
+            {
+               isDynamicSwEnable = false; // supported only for M3e. Hence making it false for other readers.
+               strp = new StopTriggerReadPlan(sotc, antennaList, TagProtocol.GEN2); 
+            }
+            r.paramSet("/reader/read/plan", strp);
         }
         else
         {
-           strp = new StopTriggerReadPlan(sotc, antennaList, TagProtocol.GEN2); 
+            // In case of sync read,dynamic protocol switching is not supported for M3e.So, it should fall back to multi protocol sync read similar to UHF
+            if(enableSyncRead)
+            {
+                isDynamicSwEnable = false;
+            }
+            TagProtocol[] protocolList = (TagProtocol[]) r.paramGet("/reader/version/supportedProtocols");
+            if(model.equalsIgnoreCase("M3e") && isDynamicSwEnable)
+            {
+                //Set the multiple protocols using TMR_PARAM_PROTOCOL_LIST param for dynamic protocol switching
+                r.paramSet(TMConstants.TMR_PARAM_PROTOCOL_LIST, protocolList);
+                
+                // If TMR_PARAM_PROTOCOL_LIST param is set, API ignores the protocol mentioned in readplan.
+                strp = new StopTriggerReadPlan(sotc, antennaList, TagProtocol.ISO14443A);
+                r.paramSet("/reader/read/plan", strp);
+            }
+            else
+            {
+                StopTriggerReadPlan rp[] = new StopTriggerReadPlan[protocolList.length];
+                for (int i = 0; i < protocolList.length; i++)
+                {
+                    rp[i] = new StopTriggerReadPlan(sotc, antennaList, protocolList[i]);
+                }
+                MultiReadPlan testMultiReadPlan = new MultiReadPlan(rp);
+                r.paramSet("/reader/read/plan", testMultiReadPlan);
+            }
         }
-        r.paramSet("/reader/read/plan", strp);
-
-        TagProtocol tagproto;
-        // Read tags
-        tagReads = r.read(1000);
-        // Print tag reads
-        for (TagReadData tr : tagReads)
+        // Sync Read
+        if(enableSyncRead)
         {
-            System.out.println(tr.toString());
-            tagproto = tr.getTag().getProtocol();
+            // Read tags
+            tagReads = r.read(1000);
+            // Print tag reads
+            for (TagReadData tr : tagReads)
+            {
+                System.out.println(tr.toString());
+                System.out.println("TagProtocol: " + tr.getTag().getProtocol());
+            }
+        }
+        // Async Read
+        else
+        {
+            //create and add exception listener
+            ReadExceptionListener exceptionListener = new TagReadExceptionReceiver();
+            r.addReadExceptionListener(exceptionListener);
+            // Create and add tag listener
+            ReadListener rl = new PrintListener();
+            r.addReadListener(rl);
+            // search for tags in the background
+            r.startReading();
+            
+            while(!r.isReadStopped())
+            {
+                //Wait till tag read completion
+                Thread.sleep(1);
+            }
+
+            r.removeReadListener(rl);
+            r.removeReadExceptionListener(exceptionListener);
         }
         // Shut down reader
         r.destroy();
@@ -184,6 +253,30 @@ public class ReadStopTrigger {
             usage();
         }
         return antennaList;
+    }
+
+    // Print Listener
+    static class PrintListener implements ReadListener
+    {
+        public void tagRead(Reader r, TagReadData tr)
+        {
+          System.out.println("Background read: " + tr.toString());
+        }
+    }
+    // Exception Listener
+    static class TagReadExceptionReceiver implements ReadExceptionListener
+    {
+        String strDateFormat = "M/d/yyyy h:m:s a";
+        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
+        public void tagReadException(com.thingmagic.Reader r, ReaderException re)
+        {
+            String format = sdf.format(Calendar.getInstance().getTime());
+            System.out.println("Reader Exception: " + re.getMessage() + " Occured on :" + format);
+            if(re.getMessage().equals("Connection Lost"))
+            {
+                System.exit(1);
+            }
+        }
     }
     
 }

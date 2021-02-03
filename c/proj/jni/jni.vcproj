@@ -41,7 +41,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				InlineFunctionExpansion="0"
-				AdditionalIncludeDirectories="..\..\src\api;.;&quot;C:\Program Files\Java\jdk1.6.0_20\include&quot;;&quot;C:\Program Files\Java\jdk1.6.0_20\include\win32&quot;;&quot;C:\Program Files\Java\jdk1.6.0_18\include&quot;;&quot;C:\Program Files\Java\jdk1.6.0_18\include\win32&quot;;..\..\..\..\..\include;..\..\..\..\..\arch\win32\include"
+				AdditionalIncludeDirectories="..\..\src\api;.;&quot;C:\Program Files\Java\jdk1.8.0_261\include&quot;;&quot;C:\Program Files\Java\jdk1.8.0_261\include\win32&quot;;..\..\..\..\..\include;..\..\..\..\..\arch\win32\include;..\..\src\api\ltkc_win32\inc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="0"
@@ -96,7 +96,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="copy $(TargetPath) $(ProjectDir)\..\..\..\java\mercuryapi_nb\src\com\thingmagic\win-x86.lib&#x0D;&#x0A;copy $(TargetPath) $(ProjectDir)\..\..\..\java\win-x86.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration

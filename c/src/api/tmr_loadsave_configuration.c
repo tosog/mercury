@@ -63,7 +63,7 @@ typedef enum paramOption
 /* Private: Should not be used by user level application. */
 #ifdef TMR_ENABLE_UHF
 static const char *regions[] = {"UNSPEC", "NA", "EU", "KR", "IN", "JP", "PRC",
-                                "EU2", "EU3", "KR2", "PRC2", "AU", "NZ", "NA2", "NA3", "IS", "MY", "ID", "PH", "TW", "MO", "RU", "SG", "JP2", "JP3", "VN", "TH", "AR", "HK", "BD","EU4","UNIVERSAL"};
+                                "EU2", "EU3", "KR2", "PRC2", "AU", "NZ", "NA2", "NA3", "IS", "MY", "ID", "PH", "TW", "MO", "RU", "SG", "JP2", "JP3", "VN", "TH", "AR", "HK", "BD","EU4","UNIVERSAL","IS2", "NA4"};
 static const char *powerModes[] = {"FULL", "MINSAVE", "MEDSAVE", "MAXSAVE", "SLEEP"};
 static const char *hexChars = "0123456789abcdefABCDEF";
 static const char *selectOptionNames[] = {"EQ", "NE", "GT", "LT"};
@@ -80,12 +80,12 @@ static const char *tagopNames[] = {NULL, "ReadData"};
 static const char *protocolNames[] = {NULL, NULL, NULL, "ISO180006B", NULL, "GEN2", "ISO180006B_UCODE", "IPX64", "IPX256", "ISO14443A", "ISO14443B", "ISO15693", "ISO18092",
                                       "FELICA", "ISO18000_3M3", NULL, NULL, NULL, NULL, NULL, "LF125KHZ", "LF134KHZ", NULL, NULL, NULL, NULL, NULL, NULL, NULL, "ATA"};
 #ifdef TMR_ENABLE_HF_LF
-static const char *ISO1443ATagtypeNames[] = {"AUTO_DETECT", "MIFARE_PLUS", "MIFARE_ULTRALIGHT", "MIFARE_CLASSIC", "NTAG", "MIFARE_DESFIRE", "MIFARE_MINI"};
+static const char *ISO1443ATagtypeNames[] = {"AUTO_DETECT", "MIFARE_PLUS", "MIFARE_ULTRALIGHT", "MIFARE_CLASSIC", "NTAG", "MIFARE_DESFIRE", "MIFARE_MINI", "ULTRALIGHT_NTAG"};
 static const char *ISO15693TagtypeNames[] = {"AUTO_DETECT", "HID_ICLASS_SE", "ICODE_SLI", "ICODE_SLI_L", "ICODE_SLI_S", "ICODE_DNA",
                                              "ICODE_SLIX", "ICODE_SLIX_L", "ICODE_SLIX_S", "ICODE_SLIX_2"};
 static const char *ISO1443BTagtypeNames[] = {"AUTO_DETECT", "CALYSO", "CALYPSO_INNOVATRON_PROTOCOL", "CTS",
                                              "MONEO", "PICO_PASS", "SRI4K", "SRIX4K", "SRI512", "SRT512"};
-static const char *LF125KHZTagtypeNames[] = {"AUTO_DETECT", "AWID", "HID_PROX", "HITAG_1", "HITAG_2", "EM_4100"};
+static const char *LF125KHZTagtypeNames[] = {"AUTO_DETECT", "HID_PROX", "AWID", "HITAG_1", "HITAG_2", "EM_4100", "KERI", "INDALA"};
 static const char *LF134KHZTagtypeNames[] = {"AUTO_DETECT"};
 #endif /* TMR_ENABLE_HF_LF */
 static TMR_Status readLine(FILE *fp, char *buffer);
@@ -434,14 +434,16 @@ isParamWritable(TMR_Param key)
   case TMR_PARAM_METADATAFLAG:
   case TMR_PARAM_TAGOP_ANTENNA:
 #ifdef TMR_ENABLE_HF_LF
-  case TMR_PARAM_RADIO_READPOWER:
-  case TMR_PARAM_POWERMODE:
-  case TMR_PARAM_RADIO_WRITEPOWER:
   case TMR_PARAM_ISO14443A_SUPPORTED_TAGTYPES:
   case TMR_PARAM_ISO14443B_SUPPORTED_TAGTYPES:
   case TMR_PARAM_ISO15693_SUPPORTED_TAGTYPES:
   case TMR_PARAM_LF125KHZ_SUPPORTED_TAGTYPES:
   case TMR_PARAM_LF134KHZ_SUPPORTED_TAGTYPES:
+  case TMR_PARAM_ISO14443A_SUPPORTED_TAG_FEATURES:
+  case TMR_PARAM_ISO15693_SUPPORTED_TAG_FEATURES:
+  case TMR_PARAM_LF125KHZ_SUPPORTED_TAG_FEATURES:
+  case TMR_PARAM_RADIO_KEEP_RF_ON:
+  case TMR_PARAM_PROTOCOL_LIST:
 #endif /* TMR_ENABLE_HF_LF */
     {
       ret = TMR_ERROR_READONLY;

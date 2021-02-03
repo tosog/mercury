@@ -6,6 +6,7 @@ package samples;
 
 import com.thingmagic.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ReaderStatistics
@@ -186,24 +187,29 @@ public class ReaderStatistics
         }
         try
         {
-            if(readerStats.connectedAntennaPorts.length != 0)
+            if(Arrays.asList(getReaderStatisticFlag).contains(SerialReader.ReaderStatsFlag.CONNECTED_ANTENNA_PORTS) ||
+                    (Arrays.asList(getReaderStatisticFlag).contains(SerialReader.ReaderStatsFlag.ALL) && (!model.equalsIgnoreCase("M3e"))))
             {
                 int portList[] = (int[])r.paramGet("/reader/antenna/portList");
                 int[] connectedAntennaPorts = readerStats.connectedAntennaPorts;
                 List<Integer> list = new ArrayList<Integer>();
-                for(int index = 0; index < connectedAntennaPorts.length; index++)
+                if(connectedAntennaPorts != null)
                 {
-                    list.add(connectedAntennaPorts[index]);
-                }
+                    for(int index = 0; index < connectedAntennaPorts.length; index++)
+                    {
+                        list.add(connectedAntennaPorts[index]);
+                    }
 
-                for (int i = 1; i <= portList.length; i++) 
-                {
-                    if (list.contains(i)) 
+                    for(int i = 1; i <= portList.length; i++)
                     {
-                        System.out.println("Antenna " + (i) + " is : Connected");
-                    } else 
-                    {
-                        System.out.println("Antenna " + (i) + " is : Disconnected");
+                        if(list.contains(i))
+                        {
+                            System.out.println("Antenna " + (i) + " is : Connected" );
+                        }
+                        else
+                        {
+                            System.out.println("Antenna " + (i) + " is : Disconnected" );
+                        }
                     }
                 }
             }
@@ -222,7 +228,7 @@ public class ReaderStatistics
                System.out.println("Antenna ["+rl[0] +"] returnloss :"+ rl[1]);
            }
         }
-        if(readerStats.rfOnTime.length != 0)
+        if(readerStats.rfOnTime != null)
         {
             int[] rfontimes = readerStats.rfOnTime;
             for (int antenna = 0; antenna < rfontimes.length; antenna++)
@@ -230,7 +236,7 @@ public class ReaderStatistics
               System.out.println("RF_ON_TIME for antenna [" + (antenna + 1) + "] is : " + rfontimes[antenna] +" ms");
             }
         }
-        if(readerStats.noiseFloorTxOn.length != 0)
+        if(readerStats.noiseFloorTxOn != null)
         {
             byte[] noiseFloorTxOn = readerStats.noiseFloorTxOn;
             for (int antenna = 0; antenna < noiseFloorTxOn.length; antenna++)

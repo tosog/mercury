@@ -214,7 +214,7 @@ namespace ThingMagic.URA2
                 {
                     rbtnata.Visibility = Visibility.Collapsed;
                     lblNote.Content = "Note : Tag Inspector Operation supports only GEN2 Tags. Rest of the protocols will be ignored";
-                    stkSelectProtocol.Visibility = Visibility.Collapsed;
+                    stkSelectProtocol.Visibility = Visibility.Visible;
                 }
             }
             //if (cbxgen2.IsChecked == true && (cbxata.IsChecked == true && cbxata.Visibility == Visibility.Visible))
@@ -2242,149 +2242,156 @@ namespace ThingMagic.URA2
         /// <param name="data">Tag Data received from the module</param>
         private void GenerateControls(byte[] data, byte blockSizeByte, byte blockCountByte, List<byte> lockStatus)
         {
-            bool isLastTagBlockAdded = false;
-            //TextBox[] txtBlockCellList = new TextBox[data.Length];
-            List<TextBox> txtBlockCellList = new List<TextBox>();
-
-            // Create new label the represent byte's in next address eg: Byte 1, Byte 2 etc.
-            Label lblEmptyGridCell = new Label();
-            lblEmptyGridCell.Height = 30;
-            lblEmptyGridCell.Width = 57;
-            lblEmptyGridCell.VerticalAlignment = VerticalAlignment.Top;
-            lblEmptyGridCell.HorizontalAlignment = HorizontalAlignment.Left;
-            lblEmptyGridCell.Content = "";
-            stkpnlByteAddress.Children.Add(lblEmptyGridCell);
-            // Create a namescope for the yte Address panel
-            NameScope.SetNameScope(stkpnlByteAddress, new NameScope());
-            int byteAddressCount = Convert.ToInt32(blockSizeByte) + 1;
-            for (int i = 0; i < byteAddressCount; i++)//here we will Add the total byte address count
+            try
             {
-                // Create a new label to represent Byte Address eg: Byte 1, Byte 2 etc.
-                Label lblAddressGridCell = new Label();
-                lblAddressGridCell.Height = 50;
-                lblAddressGridCell.Width = 65;
-                lblAddressGridCell.VerticalAlignment = VerticalAlignment.Top;
-                lblAddressGridCell.HorizontalAlignment = HorizontalAlignment.Left;
-                lblAddressGridCell.HorizontalContentAlignment = HorizontalAlignment.Center;
-                lblAddressGridCell.Content = ((i) != (byteAddressCount - 1)) ? ("Byte " + i.ToString()) : ("Lock Status");
-                if (lblAddressGridCell.Content == "Lock Status")
+                bool isLastTagBlockAdded = false;
+                //TextBox[] txtBlockCellList = new TextBox[data.Length];
+                List<TextBox> txtBlockCellList = new List<TextBox>();
+
+                // Create new label the represent byte's in next address eg: Byte 1, Byte 2 etc.
+                Label lblEmptyGridCell = new Label();
+                lblEmptyGridCell.Height = 30;
+                lblEmptyGridCell.Width = 57;
+                lblEmptyGridCell.VerticalAlignment = VerticalAlignment.Top;
+                lblEmptyGridCell.HorizontalAlignment = HorizontalAlignment.Left;
+                lblEmptyGridCell.Content = "";
+                stkpnlByteAddress.Children.Add(lblEmptyGridCell);
+                // Create a namescope for the yte Address panel
+                NameScope.SetNameScope(stkpnlByteAddress, new NameScope());
+                int byteAddressCount = Convert.ToInt32(blockSizeByte) + 1;
+                for (int i = 0; i < byteAddressCount; i++)//here we will Add the total byte address count
                 {
-                    lblAddressGridCell.Width = 90;
+                    // Create a new label to represent Byte Address eg: Byte 1, Byte 2 etc.
+                    Label lblAddressGridCell = new Label();
+                    lblAddressGridCell.Height = 50;
+                    lblAddressGridCell.Width = 65;
+                    lblAddressGridCell.VerticalAlignment = VerticalAlignment.Top;
+                    lblAddressGridCell.HorizontalAlignment = HorizontalAlignment.Left;
+                    lblAddressGridCell.HorizontalContentAlignment = HorizontalAlignment.Center;
+                    lblAddressGridCell.Content = ((i) != (byteAddressCount - 1)) ? ("Byte " + i.ToString()) : ("Lock Status");
+                    if (lblAddressGridCell.Content == "Lock Status")
+                    {
+                        lblAddressGridCell.Width = 90;
+                    }
+                    stkpnlByteAddress.Children.Add(lblAddressGridCell);
                 }
-                stkpnlByteAddress.Children.Add(lblAddressGridCell);
-            }
-            int byteCount = Convert.ToInt32(blockSizeByte);//here we will add the byte count of the tag.
-            int blockCount = Convert.ToInt32(blockCountByte);
-            for (int i = 0; i < blockCount; i++)//here we will add the Block count
-            {
-                StackPanel stkPanel = new StackPanel();
-                stkPanel.Orientation = Orientation.Horizontal;
-                stkPanel.Name = "stkpnlMemoryAddress" + i.ToString();
-                stkPanel.VerticalAlignment = VerticalAlignment.Top;
-                stkPanel.HorizontalAlignment = HorizontalAlignment.Left;
-
-                // Create a name scope for the stackpanel. 
-                NameScope.SetNameScope(stkPanel, new NameScope());
-
-                // Create a new label to represent block Address eg: Block 1, Block 2 etc.
-                Label txtBlockAddress = new Label();
-                txtBlockAddress.Content = "Block " + i.ToString();
-                txtBlockAddress.Height = 30;
-                txtBlockAddress.Width = 65;
-                txtBlockAddress.VerticalAlignment = VerticalAlignment.Top;
-                txtBlockAddress.HorizontalAlignment = HorizontalAlignment.Left;
-                txtBlockAddress.Visibility = Visibility.Visible;
-                stkPanel.Children.Add(txtBlockAddress);
-
-                for (int j = 0; j < byteCount; j++)
+                int byteCount = Convert.ToInt32(blockSizeByte);//here we will add the byte count of the tag.
+                int blockCount = Convert.ToInt32(blockCountByte);
+                for (int i = 0; i < blockCount; i++)//here we will add the Block count
                 {
-                    isLastTagBlockAdded = true;
-                    // Create Textbox to represent tag data.
-                    TextBox txtCellAddress = new TextBox();
-                    txtCellAddress.IsReadOnly = true;
-                    txtCellAddress.Name = "txtCellNumber" + i.ToString() + j.ToString();
-                    txtCellAddress.Text = "00";
-                    txtCellAddress.CaretBrush = Brushes.Black;
-                    txtCellAddress.Background = (SolidColorBrush)new BrushConverter().ConvertFrom("#0A000000");
-                    txtCellAddress.TextAlignment = TextAlignment.Center;
-                    txtCellAddress.Height = 30;
-                    txtCellAddress.Width = 65;
-                    txtCellAddress.VerticalAlignment = VerticalAlignment.Top;
-                    txtCellAddress.HorizontalAlignment = HorizontalAlignment.Left;
-                    txtCellAddress.TextAlignment = TextAlignment.Center;
-                    txtCellAddress.VerticalContentAlignment = VerticalAlignment.Center;
-                    txtCellAddress.MaxLength = 2;
-                    txtCellAddress.Visibility = Visibility.Visible;
-                    #region TextBox Command Binding
+                    StackPanel stkPanel = new StackPanel();
+                    stkPanel.Orientation = Orientation.Horizontal;
+                    stkPanel.Name = "stkpnlMemoryAddress" + i.ToString();
+                    stkPanel.VerticalAlignment = VerticalAlignment.Top;
+                    stkPanel.HorizontalAlignment = HorizontalAlignment.Left;
+
+                    // Create a name scope for the stackpanel. 
+                    NameScope.SetNameScope(stkPanel, new NameScope());
+
+                    // Create a new label to represent block Address eg: Block 1, Block 2 etc.
+                    Label txtBlockAddress = new Label();
+                    txtBlockAddress.Content = "Block " + i.ToString();
+                    txtBlockAddress.Height = 30;
+                    txtBlockAddress.Width = 65;
+                    txtBlockAddress.VerticalAlignment = VerticalAlignment.Top;
+                    txtBlockAddress.HorizontalAlignment = HorizontalAlignment.Left;
+                    txtBlockAddress.Visibility = Visibility.Visible;
+                    stkPanel.Children.Add(txtBlockAddress);
+
+                    for (int j = 0; j < byteCount; j++)
+                    {
+                        isLastTagBlockAdded = true;
+                        // Create Textbox to represent tag data.
+                        TextBox txtCellAddress = new TextBox();
+                        txtCellAddress.IsReadOnly = true;
+                        txtCellAddress.Name = "txtCellNumber" + i.ToString() + j.ToString();
+                        txtCellAddress.Text = "00";
+                        txtCellAddress.CaretBrush = Brushes.Black;
+                        txtCellAddress.Background = (SolidColorBrush)new BrushConverter().ConvertFrom("#0A000000");
+                        txtCellAddress.TextAlignment = TextAlignment.Center;
+                        txtCellAddress.Height = 30;
+                        txtCellAddress.Width = 65;
+                        txtCellAddress.VerticalAlignment = VerticalAlignment.Top;
+                        txtCellAddress.HorizontalAlignment = HorizontalAlignment.Left;
+                        txtCellAddress.TextAlignment = TextAlignment.Center;
+                        txtCellAddress.VerticalContentAlignment = VerticalAlignment.Center;
+                        txtCellAddress.MaxLength = 2;
+                        txtCellAddress.Visibility = Visibility.Visible;
+                        #region TextBox Command Binding
+
+                        #endregion
+                        int cellNumber = Convert.ToInt32((i).ToString() + (j).ToString());
+                        stkPanel.Children.Add(txtCellAddress);
+                        //NameScope.SetNameScope(txtCellAddress.Name,txtCellAddress); enable when the Binding is done
+                        //txtBlockCellList[cellNumber] = txtCellAddress;
+                        txtBlockCellList.Add(txtCellAddress);
+                    }
+
+                    //Image imgLockStatus = new Image();
+                    //imgLockStatus.Height = 30;
+                    //imgLockStatus.Width = 130;
+                    //imgLockStatus.VerticalAlignment = VerticalAlignment.Center;
+                    //imgLockStatus.HorizontalAlignment = HorizontalAlignment.Center;
+                    ////imgLockStatus.Visibility = Visibility = Visibility.Visible;
+                    ////imgLockStatus.
+                    TextBox txtLockStatus = new TextBox();
+                    txtLockStatus.IsReadOnly = true;
+                    txtLockStatus.Name = "txtBlockLockStatus" + i.ToString();
+                    if (lockStatus.Count == 0)
+                    {
+                        txtLockStatus.Text = "Unlocked";
+                    }
+                    else
+                    {
+                        txtLockStatus.Text = ((lockStatus[i] == 0) ? "Unlocked" : "Locked");
+                    }
+                    txtLockStatus.CaretBrush = Brushes.Black;
+                    txtLockStatus.Background = (SolidColorBrush)new BrushConverter().ConvertFrom("#0A000000");
+                    txtLockStatus.TextAlignment = TextAlignment.Center;
+                    txtLockStatus.Height = 30;
+                    txtLockStatus.Width = 90;
+                    txtLockStatus.VerticalAlignment = VerticalAlignment.Top;
+                    txtLockStatus.HorizontalAlignment = HorizontalAlignment.Left;
+                    txtLockStatus.Visibility = Visibility.Visible;
+                    txtLockStatus.VerticalContentAlignment = VerticalAlignment.Center;
+                    #region Click Binding Lock Textbox;
 
                     #endregion
-                    int cellNumber = Convert.ToInt32((i).ToString() + (j).ToString());
-                    stkPanel.Children.Add(txtCellAddress);
-                    //NameScope.SetNameScope(txtCellAddress.Name,txtCellAddress); enable when the Binding is done
-                    //txtBlockCellList[cellNumber] = txtCellAddress;
-                    txtBlockCellList.Add(txtCellAddress);
+                    stkPanel.Children.Add(txtLockStatus);
+                    stkpnlBlockAddress.Children.Add(stkPanel);
+
                 }
 
-                //Image imgLockStatus = new Image();
-                //imgLockStatus.Height = 30;
-                //imgLockStatus.Width = 130;
-                //imgLockStatus.VerticalAlignment = VerticalAlignment.Center;
-                //imgLockStatus.HorizontalAlignment = HorizontalAlignment.Center;
-                ////imgLockStatus.Visibility = Visibility = Visibility.Visible;
-                ////imgLockStatus.
-                TextBox txtLockStatus = new TextBox();
-                txtLockStatus.IsReadOnly = true;
-                txtLockStatus.Name = "txtBlockLockStatus" + i.ToString();
-                if (lockStatus.Count == 0)
+                int cellBlock = 0;
+                int lockFlag = 0;
+                for (int i = 0; i < data.Length; i++)
                 {
-                    txtLockStatus.Text = "Unlocked";
-                }
-                else
-                {
-                    txtLockStatus.Text = ((lockStatus[i] == 0) ? "Unlocked" : "Locked");
-                }
-                txtLockStatus.CaretBrush = Brushes.Black;
-                txtLockStatus.Background = (SolidColorBrush)new BrushConverter().ConvertFrom("#0A000000");
-                txtLockStatus.TextAlignment = TextAlignment.Center;
-                txtLockStatus.Height = 30;
-                txtLockStatus.Width = 90;
-                txtLockStatus.VerticalAlignment = VerticalAlignment.Top;
-                txtLockStatus.HorizontalAlignment = HorizontalAlignment.Left;
-                txtLockStatus.Visibility = Visibility.Visible;
-                txtLockStatus.VerticalContentAlignment = VerticalAlignment.Center;
-                #region Click Binding Lock Textbox;
 
-                #endregion
-                stkPanel.Children.Add(txtLockStatus);
-                stkpnlBlockAddress.Children.Add(stkPanel);
-
-            }
-
-            int cellBlock = 0;
-            int lockFlag = 0;
-            for (int i = 0; i < data.Length; i++)
-            {
-
-                if (lockStatus[lockFlag] == 0)
-                {
-                    txtBlockCellList[i].Text = data[i].ToString("X2");
-                }
-                else
-                {
-                    txtBlockCellList[i].Text = "";
-                }
-                cellBlock++;
-                if (cellBlock == blockSizeByte)
-                {
-                    if (lockStatus.Count != (lockFlag + 1))
+                    if (lockStatus[lockFlag] == 0)
                     {
-                        if (cellBlock == blockSizeByte)
+                        txtBlockCellList[i].Text = data[i].ToString("X2");
+                    }
+                    else
+                    {
+                        txtBlockCellList[i].Text = "";
+                    }
+                    cellBlock++;
+                    if (cellBlock == blockSizeByte)
+                    {
+                        if (lockStatus.Count != (lockFlag + 1))
                         {
-                            cellBlock = 0;
-                            lockFlag++;
+                            if (cellBlock == blockSizeByte)
+                            {
+                                cellBlock = 0;
+                                lockFlag++;
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("No data could be read from a tag");
             }
         }
 
